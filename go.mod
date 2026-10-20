@@ -3,6 +3,8 @@ module github.com/vincentsch/signetleaf
 go 1.27.2
 
 require (
+	github.com/digitorus/pkcs7 v0.0.0-20260914070511-d678ea5ea03f
+	github.com/digitorus/timestamp v0.0.0-20260914073129-b4b58b92aa51
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/spf13/cobra v1.10.2
 	github.com/vincentsch/rungrad v0.3.2

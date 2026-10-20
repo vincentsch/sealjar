@@ -218,7 +218,11 @@ func exists(name string) (bool, error) {
 	return false, err
 }
 func Write(dir, out, name string, at time.Time) (result string, err error) {
-	stem := name + "-" + at.UTC().Format("2006-01-02-1504")
+	return WriteStem(dir, out, name+"-"+at.UTC().Format("2006-01-02-1504"))
+}
+
+// WriteStem writes a package exclusively, reserving its paired reader path too.
+func WriteStem(dir, out, stem string) (result string, err error) {
 	var f *os.File
 	for n := 1; ; n++ {
 		suffix := ""

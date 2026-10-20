@@ -17,6 +17,7 @@ import (
 	"github.com/vincentsch/rungrad"
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
 	"github.com/vincentsch/signetleaf/internal/repo"
+	"github.com/vincentsch/signetleaf/internal/tsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
 )
 
@@ -63,9 +64,12 @@ func inputError(err error) error {
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	verdict := 0
 	app := rungrad.New(rungrad.AppConfig{Name: "signetleaf", Short: "Capture and check repository snapshots", Long: "Keep the current files from a Git repository in a portable package. Check its hashes and restore the snapshot later.", Version: Version})
-	app.AddCommand(captureCommand())
+	app.AddCommand(captureCommand(&verdict))
 	app.AddCommand(verifyCommand(&verdict))
 	app.AddCommand(restoreCommand())
+	app.AddCommand(stampCommand())
+	app.AddCommand(doctorCommand())
+	app.AddCommand(reportCommand())
 	code := app.RunIO(args, stdin, stdout, stderr)
 	// Completed verdicts are data, not invocation failures. Returning nil to
 	// rungrad avoids a second generic error document after the result.
@@ -82,14 +86,20 @@ type captureOptions struct {
 	out, name                                  string
 	labels, exclude                            []string
 	untracked, history, confirmed, noTimestamp bool
+	strict                                     bool
+	authorities                                []string
+	root                                       string
 }
 type captureResult struct {
-	Package     string     `json:"package,omitempty"`
-	Size        int64      `json:"size,omitempty"`
-	DryRun      bool       `json:"dry_run"`
-	Plan        *repo.Plan `json:"plan"`
-	Timestamp   string     `json:"timestamp"`
-	Limitations []string   `json:"limitations"`
+	Authorities []string      `json:"timestamp_authorities"`
+	NextStep    string        `json:"next_step,omitempty"`
+	Package     string        `json:"package,omitempty"`
+	Size        int64         `json:"size,omitempty"`
+	DryRun      bool          `json:"dry_run"`
+	Plan        *repo.Plan    `json:"plan"`
+	Timestamp   string        `json:"timestamp"`
+	Attempts    []tsa.Attempt `json:"timestamp_attempts"`
+	Limitations []string      `json:"limitations"`
 }
 
 func renderPlan(w io.Writer, p *repo.Plan) {
@@ -104,12 +114,12 @@ func renderPlan(w io.Writer, p *repo.Plan) {
 	for _, s := range f.Submodules {
 		fmt.Fprintf(w, "  Submodule %s (listed only; contents are excluded)\n", s.Path)
 	}
-	fmt.Fprintln(w, "  Timestamp Not requested\n\nExclusions cannot guarantee that no secret is included.")
+	fmt.Fprintln(w, "\nExclusions cannot guarantee that no secret is included.")
 	if f.History {
 		fmt.Fprintln(w, "History can contain old secrets and unrelated work.")
 	}
 }
-func captureCommand() *rungrad.Command {
+func captureCommand(verdict *int) *rungrad.Command {
 	opt := captureOptions{}
 	c := command("capture <path>...", "Capture the current files from one Git repository")
 	c.Mutates = true
@@ -125,6 +135,9 @@ func captureCommand() *rungrad.Command {
 		f.BoolVar(&opt.untracked, "include-untracked", false, "Include untracked files that Git does not ignore")
 		f.BoolVar(&opt.history, "history", false, "Include all Git history as a separate bundle; it can contain old secrets")
 		f.BoolVar(&opt.confirmed, "confirm", false, "Capture without asking to continue")
+		f.StringArrayVar(&opt.authorities, "tsa", nil, "Request this timestamp authority instead of defaults (repeatable)")
+		f.StringVar(&opt.root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
+		f.BoolVar(&opt.strict, "strict", false, "Exit 10 after writing if requested timestamping fails")
 		f.BoolVar(&opt.noTimestamp, "no-timestamp", false, "Create a package without a timestamp")
 	}
 	c.Run = func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
@@ -132,8 +145,13 @@ func captureCommand() *rungrad.Command {
 		if _, err := exec.LookPath("git"); err != nil {
 			return rungrad.NewError(2, "Git was not found. Install Git to capture a repository. Verify and restore do not need Git.")
 		}
-		if !opt.noTimestamp {
-			return rungrad.NewError(1, "Timestamp requests are not available in this version. Pass --no-timestamp.")
+		authorities, err := tsa.Authorities(opt.authorities)
+		if err != nil {
+			return failure(1, err)
+		}
+		roots, err := tsa.Roots(opt.root)
+		if err != nil {
+			return failure(2, err)
 		}
 		if opt.name != "" && !slugPattern.MatchString(opt.name) {
 			return rungrad.NewError(1, "Invalid package name. Use letters, numbers, hyphens and underscores.")
@@ -164,7 +182,10 @@ func captureCommand() *rungrad.Command {
 		if err != nil {
 			return failure(2, err)
 		}
-		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest."}}
+		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Signetleaf does not assess eIDAS qualification."}}
+		if !opt.noTimestamp {
+			result.Authorities = authorities
+		}
 		if opt.history {
 			result.Limitations = append(result.Limitations, "History can contain old secrets and unrelated work.")
 		}
@@ -172,10 +193,20 @@ func captureCommand() *rungrad.Command {
 			return f.WriteResult(result, func(w io.Writer) {
 				fmt.Fprintln(w, "DRY RUN: would capture this repository; no files were written.")
 				renderPlan(w, p)
+				if !opt.noTimestamp {
+					fmt.Fprintf(w, "Timestamp authorities: %s\n", strings.Join(authorities, ", "))
+				} else {
+					fmt.Fprintln(w, "Timestamp: deliberately skipped")
+				}
 			})
 		}
 		if !f.Flags.JSON && !f.Flags.Quiet {
 			renderPlan(f.Stdout, p)
+			if !opt.noTimestamp {
+				fmt.Fprintf(f.Stdout, "Timestamp authorities: %s\n", strings.Join(authorities, ", "))
+			} else {
+				fmt.Fprintln(f.Stdout, "Timestamp: deliberately skipped")
+			}
 		}
 		if !opt.confirmed {
 			if !f.CanPrompt() {
@@ -228,9 +259,31 @@ func captureCommand() *rungrad.Command {
 		if zone == "Local" {
 			zone = "UTC"
 		}
-		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: true}, Targets: []packagefmt.Target{{Kind: "repo", Name: p.Facts.Name, State: "complete", Commit: p.Facts.Commit, Changes: p.Facts.Status.Modified + p.Facts.Status.Added + p.Facts.Status.Deleted, Payload: payload}}, Environment: packagefmt.Environment{OS: runtime.GOOS, Arch: runtime.GOARCH, GitVersion: repo.GitVersion(ctx)}, TimestampAuthorities: []string{}}
+		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: opt.noTimestamp}, Targets: []packagefmt.Target{{Kind: "repo", Name: p.Facts.Name, State: "complete", Commit: p.Facts.Commit, Changes: p.Facts.Status.Modified + p.Facts.Status.Added + p.Facts.Status.Deleted, Payload: payload}}, Environment: packagefmt.Environment{OS: runtime.GOOS, Arch: runtime.GOARCH, GitVersion: repo.GitVersion(ctx)}, TimestampAuthorities: []string{}}
+		if !opt.noTimestamp {
+			m.TimestampAuthorities = authorities
+		}
 		if err = packagefmt.BuildManifest(work, &m); err != nil {
 			return failure(2, err)
+		}
+		if !opt.noTimestamp {
+			manifest, e := os.ReadFile(filepath.Join(work, "manifest.json"))
+			if e != nil {
+				return failure(2, e)
+			}
+			result.Attempts = tsa.Acquire(ctx, manifest, opt.authorities, roots)
+			count, e := storeTokens(work, result.Attempts)
+			if e != nil {
+				return failure(2, e)
+			}
+			if count > 0 {
+				result.Timestamp = "Timestamped"
+			} else {
+				result.NextStep = "Add a timestamp later with signetleaf stamp <package>."
+				if opt.strict {
+					*verdict = 10
+				}
+			}
 		}
 		name := opt.name
 		if name == "" {
@@ -247,17 +300,27 @@ func captureCommand() *rungrad.Command {
 		result.Package = resultPath(output)
 		result.Size = info.Size()
 		return f.WriteResult(result, func(w io.Writer) {
-			fmt.Fprintf(w, "\nCaptured  %s (%d bytes)\n          Timestamp: Not timestamped\n", result.Package, result.Size)
-			fmt.Fprintln(w, result.Limitations[1])
+			fmt.Fprintf(w, "\nCaptured  %s (%d bytes)\n          Timestamp: %s\n", result.Package, result.Size, result.Timestamp)
+			renderAttempts(w, result.Attempts)
+			if !opt.noTimestamp && result.Timestamp == "Not timestamped" {
+				fmt.Fprintln(w, "No authority returned a usable timestamp. Add one later with signetleaf stamp <package>.")
+			}
+			for _, limitation := range result.Limitations[1:] {
+				fmt.Fprintln(w, limitation)
+			}
 		})
 	}
 	return c
 }
 func verifyCommand(verdict *int) *rungrad.Command {
+	var root string
 	c := command("verify <package>", "Check capture results, file hashes and timestamp status")
 	c.Args = cobra.ExactArgs(1)
 	c.Examples = []string{"signetleaf verify capture.signetleaf.zip", "signetleaf verify capture.signetleaf.zip --json"}
 	c.Related = []string{"signetleaf capture", "signetleaf restore"}
+	c.Configure = func(cmd *cobra.Command) {
+		cmd.Flags().StringVar(&root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
+	}
 	c.Run = func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
 		r, err := packagefmt.Open(args[0])
 		if err != nil {
@@ -269,7 +332,11 @@ func verifyCommand(verdict *int) *rungrad.Command {
 			return inputError(err)
 		}
 		defer r.Close()
-		v, code, err := verify.Check(r)
+		roots, e := tsa.Roots(root)
+		if e != nil {
+			return failure(2, e)
+		}
+		v, code, err := verify.Check(r, roots)
 		if err != nil {
 			return inputError(err)
 		}
@@ -280,21 +347,23 @@ func verifyCommand(verdict *int) *rungrad.Command {
 }
 
 type restoreResult struct {
-	Destination  string `json:"destination"`
-	History      string `json:"history,omitempty"`
-	CloneCommand string `json:"clone_command,omitempty"`
-	DryRun       bool   `json:"dry_run"`
-	Timestamp    string `json:"timestamp"`
+	Destination  string        `json:"destination"`
+	History      string        `json:"history,omitempty"`
+	CloneCommand string        `json:"clone_command,omitempty"`
+	DryRun       bool          `json:"dry_run"`
+	Timestamp    string        `json:"timestamp"`
+	Verification verify.Result `json:"verification"`
 }
 
 func restoreCommand() *rungrad.Command {
-	var to string
+	var to, root string
 	c := command("restore <package>", "Restore checked repository files into an empty folder")
 	c.Mutates = true
 	c.Args = cobra.ExactArgs(1)
 	c.Examples = []string{"signetleaf restore capture.signetleaf.zip --to recovered", "signetleaf restore capture.signetleaf.zip --to recovered --dry-run"}
 	c.Related = []string{"signetleaf capture", "signetleaf verify"}
 	c.Configure = func(cmd *cobra.Command) {
+		cmd.Flags().StringVar(&root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
 		cmd.Flags().StringVar(&to, "to", "", "Restore into this new or empty folder")
 	}
 	c.Run = func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
@@ -306,7 +375,11 @@ func restoreCommand() *rungrad.Command {
 			return inputError(err)
 		}
 		defer r.Close()
-		v, code, err := verify.Check(r)
+		roots, e := tsa.Roots(root)
+		if e != nil {
+			return failure(2, e)
+		}
+		v, code, err := verify.Check(r, roots)
 		if err != nil {
 			return inputError(err)
 		}
@@ -352,7 +425,7 @@ func restoreCommand() *rungrad.Command {
 				return failure(2, e)
 			}
 		}
-		result := restoreResult{Destination: resultPath(to), DryRun: f.DryRun(), Timestamp: v.Timestamp.State + ". " + v.Limitations[0]}
+		result := restoreResult{Destination: resultPath(to), DryRun: f.DryRun(), Timestamp: v.Timestamp.State + ". " + v.Timestamp.Detail, Verification: v}
 		if history {
 			result.History = resultPath(to + ".history.bundle")
 			result.CloneCommand = "git clone " + shellQuote(result.History) + " " + shellQuote(resultPath(to+"-history"))
@@ -418,7 +491,7 @@ func restoreCommand() *rungrad.Command {
 			} else {
 				fmt.Fprintf(w, "Restored  %s\n", result.Destination)
 			}
-			fmt.Fprintln(w, result.Timestamp)
+			verify.Render(w, result.Verification)
 			if history {
 				fmt.Fprintf(w, "History remains separate: %s\n%s\nHistory can contain old secrets and unrelated work.\n", result.History, result.CloneCommand)
 			}

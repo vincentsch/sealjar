@@ -1,4 +1,8 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
+github.com/digitorus/pkcs7 v0.0.0-20260914070511-d678ea5ea03f h1:LBDTasGDT7gkpSl3tIq+V4Yy0nr+l+ZmI6VN9MY9FU0=
+github.com/digitorus/pkcs7 v0.0.0-20260914070511-d678ea5ea03f/go.mod h1:OQvyvldkvDCxGsUPLSibXqM4B/Pz5RaXQP4CPo5LXs4=
+github.com/digitorus/timestamp v0.0.0-20260914073129-b4b58b92aa51 h1:C5oJXjXaNiSSCs4b+yXP3JmMGKgJhuIakXD0UdjhB2k=
+github.com/digitorus/timestamp v0.0.0-20260914073129-b4b58b92aa51/go.mod h1:UbWLJjUt4ChMltkeZK0SKTUViVg4839mnQmyH8QWH+Y=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/itchyny/gojq v0.12.17 h1:8av8eGduDb5+rvEdaOO+zQUjA04MS0m3Ps8HiD+fceg=

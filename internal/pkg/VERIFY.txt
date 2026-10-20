@@ -5,8 +5,9 @@ English
 Run `signetleaf verify package.signetleaf.zip`. It gives three separate answers:
 capture results, file integrity, and timestamp trust. Exit 10 means malformed
 or changed content. Exit 11 means no trusted timestamp. Exit 0 means the files
-match and at least one timestamp is trusted. This version captures repositories
-without timestamps; later versions add timestamp requests and trust checks.
+match and at least one timestamp is trusted. Add independent trusted roots with
+`--tsa-root roots.pem` when needed. `signetleaf stamp package.signetleaf.zip`
+can add a timestamp later without changing the manifest or captured files.
 
 Manual file check without Signetleaf
 
@@ -74,9 +75,10 @@ Deutsch
 der Erfassung, die Dateien und das Vertrauen in den Zeitstempel. Rückgabecode
 10 steht für ein beschädigtes oder verändertes Paket. Code 11 bedeutet, dass
 kein vertrauenswürdiger Zeitstempel vorliegt. Bei Code 0 stimmen die Dateien
-überein und mindestens ein Zeitstempel ist vertrauenswürdig. Diese Version
-erfasst Repositorys ohne Zeitstempel. Spätere Versionen ergänzen deren Abruf
-und Prüfung.
+überein und mindestens ein Zeitstempel ist vertrauenswürdig. Mit
+`--tsa-root roots.pem` lassen sich unabhängig bezogene Vertrauensanker ergänzen.
+`signetleaf stamp paket.signetleaf.zip` fügt später einen Zeitstempel hinzu,
+ohne das Manifest oder die erfassten Dateien zu ändern.
 
 Dateien ohne Signetleaf prüfen
 
