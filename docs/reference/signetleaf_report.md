@@ -12,7 +12,7 @@ signetleaf report <package>
 
 ```
 signetleaf report capture.signetleaf.zip --out reader
-signetleaf report capture.signetleaf.zip --lang de --pdf --dry-run
+signetleaf report capture.signetleaf.zip --lang de --pdf --out reader-de --dry-run
 ```
 
 ## Flags

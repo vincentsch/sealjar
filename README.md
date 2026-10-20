@@ -1,253 +1,159 @@
-# Signetleaf
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/wordmark-dark.svg">
+    <img src="docs/media/wordmark-light.svg" alt="Signetleaf" width="380">
+  </picture>
+</p>
+<p align="center"><b>Timestamped captures of your website and code.</b></p>
+<p align="center">
+  <a href="docs/quickstart.md">Get started</a> ·
+  <a href="docs/for-recipients.md">Received a package?</a> ·
+  <a href="docs/commands.md">Commands</a> ·
+  <a href="AGENTS.md">AGENTS.md</a> ·
+  <a href="docs/de/abnahme.md">Deutsch</a>
+</p>
 
-Signetleaf captures web pages and current Git files in a portable package.
-It records capture problems, checks file hashes, adds independent timestamps
-and restores repository snapshots into a new folder.
+Signetleaf saves web pages and current code in one ZIP file. It takes desktop
+and mobile screenshots, records the rendered page and repository files, and
+adds a report in English and German. An independent timestamp helps someone
+later check when the sealed files already existed.
 
-Capture writes English and German HTML reports and PDFs, a bilingual seal page,
-and a reader folder beside the ZIP. Timestamp checks work offline.
+## Capture with your coding agent
 
-## Build and capture
+Copy this prompt and replace the URL with your own. Supply an output directory
+outside your repository, too.
 
-Go 1.27.2 builds the binary and can download the pinned toolchain automatically.
-Repository capture needs Git. Website capture needs installed Chrome or Chromium.
-Verify and restore need only the compiled binary.
-
-```sh
-go build -o bin/signetleaf ./cmd/signetleaf
-bin/signetleaf capture . --dry-run
-bin/signetleaf capture . --confirm --out ./captures
+```text
+Use Signetleaf to capture this repository and https://staging.example.com
+for handover. Use https://github.com/vincentsch/signetleaf: read its AGENTS.md
+and follow the steps. Verify the package and show me the report and any
+capture problems. Write the output to the parent directory of this repository.
 ```
 
-Capture accepts HTTP(S) URLs, paths inside one repository, or both. It uses the repository root and
-shows a plan before writing. Without `--confirm`, it asks in an interactive
-terminal and refuses unattended capture. The repository must have a commit.
+The agent installs Signetleaf, checks prerequisites, shows the plan, captures
+and verifies. It uses the scope and permission you supplied. For basic auth or
+an interactive login, see [capture](docs/capture.md).
 
-Only tracked files are included by default, with their current working-tree
-bytes. `--include-untracked` adds files that Git does not ignore. Deleted files
-are recorded but are absent from the snapshot. Submodules are listed without
-their contents. Untracked nested repositories and linked worktrees are listed
-as excluded, with their contents left out. Git LFS files keep their current
-bytes; pointers are marked, and Signetleaf never fetches LFS content.
+## Install it yourself
 
-Secret-file patterns exclude `.env`, private keys and similar candidates.
-`.env.example` and `.env.dist` are allowed by default. The plan names exclusions,
-but exclusions cannot guarantee that no secret is included. Captured source
-files may contain private information; Signetleaf does not rewrite them.
-
-`--exclude '*.key'` matches names at any depth. `--exclude 'config/server.key'`
-matches from the repository root. A trailing slash, such as `--exclude 'build/'`,
-excludes matching folders and their contents. Patterns use Go's `path.Match`;
-`**` is rejected. User exclusions also apply to `.env.example` and `.env.dist`.
-Symbolic links are never followed; links outside the repository are excluded.
-
-`--history` adds all Git history as a separate bundle. It may contain old
-secrets and unrelated work. `--name handover` sets the package name, and
-`--label client=Example` records a label. These flags can be combined:
+One executable runs on Linux, macOS and Windows, on amd64 and arm64.
+The Bash installer supports Linux, macOS and Git Bash on Windows.
+WSL uses Linux assets. It verifies SHA-256 checksums before installing.
 
 ```sh
-bin/signetleaf capture . --no-timestamp --confirm --history \
-  --include-untracked --exclude 'build/' --name handover --label client=Example
+curl -fsSL https://raw.githubusercontent.com/vincentsch/signetleaf/main/install.sh -o /tmp/signetleaf-install.sh
+bash /tmp/signetleaf-install.sh
+rm /tmp/signetleaf-install.sh
 ```
 
-## Timestamp and add timestamps later
+Use the absolute path printed after `Installed:` if it is not on PATH.
+The examples below call that executable `signetleaf`.
+[Native Windows downloads and the optional Go install](docs/quickstart.md#install)
+are described separately. Native Windows needs no Go installation.
 
-Capture sends only the manifest’s SHA-256 hash and a fresh nonce to DigiCert,
-then tries FreeTSA if DigiCert returns no usable token. Repeat `--tsa <url>` to
-replace those defaults and request every supplied authority. Requests honor
-`HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`, with a ten-second deadline per
-authority, including proxy connection time, and a 1 MiB response limit.
+Chrome or Chromium is needed for web capture and demo. Git is needed for code
+capture and demo. Verify, stored-report extraction and snapshot restore need
+neither. Checking out a history bundle needs Git. Repository-only capture
+without Chrome produces HTML reports without PDFs. `report --pdf` copies stored
+PDFs; it cannot generate missing ones.
 
-If every authority fails, capture still writes the package and explains how to
-add a timestamp later. `--strict` makes that completed capture exit 10; otherwise
-it exits 0. Successful fallback or partial success counts as success. A valid
-token with an unknown trust anchor is retained as untrusted. `--no-timestamp`
-deliberately skips requests and does not trigger strict failure.
+## Try it
+
+After [installation](#install-it-yourself), run:
 
 ```sh
-bin/signetleaf capture . --confirm --tsa https://freetsa.org/tsr
-bin/signetleaf stamp capture.signetleaf.zip --dry-run
-bin/signetleaf stamp capture.signetleaf.zip
-bin/signetleaf verify capture-stamped.signetleaf.zip
-bin/signetleaf doctor --tsa https://freetsa.org/tsr
+signetleaf doctor
+signetleaf demo --out ../bakery-demo
 ```
 
-Stamp checks integrity first and writes a new `-stamped.signetleaf.zip` beside
-the input. It preserves the manifest, payload and every existing token byte for
-byte, including when adding to an already trusted package. Token names and
-package names get numeric suffixes on collision. If no authority returns a
-usable token, stamp exits 2 and writes no package.
+The demo serves a bakery website on your computer and captures an example
+repository. It writes a ZIP, a reader folder and a tampered ZIP for trying verify.
+If the public timestamp service is unavailable, it uses a local token labelled
+“Demo timestamp, not trusted”. That fallback gives verify exit 11.
 
-Trust comes from system roots, the embedded FreeTSA root, and optional PEM roots
-added with `--tsa-root roots.pem` on capture, stamp, verify, restore and report.
-Certificates inside the package alone never supply trust anchors. Verification
-checks certificate validity at the token’s `genTime`, rather than today. No
-network connection is needed for verification. `VERIFY.txt` includes manual
-OpenSSL commands with `-attime` for the same historical validity check.
+<p><img src="docs/media/demo-report.png" alt="Capture report from the bakery demo, showing example capture provenance" width="820"></p>
+<p><img src="docs/media/demo-seal.png" alt="Demo seal page with the visible untrusted demo timestamp warning" width="820"></p>
 
-Doctor checks Chrome's path and version in a temporary isolated browser,
-Git, output write access and configured
-TSA connections. Each failed check includes a fix. HTTPS checks include the TLS
-handshake. No timestamp request is sent, and reachability does not prove issuance.
-Report copies the reports generated during capture and returns exit 5 when a
-requested report language or PDF is absent.
+These images come from actual demo output using its labelled local fallback.
 
-## Try the bundled demo
+## Capture by hand
+
+From your repository root, write outside it. Here `..` is the parent directory;
+check it is the destination you want. List each authorised URL explicitly.
 
 ```sh
-bin/signetleaf demo
-bin/signetleaf demo --out ./bakery-demo --json
+OUT=$(cd .. && pwd -P)
+printf 'Output directory: %s\n' "$OUT"
+signetleaf capture https://staging.example.com . --out "$OUT" --dry-run
+signetleaf capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
-The demo captures two local bakery pages and a Git repository, then verifies
-the package. It prints the ZIP path, reader folder and report path. Open the
-report in that folder to read it locally. Chrome and Git are required.
+Read the complete plan, including exclusions. Add pages or hosts as more URL
+arguments; Signetleaf does not crawl. The package can combine those pages with
+one Git repository. Tracked files include current uncommitted edits.
+`--include-untracked` adds files Git does not ignore. `--history` adds a Git
+bundle, which can contain old secrets and unrelated work. Submodules are listed
+without their contents; LFS pointers remain pointers unless already materialised.
 
-Default timestamp authorities are tried first. Without external network access,
-the demo uses deliberately public test material and says “Demo timestamp, not
-trusted”. This never adds a trusted root. Demo still exits 0; ordinary verify
-on that package exits 11. Explicit `--tsa-root` trust is shown separately from
-the token's demo provenance.
+Default exclusions cover `.env` and common key files. The plan lists excluded
+candidates and reasons. Add `--exclude 'build/'` or `--exclude '*.key'` as needed.
+A trailing slash excludes a folder tree; `**` is unsupported. These rules cannot
+remove all private content. Read [capture and privacy](docs/capture.md) before
+sharing source or screenshots.
 
-The printed verify command checks `demo-tampered.signetleaf.zip`. This readable
-ZIP has one changed screenshot; verify exits 10 and names it. Repeated demos
-keep earlier artifacts and add `-2`, `-3` and further suffixes to occupied names.
-`--dry-run` starts no services and writes nothing. `--json` returns one document
-with capture details, verification answers, the verify exit code and actual paths.
+## Check a package
 
-## Capture web pages
+Use the path printed by capture:
 
 ```sh
-bin/signetleaf capture https://example.com --dry-run
-bin/signetleaf capture https://example.com . --confirm --out ./captures
-bin/signetleaf capture https://staging.example.com/account/ --login --confirm
-bin/signetleaf doctor --out ./captures
+signetleaf verify package.signetleaf.zip
 ```
 
-Each URL gets desktop (1440×900) and mobile (390×844, scale 2) captures.
-`--tablet` adds 768×1024 at scale 2. Chrome starts with a temporary isolated
-profile and closes when capture finishes. Use `--chrome <path>` to choose it.
-Signetleaf waits for load and one second without unfinished HTTP requests,
-with a shared 30-second limit. `--wait 2s` adds time after that wait, up to 30s.
-Scrolling loads lazy content, with a separate ten-second idle limit afterwards.
-Cookie banners stay untouched. Screenshots stop at 20,000 CSS px and record
-truncation. Desktop capture also saves a PDF and rendered DOM.
+Read three answers separately: Capture, Files and Timestamp. A capture can have
+problems even when verify exits 0. Exit 10 means changed or invalid content;
+exit 11 means no trusted timestamp. [Verification](docs/verify.md) explains both.
 
-Network metadata, document headers, console messages and redirects are stored
-per viewport. Failed requests, HTTP errors, visible password forms, mixed
-content, truncation and reached wait limits become capture problems. An
-unavailable target is recorded and other targets continue. If any target
-succeeds, capture writes a package and normally exits 0. `--strict` exits 10
-after writing when any target has problems or failed. All targets failing
-exits 2 and writes no package. A captured 401 or 404 page is a problem.
+A recipient can open `report/report.en.html` in the paired reader folder and
+follow its relative image links. Keep the folder together. The report PDF is a
+standalone reading copy. Neither requires installing Signetleaf to read.
+[Manual verification](docs/verify.md#without-installing-signetleaf) uses Python 3
+for manifest-file hashes and OpenSSL for the timestamp, with independent roots
+and the token's time. `VERIFY.txt` inside the ZIP contains the same steps.
 
-Use `SIGNETLEAF_AUTH=user:password` or `--auth user:password` for basic auth.
-Credentials are sent only to explicitly listed target origins, including their
-ports. URLs containing user info are rejected. `--login` needs an interactive
-terminal: log in in the visible Chrome window, then press Enter in the terminal.
-Capture uses the same browser context and tab, keeping session cookies and
-session storage. Chrome closes and its temporary profile is removed afterwards.
-Ctrl+C cancels capture and removes the temporary browser profile too.
+Matching hashes establish agreement with the manifest. They cannot authenticate
+an untimestamped manifest. A trusted timestamp gives an upper bound for when
+sealed files existed, rather than an independently checked capture time.
+A package cannot establish truthful or complete content, honest operation, that
+a server sent the bytes, delivery or acceptance, or that captured code produced
+the website. No legal effect or admissibility is promised. For important disputes,
+consider a neutral expert or notary during capture.
 
-Metadata masks credentials, cookies and known secret query values. Screenshots,
-PDFs and DOM can still contain private information; captured content is never
-rewritten. Review a package before sharing it. Separate host folders record
-system DNS results and TLS chains for each origin, including redirects. These
-facts come from separate connections and include metadata lookup failures.
+## Timestamps and network access
 
-The ZIP stores page files under numbered `web/` folders and host facts under
-`hosts/<origin-id>/`, where the ID is the SHA-256 of the canonical origin.
-Each screenshot also has a 600 px JPEG thumbnail linked to its full PNG in the report.
+DigiCert is the default authority; FreeTSA is the fallback. Repeat `--tsa` to
+use custom authorities instead. `stamp` adds tokens later without changing the
+manifest or captured files. See [timestamps](docs/timestamps.md).
 
-## Read and share reports
+Trust comes from system roots, the embedded FreeTSA root, or independently
+supplied explicit roots, never certificates merely carried in the package.
+Offline checks cannot see later revocation. Signetleaf v0.1 does not assess
+eIDAS qualification or label timestamps qualified.
 
-Capture stores reports at `report/report.en.html`, `report/report.de.html` and
-matching `.pdf` paths. Use `--lang en`, `--lang de` or `--lang both` (the default).
-PDF generation uses Chrome. A repository capture without Chrome stores HTML
-only and explains the missing PDFs before and after capture.
+Capture contacts target pages and their resources, DNS and timestamp authorities.
+A TSA receives a hash and normal network metadata. Timestamp requests use standard
+proxy settings; doctor's connection probes do not honour proxies. Metadata masking
+and exclusions cannot remove private content from screenshots, DOM, source or
+history. Inspect the package before sharing it. There are no Signetleaf accounts
+or automatic package uploads.
 
-The reader folder is next to the ZIP, with the same name minus `.zip`.
-Open `<reader folder>/report/report.en.html` or the German report locally.
-The folder includes all report images, available report PDFs, `VERIFY.txt` and
-`SEAL.html`. Send the ZIP for verification, or a PDF for a standalone report.
+## Read more
 
-```sh
-bin/signetleaf report capture.signetleaf.zip --out reader --lang de --pdf
-bin/signetleaf report capture.signetleaf.zip --out html-reader --lang both
-```
+[Quickstart](docs/quickstart.md), [capture](docs/capture.md),
+[commands](docs/commands.md), [package format](docs/package-format.md),
+[recipient guide](docs/for-recipients.md) and [FAQ](docs/faq.md) explain daily use.
+German guides cover [Abnahme](docs/de/abnahme.md) and
+[empfangene Pakete](docs/de/fuer-empfaenger.md).
 
-`report` checks files and timestamp tokens before writing. It copies the
-selected stored HTML reports and images. `--pdf` also copies stored PDFs;
-extraction needs no Chrome. Without `--out`, it uses the package path minus
-`.zip`. A non-empty destination is refused with exit 1. An absent requested
-language or PDF returns exit 5; changed or missing authenticated files return
-exit 10. No reader output is written in these cases.
-
-The seal page shows the manifest hash and timestamp trust. It is outside the
-manifest and serves as a reading aid. Capture, stamp and report generate it
-from checked data; report never copies a stored seal page. `--tsa-root` adds
-independently obtained trust roots for report extraction too. An intact package
-with missing or untrusted timestamps can still be extracted; matching hashes
-alone do not establish an untimestamped manifest's authenticity.
-
-Stamp writes a fresh reader folder beside its new ZIP. It refreshes the seal
-while preserving reports, payload, manifest and existing tokens byte for byte.
-
-## Check and restore
-
-Use the package path printed by capture:
-
-```sh
-bin/signetleaf verify capture.signetleaf.zip
-bin/signetleaf verify capture.signetleaf.zip --json
-bin/signetleaf restore capture.signetleaf.zip --to recovered --dry-run
-bin/signetleaf restore capture.signetleaf.zip --to recovered
-```
-
-Verify gives separate capture, file and timestamp answers, with authority, time and trust in normal text. `--json` also gives the full
-signer subject, serial, accuracy and trust reason. Matching files with
-at least one trusted timestamp exit **0**. No trusted timestamp exits **11**.
-Changed, missing or unexpected files, malformed tokens, bad signatures and
-manifest imprint mismatches exit **10**, even if another token is trusted.
-Missing or mismatched signer certificates, unsuitable certificate purposes and
-untrusted chains cannot establish trust. Missing input exits 5,
-invalid arguments exit 1, and unsupported formats or operational failures exit
-2. Completed JSON verdicts contain one result on stdout, including at exits
-10 and 11, and repeated checks return identical bytes.
-
-Restore accepts an intact untimestamped package and checks its contents before
-writing. It restores file bytes, permission modes, modification times and safe
-links into a new or empty folder. History stays beside it as
-`recovered.history.bundle`, with a printed `git clone` command for a separate
-checkout. An existing history sidecar or non-empty destination is refused.
-
-The ZIP contains `manifest.json`, complete timestamp responses as
-`manifest.json.<authority>.tsr`, bilingual `VERIFY.txt` instructions, and the
-repository's `git.json`, `files.json`, `snapshot.tar.gz` and optional
-`history.bundle`. Names get `-2`, `-3` and further suffixes on collision. A
-reserved reader-folder name also causes a new suffix. Every command that writes
-files supports `--dry-run`, without creating files or contacting the network.
-
-Hashes alone do not establish an untimestamped manifest's authenticity. Someone
-could replace a file and its hash together. A trusted timestamp can establish
-that files existed no later than its time; it does not independently confirm
-capture time. Offline checks cannot see later certificate revocation. Signetleaf
-does not assess eIDAS qualification. The package does not establish truthful content, honest operation,
-delivery, acceptance, or that code produced a website. For important disputes,
-consider having a neutral expert or notary present during capture.
-
-## Development
-
-```sh
-make check
-make conformance
-```
-
-The checks use local fixtures and command-local Git identities. They do not
-change Git configuration or contact timestamp services. `make conformance` uses
-an ephemeral local test authority and trusted verification as its successful
-read probe. Test authority keys stay in memory.
-
-## License
-
-MIT
+Signetleaf is [MIT licensed](LICENSE). For source changes, read
+[CONTRIBUTING.md](CONTRIBUTING.md). [Release checks](RELEASE.md) distinguish
+local validation from publication and native-platform checks still pending.

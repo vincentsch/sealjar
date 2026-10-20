@@ -23,7 +23,7 @@ func reportCommand() *rungrad.Command {
 	c := command("report <package>", "Copy stored reports after checking package integrity and timestamp trust")
 	c.Mutates = true
 	c.Args = cobra.ExactArgs(1)
-	c.Examples = []string{"signetleaf report capture.signetleaf.zip --out reader", "signetleaf report capture.signetleaf.zip --lang de --pdf --dry-run"}
+	c.Examples = []string{"signetleaf report capture.signetleaf.zip --out reader", "signetleaf report capture.signetleaf.zip --lang de --pdf --out reader-de --dry-run"}
 	c.Related = []string{"signetleaf verify", "signetleaf restore"}
 	c.Configure = func(cmd *cobra.Command) {
 		f := cmd.Flags()

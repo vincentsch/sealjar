@@ -10,3 +10,5 @@
 - Check Chrome, Git, output access and timestamp endpoint connections with `doctor`.
 - Install a checksum-verified binary on Linux, macOS or Git Bash on Windows.
 - Build six platform assets with version metadata and generated command documentation.
+- Follow agent-led or manual first-capture guides and English/German recipient checks.
+- Read package structure, manual hash and timestamp checks, privacy and trust limits.

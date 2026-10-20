@@ -24,6 +24,7 @@ build-all:
 test:
 	go test ./...
 	python3 scripts/test-release-notes.py
+	python3 scripts/test-docs.py
 
 race:
 	go test -race ./...

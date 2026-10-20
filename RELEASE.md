@@ -102,3 +102,27 @@ Trust remains system roots plus embedded FreeTSA and explicit user roots. If def
 trust fails, hold any macOS default-trust claim and document the independent root
 path and explicit-root result. Do not silently add roots or change trust policy.
 Remove the temporary repository and captures after recording concise results.
+
+## Local documentation checks
+
+The Linux amd64 documentation check on 2026-10-21 used an exact-HEAD local clone
+with the intended source changes overlaid and staged. This records a source
+snapshot, rather than claiming a clean implementation commit. The local release
+fixture built all six assets and installed both its pinned and latest Linux
+versions. The quickstart used the installed binary with the ephemeral website
+Handler and an independently supplied local TSA root.
+
+Local capture covered multiple pages, tablet views, basic auth, current code,
+exclusions and history. Verification reported Complete, Unchanged and Trusted
+with the supplied fixture root. The manual Python hash check passed before a
+payload edit and named the changed path afterwards. OpenSSL verified the token
+with the fixture root at its genTime using `-attime`. A readable tampered ZIP
+returned 10 and named the changed screenshot. The demo used blocked public TSA
+connections and its labelled untrusted fallback; verification returned 11.
+Report and seal review covered 390, 768 and 1440 px and A4, without shared Chrome.
+
+Manual `--login` was not executed because it needs a person. Public installer,
+public module install and GitHub prompt fetching remain in the single pending
+list above. Native Windows PowerShell download/hash commands and native macOS
+execution were not run on this Linux host. Local fixture checks do not establish
+public downloads, hosted jobs, provenance attestations or native platform results.

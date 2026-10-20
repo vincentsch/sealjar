@@ -40,3 +40,7 @@ of legal effect or claims that a timestamp establishes more than the tool checks
 
 Keep changes focused and test the behavior a person relies on. Never commit
 credentials, private captures or machine-specific files.
+
+Documentation checks run with `python3 scripts/test-docs.py` as part of `make test`.
+For local capture examples, use the [fixture quickstart](docs/quickstart.md#try-the-instructions-without-an-external-site).
+The test site includes basic-auth and login routes; a static server cannot replace it.
