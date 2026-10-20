@@ -1,16 +1,17 @@
 # Signetleaf
 
-Signetleaf keeps the current files from a Git repository in a portable package.
-It includes uncommitted edits, records excluded files, checks the package's
-hashes, adds independent timestamps and restores the snapshot into a new folder.
+Signetleaf captures web pages and current Git files in a portable package.
+It records capture problems, checks file hashes, adds independent timestamps
+and restores repository snapshots into a new folder.
 
-This version captures repositories and verifies RFC 3161 timestamps offline.
-Website capture and report generation are still being developed.
+This version captures websites and repositories and verifies RFC 3161 timestamps
+offline. Report generation is still being developed.
 
 ## Build and capture
 
-Go 1.27.2 and Git are required to build and capture. Go can download the pinned
-toolchain automatically. Verify and restore need only the compiled binary.
+Go 1.27.2 builds the binary and can download the pinned toolchain automatically.
+Repository capture needs Git. Website capture needs installed Chrome or Chromium.
+Verify and restore need only the compiled binary.
 
 ```sh
 go build -o bin/signetleaf ./cmd/signetleaf
@@ -18,7 +19,7 @@ bin/signetleaf capture . --dry-run
 bin/signetleaf capture . --confirm --out ./captures
 ```
 
-Capture accepts paths inside one repository. It uses the repository root and
+Capture accepts HTTP(S) URLs, paths inside one repository, or both. It uses the repository root and
 shows a plan before writing. Without `--confirm`, it asks in an interactive
 terminal and refuses unattended capture. The repository must have a commit.
 
@@ -84,10 +85,56 @@ checks certificate validity at the token’s `genTime`, rather than today. No
 network connection is needed for verification. `VERIFY.txt` includes manual
 OpenSSL commands with `-attime` for the same historical validity check.
 
-Doctor currently checks timestamp endpoint connections without sending a
-request; a connection does not prove issuance would succeed. Report copies
-stored report artifacts with trust results, but this version’s captures do not
-yet generate those artifacts and report returns exit 5 when they are absent.
+Doctor checks Chrome's path and version in a temporary isolated browser,
+Git, output write access and configured
+TSA connections. Each failed check includes a fix. HTTPS checks include the TLS
+handshake. No timestamp request is sent, and reachability does not prove issuance.
+Report copies stored reports, but captures do not yet generate them. Report
+returns exit 5 when these artifacts are absent.
+
+## Capture web pages
+
+```sh
+bin/signetleaf capture https://example.com --dry-run
+bin/signetleaf capture https://example.com . --confirm --out ./captures
+bin/signetleaf capture https://staging.example.com/account/ --login --confirm
+bin/signetleaf doctor --out ./captures
+```
+
+Each URL gets desktop (1440×900) and mobile (390×844, scale 2) captures.
+`--tablet` adds 768×1024 at scale 2. Chrome starts with a temporary isolated
+profile and closes when capture finishes. Use `--chrome <path>` to choose it.
+Signetleaf waits for load and one second without unfinished HTTP requests,
+with a shared 30-second limit. `--wait 2s` adds time after that wait, up to 30s.
+Scrolling loads lazy content, with a separate ten-second idle limit afterwards.
+Cookie banners stay untouched. Screenshots stop at 20,000 CSS px and record
+truncation. Desktop capture also saves a PDF and rendered DOM.
+
+Network metadata, document headers, console messages and redirects are stored
+per viewport. Failed requests, HTTP errors, visible password forms, mixed
+content, truncation and reached wait limits become capture problems. An
+unavailable target is recorded and other targets continue. If any target
+succeeds, capture writes a package and normally exits 0. `--strict` exits 10
+after writing when any target has problems or failed. All targets failing
+exits 2 and writes no package. A captured 401 or 404 page is a problem.
+
+Use `SIGNETLEAF_AUTH=user:password` or `--auth user:password` for basic auth.
+Credentials are sent only to explicitly listed target origins, including their
+ports. URLs containing user info are rejected. `--login` needs an interactive
+terminal: log in in the visible Chrome window, then press Enter in the terminal.
+Capture uses the same browser context and tab, keeping session cookies and
+session storage. Chrome closes and its temporary profile is removed afterwards.
+Ctrl+C cancels capture and removes the temporary browser profile too.
+
+Metadata masks credentials, cookies and known secret query values. Screenshots,
+PDFs and DOM can still contain private information; captured content is never
+rewritten. Review a package before sharing it. Separate host folders record
+system DNS results and TLS chains for each origin, including redirects. These
+facts come from separate connections and include metadata lookup failures.
+
+The ZIP stores page files under numbered `web/` folders and host facts under
+`hosts/<origin-id>/`, where the ID is the SHA-256 of the canonical origin.
+Reports, thumbnails, seal pages and reader folders are not generated yet.
 
 ## Check and restore
 

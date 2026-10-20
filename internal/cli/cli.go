@@ -2,14 +2,19 @@
 package cli
 
 import (
+	"bufio"
+	"context"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/oklog/ulid/v2"
@@ -19,6 +24,7 @@ import (
 	"github.com/vincentsch/signetleaf/internal/repo"
 	"github.com/vincentsch/signetleaf/internal/tsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
+	"github.com/vincentsch/signetleaf/internal/web"
 )
 
 const Version = "0.1.0"
@@ -62,8 +68,13 @@ func inputError(err error) error {
 	return failure(2, err)
 }
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	defer stop()
+	restoreSignals := context.AfterFunc(ctx, stop)
+	defer restoreSignals()
 	verdict := 0
-	app := rungrad.New(rungrad.AppConfig{Name: "signetleaf", Short: "Capture and check repository snapshots", Long: "Keep the current files from a Git repository in a portable package. Check its hashes and restore the snapshot later.", Version: Version})
+	app := rungrad.New(rungrad.AppConfig{Name: "signetleaf", Short: "Capture websites and repository snapshots", Long: "Keep web pages and current Git files in a portable package. Check its hashes and timestamps offline.", Version: Version})
+	app.Root().SetContext(ctx)
 	app.AddCommand(captureCommand(&verdict))
 	app.AddCommand(verifyCommand(&verdict))
 	app.AddCommand(restoreCommand())
@@ -89,20 +100,30 @@ type captureOptions struct {
 	strict                                     bool
 	authorities                                []string
 	root                                       string
+	chrome, auth                               string
+	tablet, login                              bool
+	wait                                       time.Duration
 }
 type captureResult struct {
-	Authorities []string      `json:"timestamp_authorities"`
-	NextStep    string        `json:"next_step,omitempty"`
-	Package     string        `json:"package,omitempty"`
-	Size        int64         `json:"size,omitempty"`
-	DryRun      bool          `json:"dry_run"`
-	Plan        *repo.Plan    `json:"plan"`
-	Timestamp   string        `json:"timestamp"`
-	Attempts    []tsa.Attempt `json:"timestamp_attempts"`
-	Limitations []string      `json:"limitations"`
+	Targets      []packagefmt.Target `json:"targets,omitempty"`
+	Pages        []string            `json:"pages,omitempty"`
+	Widths       []int               `json:"widths,omitempty"`
+	ReaderFolder string              `json:"reader_folder,omitempty"`
+	Authorities  []string            `json:"timestamp_authorities"`
+	NextStep     string              `json:"next_step,omitempty"`
+	Package      string              `json:"package,omitempty"`
+	Size         int64               `json:"size,omitempty"`
+	DryRun       bool                `json:"dry_run"`
+	Plan         *repo.Plan          `json:"plan"`
+	Timestamp    string              `json:"timestamp"`
+	Attempts     []tsa.Attempt       `json:"timestamp_attempts"`
+	Limitations  []string            `json:"limitations"`
 }
 
 func renderPlan(w io.Writer, p *repo.Plan) {
+	if p == nil {
+		return
+	}
 	f := p.Facts
 	fmt.Fprintf(w, "Signetleaf will capture:\n\n  Code      %s (git, branch %s, %s, %d uncommitted changes)\n            %d files, %d bytes\n", f.Name, f.Branch, f.Commit, f.Status.Modified+f.Status.Added+f.Status.Deleted, len(p.Paths), p.TotalSize)
 	for _, e := range f.Excluded {
@@ -119,9 +140,22 @@ func renderPlan(w io.Writer, p *repo.Plan) {
 		fmt.Fprintln(w, "History can contain old secrets and unrelated work.")
 	}
 }
+func waitForLoginEnter(ctx context.Context, input io.Reader) error {
+	read := make(chan error, 1)
+	go func() { _, err := bufio.NewReader(input).ReadString('\n'); read <- err }()
+	select {
+	case err := <-read:
+		if err != nil {
+			return fmt.Errorf("Login cancelled before Enter was received.")
+		}
+		return nil
+	case <-ctx.Done():
+		return fmt.Errorf("Login cancelled. Chrome was closed.")
+	}
+}
 func captureCommand(verdict *int) *rungrad.Command {
 	opt := captureOptions{}
-	c := command("capture <path>...", "Capture the current files from one Git repository")
+	c := command("capture <target>...", "Capture web pages and current files from one Git repository")
 	c.Mutates = true
 	c.Args = cobra.MinimumNArgs(1)
 	c.Examples = []string{"signetleaf capture . --confirm --no-timestamp", "signetleaf capture . --dry-run --no-timestamp --include-untracked"}
@@ -137,13 +171,30 @@ func captureCommand(verdict *int) *rungrad.Command {
 		f.BoolVar(&opt.confirmed, "confirm", false, "Capture without asking to continue")
 		f.StringArrayVar(&opt.authorities, "tsa", nil, "Request this timestamp authority instead of defaults (repeatable)")
 		f.StringVar(&opt.root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
-		f.BoolVar(&opt.strict, "strict", false, "Exit 10 after writing if requested timestamping fails")
+		f.BoolVar(&opt.strict, "strict", false, "Exit 10 after writing if a target has problems or requested timestamping fails")
+		f.StringVar(&opt.chrome, "chrome", "", "Use this Chrome or Chromium executable")
+		f.StringVar(&opt.auth, "auth", "", "Send basic auth user:password only to listed target origins (or SIGNETLEAF_AUTH)")
+		f.BoolVar(&opt.login, "login", false, "Open Chrome visibly for login, then press Enter in this terminal")
+		f.BoolVar(&opt.tablet, "tablet", false, "Also capture a 768×1024 tablet viewport at scale 2")
+		f.DurationVar(&opt.wait, "wait", 0, "Wait extra after load (maximum 30s)")
 		f.BoolVar(&opt.noTimestamp, "no-timestamp", false, "Create a package without a timestamp")
 	}
 	c.Run = func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
-		if _, err := exec.LookPath("git"); err != nil {
-			return rungrad.NewError(2, "Git was not found. Install Git to capture a repository. Verify and restore do not need Git.")
+		if opt.wait < 0 || opt.wait > 30*time.Second {
+			return rungrad.NewError(1, "--wait must be between 0s and 30s.")
+		}
+		if opt.login && !f.CanPrompt() {
+			return rungrad.NewError(1, "--login requires an interactive terminal. Run capture from a terminal and press Enter after login.")
+		}
+		if opt.auth == "" {
+			opt.auth = os.Getenv("SIGNETLEAF_AUTH")
+		}
+		if opt.auth != "" {
+			if _, _, ok := strings.Cut(opt.auth, ":"); !ok {
+				return rungrad.NewError(1, "Basic auth needs user:password.")
+			}
+			f.RegisterSecret(opt.auth)
 		}
 		authorities, err := tsa.Authorities(opt.authorities)
 		if err != nil {
@@ -168,7 +219,27 @@ func captureCommand(verdict *int) *rungrad.Command {
 			labels[k] = v
 		}
 		root := ""
-		for _, target := range args {
+		urls := []string{}
+		positions := []int{}
+		for i, target := range args {
+			if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") {
+				u, e := url.Parse(target)
+				if e != nil {
+					return rungrad.NewError(1, "Invalid target URL. Check its host and port.")
+				}
+				if u.User != nil {
+					return rungrad.NewError(1, "Target URLs cannot contain user info. Use --auth or SIGNETLEAF_AUTH instead.")
+				}
+				if _, e = web.Origin(target); e != nil {
+					return failure(1, e)
+				}
+				urls = append(urls, target)
+				positions = append(positions, i+1)
+				continue
+			}
+			if _, e := exec.LookPath("git"); e != nil {
+				return rungrad.NewError(2, "Git was not found. Install Git to capture a repository. Verify and restore do not need Git.")
+			}
 			r, e := repo.Root(ctx, target)
 			if e != nil {
 				return failure(1, e)
@@ -178,11 +249,34 @@ func captureCommand(verdict *int) *rungrad.Command {
 			}
 			root = r
 		}
-		p, err := repo.Inspect(ctx, root, repo.Options{IncludeUntracked: opt.untracked, History: opt.history, Exclude: opt.exclude})
-		if err != nil {
-			return failure(2, err)
+		if opt.login && len(urls) == 0 {
+			return rungrad.NewError(1, "--login needs a web page target.")
 		}
+		var p *repo.Plan
+		if root != "" {
+			p, err = repo.Inspect(ctx, root, repo.Options{IncludeUntracked: opt.untracked, History: opt.history, Exclude: opt.exclude})
+			if err != nil {
+				return failure(2, err)
+			}
+		}
+
 		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Signetleaf does not assess eIDAS qualification."}}
+		if len(urls) > 0 {
+			result.Widths = []int{1440, 390}
+			if opt.tablet {
+				result.Widths = append(result.Widths, 768)
+			}
+			for _, u := range urls {
+				result.Pages = append(result.Pages, web.MaskURL(u))
+			}
+			result.Limitations = append(result.Limitations, "Captured images, DOM and PDFs may contain private information. Signetleaf masks metadata but does not rewrite captured content.")
+		}
+		renderCapturePlan := func(w io.Writer) {
+			renderPlan(w, p)
+			for _, u := range result.Pages {
+				fmt.Fprintf(w, "  Page      %s (widths %v)\n", u, result.Widths)
+			}
+		}
 		if !opt.noTimestamp {
 			result.Authorities = authorities
 		}
@@ -191,8 +285,8 @@ func captureCommand(verdict *int) *rungrad.Command {
 		}
 		if f.DryRun() {
 			return f.WriteResult(result, func(w io.Writer) {
-				fmt.Fprintln(w, "DRY RUN: would capture this repository; no files were written.")
-				renderPlan(w, p)
+				fmt.Fprintln(w, "DRY RUN: would capture these targets; no files were written.")
+				renderCapturePlan(w)
 				if !opt.noTimestamp {
 					fmt.Fprintf(w, "Timestamp authorities: %s\n", strings.Join(authorities, ", "))
 				} else {
@@ -201,7 +295,7 @@ func captureCommand(verdict *int) *rungrad.Command {
 			})
 		}
 		if !f.Flags.JSON && !f.Flags.Quiet {
-			renderPlan(f.Stdout, p)
+			renderCapturePlan(f.Stdout)
 			if !opt.noTimestamp {
 				fmt.Fprintf(f.Stdout, "Timestamp authorities: %s\n", strings.Join(authorities, ", "))
 			} else {
@@ -226,19 +320,55 @@ func captureCommand(verdict *int) *rungrad.Command {
 			return failure(2, err)
 		}
 		defer os.RemoveAll(work)
-		payload := "repo/" + slug(p.Facts.Name)
-		dir := filepath.Join(work, filepath.FromSlash(payload))
-		if err = os.MkdirAll(dir, 0700); err != nil {
-			return failure(2, err)
+		targets := []packagefmt.Target{}
+		var webResult web.Result
+		if p != nil {
+			payload := "repo/" + slug(p.Facts.Name)
+			dir, e := filepath.Abs(filepath.Join(work, filepath.FromSlash(payload)))
+			if e != nil {
+				return failure(2, e)
+			}
+			if e = os.MkdirAll(dir, 0700); e != nil {
+				return failure(2, e)
+			}
+			if e = repo.Snapshot(ctx, p, dir); e != nil {
+				return failure(2, e)
+			}
+			targets = append(targets, packagefmt.Target{Kind: "repo", Name: p.Facts.Name, State: "complete", Commit: p.Facts.Commit, Changes: p.Facts.Status.Modified + p.Facts.Status.Added + p.Facts.Status.Deleted, Payload: payload})
 		}
-		// Bundle output must be absolute because Git runs with a different -C root.
-		dir, err = filepath.Abs(dir)
-		if err != nil {
-			return failure(2, err)
+		if len(urls) > 0 {
+			webResult, err = web.Capture(ctx, work, urls, positions, web.Options{Progress: func(message string) { f.Infof("%s", message) }, Chrome: opt.chrome, Tablet: opt.tablet, Wait: opt.wait, Auth: opt.auth, Login: opt.login, LoginWait: func(ctx context.Context) error {
+				fmt.Fprintln(f.Stderr, "Log in in the Chrome window, then press Enter here to capture.")
+				return waitForLoginEnter(ctx, f.Stdin)
+			}})
+			if err != nil {
+				return failure(2, err)
+			}
+			targets = append(targets, webResult.Targets...)
 		}
-		if err = repo.Snapshot(ctx, p, dir); err != nil {
-			return failure(2, err)
+		succeeded := false
+		for _, target := range targets {
+			if target.State != "failed" {
+				succeeded = true
+			}
+			if opt.strict && target.State != "complete" {
+				*verdict = 10
+			}
 		}
+		if !succeeded {
+			details := []string{"No target document could be captured."}
+			for _, target := range targets {
+				note := "No target document was captured"
+				if len(target.Notes) > 0 {
+					note = target.Notes[0]
+				}
+				details = append(details, fmt.Sprintf("%s: %s", target.URL, note))
+			}
+			details = append(details, "Check the target URLs and network, then try again. No package was written.")
+			return rungrad.NewError(2, strings.Join(details, "\n"))
+		}
+		result.Targets = targets
+
 		if err = os.WriteFile(filepath.Join(work, "VERIFY.txt"), packagefmt.Instructions, 0600); err != nil {
 			return failure(2, err)
 		}
@@ -259,7 +389,14 @@ func captureCommand(verdict *int) *rungrad.Command {
 		if zone == "Local" {
 			zone = "UTC"
 		}
-		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: opt.noTimestamp}, Targets: []packagefmt.Target{{Kind: "repo", Name: p.Facts.Name, State: "complete", Commit: p.Facts.Commit, Changes: p.Facts.Status.Modified + p.Facts.Status.Added + p.Facts.Status.Deleted, Payload: payload}}, Environment: packagefmt.Environment{OS: runtime.GOOS, Arch: runtime.GOARCH, GitVersion: repo.GitVersion(ctx)}, TimestampAuthorities: []string{}}
+		env := webResult.Environment
+		env.OS = runtime.GOOS
+		env.Arch = runtime.GOARCH
+		if p != nil {
+			env.GitVersion = repo.GitVersion(ctx)
+		}
+		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: opt.noTimestamp, ManualLogin: opt.login, BasicAuth: opt.auth != "" && len(urls) > 0, Wait: opt.wait.String(), Widths: result.Widths}, Targets: targets, Environment: env, Hosts: webResult.Hosts, TimestampAuthorities: []string{}}
+
 		if !opt.noTimestamp {
 			m.TimestampAuthorities = authorities
 		}
@@ -287,7 +424,12 @@ func captureCommand(verdict *int) *rungrad.Command {
 		}
 		name := opt.name
 		if name == "" {
-			name = slug(p.Facts.Name)
+			if p != nil {
+				name = slug(p.Facts.Name)
+			} else {
+				u, _ := url.Parse(urls[0])
+				name = slug(u.Hostname())
+			}
 		}
 		output, err := packagefmt.Write(work, opt.out, name, started)
 		if err != nil {
@@ -301,6 +443,14 @@ func captureCommand(verdict *int) *rungrad.Command {
 		result.Size = info.Size()
 		return f.WriteResult(result, func(w io.Writer) {
 			fmt.Fprintf(w, "\nCaptured  %s (%d bytes)\n          Timestamp: %s\n", result.Package, result.Size, result.Timestamp)
+			for _, target := range targets {
+				if target.Kind == "web" {
+					fmt.Fprintf(w, "Page %s: %s\n", target.URL, target.State)
+					for _, note := range target.Notes {
+						fmt.Fprintln(w, "  "+note)
+					}
+				}
+			}
 			renderAttempts(w, result.Attempts)
 			if !opt.noTimestamp && result.Timestamp == "Not timestamped" {
 				fmt.Fprintln(w, "No authority returned a usable timestamp. Add one later with signetleaf stamp <package>.")
@@ -388,10 +538,16 @@ func restoreCommand() *rungrad.Command {
 			verify.Render(&b, v)
 			return failure(10, fmt.Errorf("restore stopped: %s", b.String()))
 		}
-		if len(r.Manifest.Targets) != 1 {
+		var repositories []packagefmt.Target
+		for _, target := range r.Manifest.Targets {
+			if target.Kind == "repo" {
+				repositories = append(repositories, target)
+			}
+		}
+		if len(repositories) != 1 {
 			return rungrad.NewError(10, "Restore needs exactly one repository snapshot.")
 		}
-		prefix := r.Manifest.Targets[0].Payload
+		prefix := repositories[0].Payload
 		if err = repo.CheckSnapshot(r, prefix, ""); err != nil {
 			return inputError(err)
 		}

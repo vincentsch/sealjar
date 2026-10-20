@@ -47,6 +47,10 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 	}
 	targets := []string{}
 	for _, t := range r.Manifest.Targets {
+		if t.Kind == "web" {
+			targets = append(targets, fmt.Sprintf("Page %s: %s. %s", t.URL, t.State, strings.Join(t.Notes, "; ")))
+			continue
+		}
 		targets = append(targets, fmt.Sprintf("Repository %s at %s with %d uncommitted changes.", t.Name, t.Commit, t.Changes))
 	}
 	result := Result{
@@ -54,6 +58,11 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 		Files:       Files{"Unchanged", fmt.Sprintf("All %d files listed in the manifest match their recorded hashes.", matching), matching, differences},
 		Timestamp:   Answer{"Not timestamped", "This package has no timestamp."},
 		Limitations: []string{"Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp's time is an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation."},
+	}
+	for _, target := range r.Manifest.Targets {
+		if target.State != "complete" {
+			result.Capture.State = "Problems"
+		}
 	}
 	result.Tokens = []tsa.Result{}
 	code := 11
@@ -96,6 +105,9 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 
 	if code != 10 {
 		for _, target := range r.Manifest.Targets {
+			if target.Kind != "repo" {
+				continue
+			}
 			if err := repo.CheckSnapshot(r, target.Payload, ""); err != nil {
 				if !packagefmt.IsMalformed(err) {
 					return result, 2, err

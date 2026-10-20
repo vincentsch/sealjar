@@ -20,23 +20,55 @@ type File struct {
 	SHA256 string `json:"sha256"`
 }
 type Target struct {
-	Kind    string `json:"kind"`
-	Name    string `json:"name"`
-	State   string `json:"state"`
-	Commit  string `json:"commit"`
-	Changes int    `json:"changes"`
-	Payload string `json:"payload"`
+	Kind      string     `json:"kind"`
+	Name      string     `json:"name"`
+	State     string     `json:"state"`
+	Commit    string     `json:"commit"`
+	Changes   int        `json:"changes"`
+	Payload   string     `json:"payload"`
+	URL       string     `json:"url,omitempty"`
+	FinalURL  string     `json:"final_url,omitempty"`
+	Title     string     `json:"title,omitempty"`
+	Viewports []Viewport `json:"viewports,omitempty"`
+	Notes     []string   `json:"notes,omitempty"`
+}
+type Viewport struct {
+	Name           string   `json:"name"`
+	Width          int      `json:"width"`
+	Height         int      `json:"height"`
+	Scale          float64  `json:"scale"`
+	State          string   `json:"state"`
+	DocumentStatus int64    `json:"document_status"`
+	FailedRequests int      `json:"failed_requests"`
+	FailedURLs     []string `json:"failed_urls,omitempty"`
+	MixedContent   bool     `json:"mixed_content"`
+	Truncated      bool     `json:"truncated"`
+	PasswordForm   bool     `json:"password_form"`
+	Timeouts       []string `json:"timeouts,omitempty"`
+	Notes          []string `json:"notes,omitempty"`
+}
+type Host struct {
+	Origin   string `json:"origin"`
+	OriginID string `json:"origin_id"`
 }
 type Settings struct {
 	IncludeUntracked bool     `json:"include_untracked"`
 	History          bool     `json:"history"`
 	Exclude          []string `json:"exclude"`
 	NoTimestamp      bool     `json:"no_timestamp"`
+	BasicAuth        bool     `json:"basic_auth,omitempty"`
+	ManualLogin      bool     `json:"manual_login,omitempty"`
+	Wait             string   `json:"wait,omitempty"`
+	Widths           []int    `json:"widths,omitempty"`
 }
 type Environment struct {
-	OS         string `json:"os"`
-	Arch       string `json:"arch"`
-	GitVersion string `json:"git_version"`
+	OS            string `json:"os"`
+	Arch          string `json:"arch"`
+	GitVersion    string `json:"git_version"`
+	ChromeVersion string `json:"chrome_version,omitempty"`
+	UserAgent     string `json:"user_agent,omitempty"`
+	Locale        string `json:"locale,omitempty"`
+	TimeZone      string `json:"time_zone,omitempty"`
 }
 type Manifest struct {
 	Type                 string            `json:"type"`
@@ -50,6 +82,7 @@ type Manifest struct {
 	Targets              []Target          `json:"targets"`
 	Environment          Environment       `json:"environment"`
 	TimestampAuthorities []string          `json:"timestamp_authorities"`
+	Hosts                []Host            `json:"hosts,omitempty"`
 	Files                []File            `json:"files"`
 }
 
@@ -104,7 +137,10 @@ func (m Manifest) Validate() error {
 		previous = f.Path
 	}
 	for _, t := range m.Targets {
-		if t.Kind != "repo" || t.State != "complete" || t.Name == "" {
+		if t.Name == "" || (t.Kind != "repo" && t.Kind != "web") || (t.State != "complete" && t.State != "problems" && t.State != "failed") {
+			return fmt.Errorf("invalid capture target")
+		}
+		if t.Kind == "repo" && t.State != "complete" {
 			return fmt.Errorf("invalid repository target")
 		}
 		if err := SafePath(t.Payload); err != nil {

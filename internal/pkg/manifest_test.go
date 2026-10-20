@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestNormativeManifestFormat(t *testing.T) {
 	}
 	var fields map[string]json.RawMessage
 	json.Unmarshal(b, &fields)
-	want := []string{"type", "tool_version", "capture_id", "started", "ended", "time_zone", "labels", "settings", "targets", "environment", "timestamp_authorities", "files"}
+	want := []string{"type", "tool_version", "capture_id", "started", "ended", "time_zone", "labels", "settings", "targets", "environment", "timestamp_authorities", "hosts", "files"}
 	if len(fields) != len(want) {
 		t.Fatal("example fields")
 	}
@@ -40,6 +41,24 @@ func TestNormativeManifestFormat(t *testing.T) {
 		if _, ok := fields[key]; !ok {
 			t.Errorf("missing %s", key)
 		}
+	}
+	if len(m.Hosts) != 1 || m.Hosts[0].Origin != "https://example.com:443" || m.Hosts[0].OriginID != Hash([]byte(m.Hosts[0].Origin)) {
+		t.Fatal("example origin fields")
+	}
+	var hostFields []map[string]json.RawMessage
+	if err := json.Unmarshal(fields["hosts"], &hostFields); err != nil {
+		t.Fatal(err)
+	}
+	if len(hostFields[0]) != 2 || hostFields[0]["origin"] == nil || hostFields[0]["origin_id"] == nil {
+		t.Fatal("example host field names")
+	}
+	webFile, hostFile := false, false
+	for _, file := range m.Files {
+		webFile = webFile || strings.HasPrefix(file.Path, "web/")
+		hostFile = hostFile || strings.HasPrefix(file.Path, "hosts/"+m.Hosts[0].OriginID+"/")
+	}
+	if !webFile || !hostFile {
+		t.Fatal("example omits web or host payload records")
 	}
 	original := append([]File{}, m.Files...)
 	m.Files = append(m.Files, m.Files[0])

@@ -22,6 +22,43 @@
       "commit": "0123456789abcdef0123456789abcdef01234567",
       "changes": 0,
       "payload": "repo/example-repo"
+    },
+    {
+      "kind": "web",
+      "name": "https://example.com/",
+      "state": "complete",
+      "commit": "",
+      "changes": 0,
+      "payload": "web/002-example-com",
+      "url": "https://example.com/",
+      "final_url": "https://example.com/",
+      "title": "Example Domain",
+      "viewports": [
+        {
+          "name": "desktop",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "complete",
+          "document_status": 200,
+          "failed_requests": 0,
+          "mixed_content": false,
+          "truncated": false,
+          "password_form": false
+        },
+        {
+          "name": "mobile",
+          "width": 390,
+          "height": 844,
+          "scale": 2,
+          "state": "complete",
+          "document_status": 200,
+          "failed_requests": 0,
+          "mixed_content": false,
+          "truncated": false,
+          "password_form": false
+        }
+      ]
     }
   ],
   "environment": {
@@ -30,11 +67,27 @@
     "git_version": "git version 2.43.0"
   },
   "timestamp_authorities": [],
+  "hosts": [
+    {
+      "origin": "https://example.com:443",
+      "origin_id": "3276d403185d4a1ac89938f0f94a4b6d040c673655c8e6978435737025d434f1"
+    }
+  ],
   "files": [
     {
       "path": "VERIFY.txt",
       "size": 7971,
       "sha256": "31a5646d3409ef1b60cf1a8d562866c36a723334569517c9ff562526af26d16e"
+    },
+    {
+      "path": "hosts/3276d403185d4a1ac89938f0f94a4b6d040c673655c8e6978435737025d434f1/dns.json",
+      "size": 108,
+      "sha256": "ed48b05f3fd8bd8cfab0564d6dfcc50d9585acb016043dd710ef074e1e92a985"
+    },
+    {
+      "path": "hosts/3276d403185d4a1ac89938f0f94a4b6d040c673655c8e6978435737025d434f1/tls.json",
+      "size": 101,
+      "sha256": "ca5e378c2e34ae107460312b330c09fc635e16597743a4e5bd22d8188bb17761"
     },
     {
       "path": "repo/example-repo/files.json",
@@ -50,6 +103,31 @@
       "path": "repo/example-repo/snapshot.tar.gz",
       "size": 45,
       "sha256": "b1dd88cdd8bf09af2539d0b345e647129d8fd55c92b6d824b6ecc53efd531028"
+    },
+    {
+      "path": "web/002-example-com/console.json",
+      "size": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "web/002-example-com/dom.html",
+      "size": 68,
+      "sha256": "1290ec7c4606320ff0f357678602351573fa53229df9379e9a332b0bb828e991"
+    },
+    {
+      "path": "web/002-example-com/headers.json",
+      "size": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "web/002-example-com/network.json",
+      "size": 47,
+      "sha256": "25717831981f98e10e8960d709853eee3d6ef0194baaf2ed2e4212b48a8d06d2"
+    },
+    {
+      "path": "web/002-example-com/redirects.json",
+      "size": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
     }
   ]
 }
