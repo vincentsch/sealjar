@@ -89,8 +89,8 @@ Doctor checks Chrome's path and version in a temporary isolated browser,
 Git, output write access and configured
 TSA connections. Each failed check includes a fix. HTTPS checks include the TLS
 handshake. No timestamp request is sent, and reachability does not prove issuance.
-Report copies stored reports, but captures do not yet generate them. Report
-returns exit 5 when these artifacts are absent.
+Report copies the reports generated during capture and returns exit 5 when a
+requested report language or PDF is absent.
 
 ## Try the bundled demo
 
