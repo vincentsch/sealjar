@@ -454,11 +454,11 @@ func request(ctx context.Context, manifest []byte, endpoint string, roots *x509.
 
 func (r Result) DisplayAuthority() string {
 	if r.Demo {
-		return demotsa.Label
+		return "Signetleaf Demo TSA"
 	}
 	name := r.AuthorityName
 	if name == "" {
-		return r.Authority
+		return "Authority unavailable"
 	}
 	if strings.HasPrefix(name, "DigiCert") {
 		return "DigiCert"

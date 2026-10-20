@@ -399,3 +399,52 @@ func TestTimestampMetadataOutput(t *testing.T) {
 		}
 	}
 }
+
+func TestPlainTimestampFailuresKeepJSONDiagnostics(t *testing.T) {
+	repo := fixture(t)
+	unsigned := captured(t, repo, t.TempDir())
+	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(503) }))
+	defer bad.Close()
+	for _, jsonMode := range []bool{false, true} {
+		args := []string{"stamp", unsigned, "--tsa", bad.URL}
+		if jsonMode {
+			args = append(args, "--json")
+		}
+		out, stderr := invoke(t, 2, args...)
+		all := string(out) + string(stderr)
+		if jsonMode {
+			if !strings.Contains(all, "503") || !strings.Contains(all, "exit_code") || !strings.Contains(all, "error") {
+				t.Fatal(all)
+			}
+		} else if !strings.Contains(all, "No timestamp could be obtained") || strings.Contains(all, "503") {
+			t.Fatal(all)
+		}
+	}
+	files := entries(t, unsigned)
+	files["manifest.json.bad.tsr"] = []byte("broken")
+	broken := filepath.Join(t.TempDir(), "broken.signetleaf.zip")
+	zipEntries(t, broken, files)
+	for _, command := range []string{"stamp", "report"} {
+		for _, jsonMode := range []bool{false, true} {
+			args := []string{command, broken}
+			if jsonMode {
+				args = append(args, "--json")
+			}
+			out, stderr := invoke(t, 10, args...)
+			all := string(out) + string(stderr)
+			if jsonMode {
+				if !strings.Contains(all, "malformed timestamp response") || !strings.Contains(all, "exit_code") || !strings.Contains(all, "error") {
+					t.Fatal(all)
+				}
+			} else if !strings.Contains(all, "damaged or is not a timestamp") || strings.Contains(all, "malformed timestamp response") {
+				t.Fatal(all)
+			}
+		}
+	}
+	var b bytes.Buffer
+	token := tsa.Result{Reason: "SHA-256 manifest imprint mismatch", Invalid: true}
+	renderAttempts(&b, []tsa.Attempt{{Token: &token, Error: "raw diagnostic"}})
+	if !strings.Contains(b.String(), "different manifest") || strings.Contains(b.String(), "raw diagnostic") {
+		t.Fatal(b.String())
+	}
+}

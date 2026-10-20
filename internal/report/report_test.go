@@ -3,6 +3,8 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"html/template"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -86,7 +88,7 @@ func TestBilingualReportsAndThumbnails(t *testing.T) {
 		if bytes.Contains(b, []byte("<script")) || bytes.Contains(b, []byte("src=\"https://")) {
 			t.Fatal("external resource")
 		}
-		for i := 1; i <= 8; i++ {
+		for i := 1; i <= 7; i++ {
 			if !strings.Contains(string(b), "§ "+string(rune('0'+i))) {
 				t.Errorf("missing section %d", i)
 			}
@@ -122,3 +124,76 @@ func TestLocalReportURL(t *testing.T) {
 		}
 	}
 }
+
+func TestReportTitleAndNumbering(t *testing.T) {
+	for _, labels := range []map[string]string{nil, {"client": "Bakery"}} {
+		dir := t.TempDir()
+		m := packagefmt.Manifest{CaptureID: "capture-id", Labels: labels}
+		if err := Render(dir, "staging.example.com", "both", m); err != nil {
+			t.Fatal(err)
+		}
+		for _, lang := range []string{"en", "de"} {
+			raw, _ := os.ReadFile(filepath.Join(dir, "report/report."+lang+".html"))
+			text := string(raw)
+			for _, label := range map[string][]string{"en": {"Package", "Capture id", "Started", "Finished"}, "de": {"Paket", "Erfassungs-ID", "Beginn", "Ende"}}[lang] {
+				if !strings.Contains(text, "<dt>"+label+"</dt>") {
+					t.Fatal(label)
+				}
+			}
+			label := map[string]string{"en": "Labels", "de": "Angaben"}[lang]
+			if strings.Contains(text, "<dt>"+label+"</dt>") != (labels != nil) {
+				t.Fatal("optional labels")
+			}
+			if strings.Contains(text, "<header><small>") || strings.Contains(text, "§ 8") || !strings.Contains(text, "<dd>staging.example.com</dd>") {
+				t.Fatal("title")
+			}
+			for i := 1; i <= 7; i++ {
+				if strings.Count(text, fmt.Sprintf("§ %d</small>", i)) != 1 {
+					t.Fatal(i)
+				}
+			}
+		}
+	}
+}
+
+func TestSealTokenPresentation(t *testing.T) {
+	for _, trusted := range []bool{false, true} {
+		demo := tsa.Result{Demo: true, Trusted: trusted, Authority: "CN=raw-subject", Serial: "241", Time: "unavailable", Accuracy: "unavailable", Reason: "Untrusted certificate chain at genTime: raw diagnostic"}
+		for _, mixed := range []bool{false, true} {
+			tokens := []tsa.Result{demo}
+			if mixed {
+				tokens = append(tokens, tsa.Result{AuthorityName: "DigiCert Timestamp", Trusted: true})
+			}
+			raw, err := Seal(packagefmt.Manifest{}, nil, tokens, "test")
+			if err != nil {
+				t.Fatal(err)
+			}
+			text := string(raw)
+			for _, lang := range []string{"en", "de"} {
+				for _, want := range []string{tsa.Explanation(demo, lang), tsa.DemoProvenance(demo, lang), tsa.TimeLimitation(lang)} {
+					if !strings.Contains(text, templateEscape(want)) {
+						t.Fatal(want)
+					}
+				}
+			}
+			for _, want := range []string{"Signetleaf Demo TSA", "0xF1", "Certificate details", "Zertifikatsdetails", "nicht verfügbar", "CN=raw-subject"} {
+				if !strings.Contains(text, want) {
+					t.Fatal(want)
+				}
+			}
+			if trusted && strings.Contains(text, "Demo timestamp, not trusted") {
+				t.Fatal("contradictory provenance")
+			}
+			if !trusted && (!strings.Contains(text, "Technical reason") || !strings.Contains(text, "Technische Angabe")) {
+				t.Fatal("missing diagnostics")
+			}
+		}
+	}
+	raw, _ := Seal(packagefmt.Manifest{}, nil, []tsa.Result{{Invalid: true, Authority: "Unavailable", Time: "unavailable", Serial: "unavailable", Accuracy: "unavailable", Reason: "decode error"}}, "test")
+	for _, want := range []string{"Authority unavailable", "Zeitstempelstelle nicht verfügbar", "nicht verfügbar", "damaged", "beschädigt"} {
+		if !strings.Contains(string(raw), want) {
+			t.Fatal(want)
+		}
+	}
+}
+func templateEscape(s string) string { return template.HTMLEscapeString(s) }

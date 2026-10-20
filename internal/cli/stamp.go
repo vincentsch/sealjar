@@ -16,17 +16,21 @@ import (
 )
 
 func renderAttempts(w io.Writer, attempts []tsa.Attempt) {
+	hasToken := false
 	for _, a := range attempts {
-		if a.Error != "" {
-			fmt.Fprintf(w, "  Timestamp authority %s: %s\n", a.URL, a.Error)
-		} else if a.Token != nil {
-			t := a.Token
-			state := "The certificate chain is untrusted."
-			if t.Trusted {
-				state = "The token is valid and its certificate chain is trusted."
+		if a.Token != nil {
+			hasToken = true
+			t := *a.Token
+			fmt.Fprintf(w, "        Timestamp: %s, %s. %s\n", t.DisplayAuthority(), t.DisplayTime(), tsa.Explanation(t, "en"))
+			if t.Demo {
+				fmt.Fprintln(w, "        "+tsa.DemoProvenance(t, "en"))
 			}
-			fmt.Fprintf(w, "        Timestamp: %s, %s. %s\n", t.DisplayAuthority(), t.DisplayTime(), state)
+		} else {
+			fmt.Fprintf(w, "  Timestamp authority %s: No timestamp could be obtained from this authority.\n", a.URL)
 		}
+	}
+	if hasToken {
+		fmt.Fprintln(w, "        "+tsa.TimeLimitation("en"))
 	}
 }
 func storeTokens(dir string, attempts []tsa.Attempt) (int, error) {
@@ -94,6 +98,11 @@ func stampCommand() *rungrad.Command {
 		if code == 10 {
 			var b strings.Builder
 			verify.Render(&b, v)
+			if f.Flags.JSON {
+				for _, t := range v.Tokens {
+					fmt.Fprintf(&b, "  %s: %s\n", t.Path, t.Reason)
+				}
+			}
 			return failure(10, fmt.Errorf("stamp stopped: %s", b.String()))
 		}
 		result := struct {
@@ -116,7 +125,13 @@ func stampCommand() *rungrad.Command {
 		}
 		if !usable {
 			var b strings.Builder
-			renderAttempts(&b, result.Attempts)
+			if f.Flags.JSON {
+				for _, a := range result.Attempts {
+					fmt.Fprintf(&b, "  Timestamp authority %s: %s\n", a.URL, a.Error)
+				}
+			} else {
+				renderAttempts(&b, result.Attempts)
+			}
 			return failure(2, fmt.Errorf("no usable timestamp; no package was written. %s", b.String()))
 		}
 		out := filepath.Dir(args[0])

@@ -22,7 +22,7 @@ func TestDemoProvenanceDoesNotGrantTrust(t *testing.T) {
 		t.Fatalf("%+v", attempts)
 	}
 	token := Check(attempts[0].DER, manifest, x509.NewCertPool())
-	if !token.Demo || token.Trusted || token.Invalid || !token.Usable || token.DisplayAuthority() != demotsa.Label {
+	if !token.Demo || token.Trusted || token.Invalid || !token.Usable || token.DisplayAuthority() != "Signetleaf Demo TSA" {
 		t.Fatalf("%+v", token)
 	}
 	roots := x509.NewCertPool()

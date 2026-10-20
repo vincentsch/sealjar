@@ -13,6 +13,7 @@ import (
 	"image"
 	"image/jpeg"
 	_ "image/png"
+	"math/big"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -46,10 +47,10 @@ func Languages(lang string) []string {
 }
 func ValidLanguage(lang string) bool { return lang == "en" || lang == "de" || lang == "both" }
 func execute(source string, data any) ([]byte, error) {
-	t, e := template.New("page").Funcs(template.FuncMap{"css": func() template.CSS { return template.CSS(css) }, "pretty": func(v any) string { b, _ := json.MarshalIndent(v, "", "  "); return string(b) }, "thumb": func(s string) string { return strings.TrimSuffix(s, ".png") + ".thumb.jpg" }, "timefmt": formatTime, "tokenTime": func(s, zone string) string {
+	t, e := template.New("page").Funcs(template.FuncMap{"css": func() template.CSS { return template.CSS(css) }, "pretty": func(v any) string { b, _ := json.MarshalIndent(v, "", "  "); return string(b) }, "thumb": func(s string) string { return strings.TrimSuffix(s, ".png") + ".thumb.jpg" }, "timefmt": formatTime, "tokenTime": func(s, zone, lang string) string {
 		t, e := time.Parse(time.RFC3339Nano, s)
 		if e != nil {
-			return s
+			return unavailable(lang)
 		}
 		return formatTime(t, zone)
 	}, "groupHash": func(s string) string {
@@ -59,7 +60,18 @@ func execute(source string, data any) ([]byte, error) {
 			s = s[8:]
 		}
 		return strings.Join(parts, " ")
-	}, "status": status, "factLabel": factLabel, "factValue": factValue, "tokenReason": tokenReason, "accuracy": accuracy, "localText": localText}).Parse(source)
+	}, "status": status, "factLabel": factLabel, "factValue": factValue, "tokenReason": tsa.Explanation, "provenance": tsa.DemoProvenance, "timeLimit": tsa.TimeLimitation, "authority": func(t tsa.Result, lang string) string {
+		s := t.DisplayAuthority()
+		if s == "Authority unavailable" && lang == "de" {
+			return "Zeitstempelstelle nicht verfügbar"
+		}
+		return s
+	}, "serial": func(s, lang string) string {
+		if n, ok := new(big.Int).SetString(s, 10); ok {
+			return "0x" + strings.ToUpper(n.Text(16))
+		}
+		return unavailable(lang)
+	}, "accuracy": accuracy, "localText": localText}).Parse(source)
 	if e != nil {
 		return nil, e
 	}
@@ -407,24 +419,6 @@ func accuracy(s, lang string) string {
 	}
 	return s
 }
-func tokenReason(t tsa.Result, lang string) string {
-	if lang != "de" {
-		return t.Reason
-	}
-	if t.Reason == "Untrusted" {
-		return "nicht vertrauenswürdig"
-	}
-	if t.Trusted {
-		return "Gültige Signatur und vertrauenswürdige Zertifikatskette zum Token-Zeitpunkt"
-	}
-	translations := map[string]string{"Untrusted certificate chain at genTime: ": "Zertifikatskette zum Token-Zeitpunkt nicht vertrauenswürdig: ", "Certificate chain is invalid at genTime: ": "Zertifikatskette zum Token-Zeitpunkt ungültig: "}
-	for prefix, text := range translations {
-		if strings.HasPrefix(t.Reason, prefix) {
-			return text + strings.TrimPrefix(t.Reason, prefix)
-		}
-	}
-	return t.Reason
-}
 
 func localText(s, lang string) string {
 	if lang != "de" {
@@ -450,4 +444,11 @@ func localText(s, lang string) string {
 		"load and network idle (30s)", "Laden und Netzwerkruhe (30 Sekunden)",
 		"post-scroll network idle (10s)", "Netzwerkruhe nach dem Scrollen (10 Sekunden)",
 	).Replace(s)
+}
+
+func unavailable(lang string) string {
+	if lang == "de" {
+		return "nicht verfügbar"
+	}
+	return "unavailable"
 }

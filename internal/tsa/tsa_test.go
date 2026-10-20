@@ -224,6 +224,19 @@ func TestCertificateMustBeValidAtTimestampTime(t *testing.T) {
 		if result.Invalid || result.Trusted || result.Usable || !strings.Contains(result.Reason, "genTime") {
 			t.Fatalf("invalid historical chain accepted: %+v", result)
 		}
+		for _, lang := range []string{"en", "de"} {
+			text := Explanation(result, lang)
+			want := "timestamp's time"
+			if lang == "de" {
+				want = "Zeitpunkt des Zeitstempels"
+			}
+			if !strings.Contains(text, want) {
+				t.Fatal(text)
+			}
+			if strings.Contains(text, "root") || strings.Contains(text, "Stamm") || strings.Contains(text, "x509") {
+				t.Fatal(text)
+			}
+		}
 	}
 }
 func TestRequestsUseFresh64BitNonces(t *testing.T) {

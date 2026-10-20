@@ -52,6 +52,11 @@ func reportCommand() *rungrad.Command {
 		if code == 10 {
 			var b strings.Builder
 			verify.Render(&b, v)
+			if f.Flags.JSON {
+				for _, t := range v.Tokens {
+					fmt.Fprintf(&b, "  %s: %s\n", t.Path, t.Reason)
+				}
+			}
 			return failure(10, fmt.Errorf("report stopped: %s", b.String()))
 		}
 		selected := []string{}

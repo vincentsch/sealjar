@@ -10,7 +10,6 @@ import (
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
 	"github.com/vincentsch/signetleaf/internal/repo"
 	"github.com/vincentsch/signetleaf/internal/tsa"
-	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
 )
 
 type Answer struct {
@@ -104,11 +103,7 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 	}
 	for _, token := range result.Tokens {
 		if token.Demo {
-			result.Timestamp.Detail += " " + demotsa.Label + "."
-			if token.Trusted {
-				result.Timestamp.Detail += " The supplied root grants trust separately from demo provenance."
-			}
-			break
+			result.Timestamp.Detail += " " + tsa.DemoProvenance(token, "en")
 		}
 	}
 	result.Limitations = append(result.Limitations, "Signetleaf does not assess eIDAS qualification.")
@@ -145,13 +140,12 @@ func Render(w io.Writer, r Result) {
 	}
 	fmt.Fprintf(w, "\nTimestamp\n  %s. %s\n", r.Timestamp.State, r.Timestamp.Detail)
 	for _, t := range r.Tokens {
-		if t.Trusted {
-			fmt.Fprintf(w, "  Timestamped by %s at %s. The token is valid and its certificate chain is trusted.\n", t.DisplayAuthority(), t.DisplayTime())
-		} else {
-			fmt.Fprintf(w, "  %s at %s: %s\n", t.DisplayAuthority(), t.DisplayTime(), t.Reason)
-		}
+		fmt.Fprintf(w, "  %s at %s: %s\n", t.DisplayAuthority(), t.DisplayTime(), tsa.Explanation(t, "en"))
 	}
 	for _, line := range r.Limitations {
+		if strings.HasPrefix(line, "A timestamp's time is an upper bound") {
+			line = tsa.TimeLimitation("en")
+		}
 		fmt.Fprintln(w, "  "+line)
 	}
 }
