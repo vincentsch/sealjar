@@ -1,0 +1,55 @@
+{
+  "type": "signetleaf.manifest/v1",
+  "tool_version": "0.1.0",
+  "capture_id": "01K81FJ90012S9JQ5WGM63CXA7",
+  "started": "2026-10-20T12:00:00.123456789Z",
+  "ended": "2026-10-20T12:00:01.123456789Z",
+  "time_zone": "Europe/Berlin",
+  "labels": {
+    "client": "Example"
+  },
+  "settings": {
+    "include_untracked": false,
+    "history": false,
+    "exclude": [],
+    "no_timestamp": true
+  },
+  "targets": [
+    {
+      "kind": "repo",
+      "name": "example-repo",
+      "state": "complete",
+      "commit": "0123456789abcdef0123456789abcdef01234567",
+      "changes": 0,
+      "payload": "repo/example-repo"
+    }
+  ],
+  "environment": {
+    "os": "linux",
+    "arch": "amd64",
+    "git_version": "git version 2.43.0"
+  },
+  "timestamp_authorities": [],
+  "files": [
+    {
+      "path": "VERIFY.txt",
+      "size": 7971,
+      "sha256": "31a5646d3409ef1b60cf1a8d562866c36a723334569517c9ff562526af26d16e"
+    },
+    {
+      "path": "repo/example-repo/files.json",
+      "size": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "repo/example-repo/git.json",
+      "size": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "repo/example-repo/snapshot.tar.gz",
+      "size": 45,
+      "sha256": "b1dd88cdd8bf09af2539d0b345e647129d8fd55c92b6d824b6ecc53efd531028"
+    }
+  ]
+}

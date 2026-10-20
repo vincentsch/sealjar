@@ -1,0 +1,162 @@
+CHECKING THIS PACKAGE / PAKET PRÜFEN
+
+English
+
+Run `signetleaf verify package.signetleaf.zip`. It gives three separate answers:
+capture results, file integrity, and timestamp trust. Exit 10 means malformed
+or changed content. Exit 11 means no trusted timestamp. Exit 0 means the files
+match and at least one timestamp is trusted. This version captures repositories
+without timestamps; later versions add timestamp requests and trust checks.
+
+Manual file check without Signetleaf
+
+Unzip into a new empty folder using an archive tool that rejects unsafe paths
+and links. Keep the original ZIP. From that extracted folder, run the Python 3
+script below. It reads the file list from manifest.json; there is no separate
+precomputed checksum list. It reports changed, missing and unexpected files.
+manifest.json, root-level manifest.json.*.tsr tokens and SEAL.html are excluded
+from that file list by the package format. SEAL.html is only a reading aid.
+
+Hashes alone show consistency with the manifest. Someone can replace both a
+file and its hash in an untimestamped manifest. This check cannot establish the
+manifest's authenticity or independently confirm the capture time.
+
+Manual timestamp check (when a token is present)
+
+Choose a token and replace token.tsr and roots.pem below with the actual paths.
+Read its UTC genTime, shown as "Time stamp":
+
+    openssl ts -reply -in token.tsr -text
+
+Convert that printed time to Unix seconds with Python 3. Paste the time without
+the "Time stamp:" label, for example Oct 20 18:45:00 2026 GMT:
+
+```sh
+python3 - <<'PY'
+from datetime import datetime, timezone
+import re
+gen_time = "Oct 20 18:45:00 2026 GMT"  # replace with the token's UTC time
+gen_time = re.sub(r'(\d{2}:\d{2}:\d{2})\.\d+', r'\1', gen_time)
+print(int(datetime.strptime(gen_time, "%b %d %H:%M:%S %Y GMT")
+          .replace(tzinfo=timezone.utc).timestamp()))
+PY
+```
+
+Use that number in place of GEN_TIME_UNIX_SECONDS:
+
+    openssl ts -verify -data manifest.json -in token.tsr -CAfile roots.pem -attime GEN_TIME_UNIX_SECONDS
+
+The certificate chain is checked at the token's time. OpenSSL's default uses
+today's time and can reject older valid timestamps whose certificates have
+since expired. `ts -reply -text` only reads a token; it does not verify it.
+
+Use trusted root certificates obtained independently: the operating system's
+roots, the embedded FreeTSA root from Signetleaf's source, or roots obtained
+from the authority through a separately trusted source. Certificates supplied
+only inside a package are not trusted roots. A different authority can require
+its own root and intermediate certificates. Consult its verification guidance.
+
+A successful signature, imprint and trusted chain check authenticates the exact
+manifest bytes. Together with matching file hashes, it shows those files
+existed no later than the timestamp's time. That time is an upper bound, not an
+independently checked capture time. Offline checks cannot see later certificate
+revocation. Signetleaf does not assess eIDAS qualification.
+
+These checks do not establish that content is true or complete, that a server
+sent these bytes, that the operator was honest, that work was delivered or
+accepted, or that captured code produced a captured website. For important
+disputes, consider having a neutral expert or notary present during capture.
+Exclusions cannot guarantee that captured files contain no secrets.
+
+Deutsch
+
+`signetleaf verify paket.signetleaf.zip` prüft drei Dinge getrennt: das Ergebnis
+der Erfassung, die Dateien und das Vertrauen in den Zeitstempel. Rückgabecode
+10 steht für ein beschädigtes oder verändertes Paket. Code 11 bedeutet, dass
+kein vertrauenswürdiger Zeitstempel vorliegt. Bei Code 0 stimmen die Dateien
+überein und mindestens ein Zeitstempel ist vertrauenswürdig. Diese Version
+erfasst Repositorys ohne Zeitstempel. Spätere Versionen ergänzen deren Abruf
+und Prüfung.
+
+Dateien ohne Signetleaf prüfen
+
+Das ZIP mit einem Archivprogramm in einen neuen, leeren Ordner entpacken. Das
+Programm muss unsichere Pfade und Verknüpfungen ablehnen. Das Original bleibt
+erhalten. Im entpackten Ordner prüft das folgende Python-3-Skript die Prüfsummen
+(SHA-256) aus manifest.json. Es meldet veränderte, fehlende und zusätzliche
+Dateien. Eine zweite vorberechnete Prüfsummenliste gibt es nicht.
+
+manifest.json, Zeitstempeldateien manifest.json.*.tsr auf der obersten Ebene
+und SEAL.html gehören laut Paketformat nicht zur Dateiliste. SEAL.html dient
+nur als Lesehilfe. Ohne authentifiziertes Manifest belegen passende Prüfsummen
+nur die Übereinstimmung mit dieser Liste. Datei und Prüfsumme könnten zusammen
+ersetzt worden sein. Die Echtheit des Manifests und der Zeitpunkt der Erfassung
+lassen sich damit allein nicht bestätigen.
+
+Zeitstempel manuell prüfen
+
+Falls ein Zeitstempel enthalten ist, zeigen die obigen OpenSSL-Befehle dessen
+UTC-Zeit genTime an und prüfen die Signatur. token.tsr und roots.pem stehen für
+die tatsächlichen Dateipfade. Das Python-Beispiel wandelt die angezeigte Zeit
+in Unix-Sekunden um. Der Beispielwert muss durch die Zeit des Tokens ersetzt
+werden. Diese Zahl ersetzt GEN_TIME_UNIX_SECONDS beim Aufruf mit -attime.
+
+Die Zertifikatskette wird zum Zeitpunkt des Zeitstempels geprüft. OpenSSL prüft
+sonst zum heutigen Datum und kann ältere gültige Zeitstempel ablehnen, deren
+Zertifikate inzwischen abgelaufen sind. Die Textanzeige allein ist keine
+Signaturprüfung.
+
+Vertrauensanker müssen aus unabhängigen Quellen stammen: aus dem Betriebssystem,
+dem eingebetteten FreeTSA-Wurzelzertifikat im Signetleaf-Quellcode oder einer
+anderweitig vertrauenswürdigen Quelle des Zeitstempeldienstes. Zertifikate aus
+dem Paket allein begründen kein Vertrauen. Je nach Dienst sind weitere
+Zwischenzertifikate nötig.
+
+Eine gültige Signatur mit passender Prüfsumme und vertrauenswürdiger
+Zertifikatskette authentifiziert die unveränderten Manifest-Bytes. Stimmen auch
+die Dateiprüfsummen, lagen diese Dateien spätestens zum Zeitpunkt des
+Zeitstempels vor. Das ist eine zeitliche Obergrenze, keine unabhängig geprüfte
+Erfassungszeit. Eine Offline-Prüfung erkennt spätere Zertifikatswiderrufe nicht.
+Signetleaf bewertet keine eIDAS-Qualifikation.
+
+Die Prüfung belegt weder die Wahrheit oder Vollständigkeit der Inhalte noch
+deren Herkunft vom Server. Sie belegt auch keine ehrliche Bedienung, Abnahme
+oder Lieferung. Ob der erfasste Code eine erfasste Website erzeugt hat, bleibt
+offen. Bei wichtigen Streitfällen empfiehlt sich eine neutrale Begleitung der
+Erfassung, etwa durch einen Sachverständigen oder Notar. Ausschlussregeln
+können geheime Inhalte in den erfassten Dateien nicht vollständig verhindern.
+
+Python 3 file check / Dateiprüfung mit Python 3
+
+Run from the extracted package folder / Im entpackten Paketordner ausführen:
+
+```python
+from pathlib import Path
+import hashlib
+import json
+import sys
+
+manifest = json.loads(Path("manifest.json").read_text(encoding="utf-8"))
+expected = {item["path"]: item for item in manifest["files"]}
+problems = []
+for name, item in expected.items():
+    file = Path(name)
+    if not file.is_file() or file.is_symlink():
+        problems.append("missing: " + name)
+        continue
+    digest = hashlib.sha256()
+    with file.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if file.stat().st_size != item["size"] or digest.hexdigest() != item["sha256"]:
+        problems.append("changed: " + name)
+for file in sorted(Path(".").rglob("*")):
+    if file.is_dir() and not file.is_symlink():
+        continue
+    name = file.as_posix()
+    token = "/" not in name and name.startswith("manifest.json.") and name.endswith(".tsr")
+    if name not in expected and name not in ("manifest.json", "SEAL.html") and not token:
+        problems.append("unexpected: " + name)
+print("\n".join(problems) if problems else f"All {len(expected)} files match.")
+sys.exit(1 if problems else 0)
+```
