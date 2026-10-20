@@ -92,6 +92,29 @@ handshake. No timestamp request is sent, and reachability does not prove issuanc
 Report copies stored reports, but captures do not yet generate them. Report
 returns exit 5 when these artifacts are absent.
 
+## Try the bundled demo
+
+```sh
+bin/signetleaf demo
+bin/signetleaf demo --out ./bakery-demo --json
+```
+
+The demo captures two local bakery pages and a Git repository, then verifies
+the package. It prints the ZIP path, reader folder and report path. Open the
+report in that folder to read it locally. Chrome and Git are required.
+
+Default timestamp authorities are tried first. Without external network access,
+the demo uses deliberately public test material and says “Demo timestamp, not
+trusted”. This never adds a trusted root. Demo still exits 0; ordinary verify
+on that package exits 11. Explicit `--tsa-root` trust is shown separately from
+the token's demo provenance.
+
+The printed verify command checks `demo-tampered.signetleaf.zip`. This readable
+ZIP has one changed screenshot; verify exits 10 and names it. Repeated demos
+keep earlier artifacts and add `-2`, `-3` and further suffixes to occupied names.
+`--dry-run` starts no services and writes nothing. `--json` returns one document
+with capture details, verification answers, the verify exit code and actual paths.
+
 ## Capture web pages
 
 ```sh

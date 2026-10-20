@@ -3,12 +3,18 @@ package testsite
 
 import (
 	site "github.com/vincentsch/signetleaf/testdata/site"
+	"io/fs"
 	"net/http"
 	"time"
 )
 
 func Handler() http.Handler {
-	files := http.FileServer(http.FS(site.Files))
+	return WithFiles(site.Files)
+}
+
+// WithFiles serves the same fixture behaviours from bundled static files.
+func WithFiles(source fs.FS) http.Handler {
+	files := http.FileServer(http.FS(source))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "public, max-age=60")
 		http.SetCookie(w, &http.Cookie{Name: "bakery_notice", Value: "seen", Path: "/", SameSite: http.SameSiteLaxMode})

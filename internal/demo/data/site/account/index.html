@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your orders (test page)</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Your orders</h1>
+  <p id="state">Checking…</p>
+</main>
+<script>
+  // Shows whether the session storage from the login page survived.
+  document.getElementById("state").textContent =
+    sessionStorage.getItem("bakery-session") === "yes"
+      ? "Logged in. 2 open orders."
+      : "Session storage is empty.";
+</script>
+</body>
+</html>

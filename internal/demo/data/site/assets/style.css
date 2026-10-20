@@ -1,0 +1,16 @@
+:root { --ink: #2b2118; --bg: #fbf6ee; --accent: #b8572b; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: var(--bg); }
+header { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid #e5d9c7; }
+nav a { margin-left: 20px; color: var(--ink); text-decoration: none; }
+.hero { padding: 64px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+.hero img { width: 100%; border-radius: 12px; }
+h1 { font-size: 44px; margin: 0 0 12px; }
+.prices { padding: 32px; }
+table { border-collapse: collapse; width: 100%; max-width: 640px; }
+td, th { border-bottom: 1px solid #e5d9c7; padding: 10px; text-align: left; }
+.gallery { padding: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.gallery img { width: 100%; height: 220px; object-fit: cover; border-radius: 8px; }
+.cookie { position: fixed; bottom: 16px; left: 16px; right: 16px; background: #fff; border: 1px solid #e5d9c7; padding: 16px; border-radius: 10px; }
+footer { padding: 32px; color: #6b5d50; }
+@media (max-width: 700px) { .hero { grid-template-columns: 1fr; } .gallery { grid-template-columns: 1fr; } h1 { font-size: 32px; } }

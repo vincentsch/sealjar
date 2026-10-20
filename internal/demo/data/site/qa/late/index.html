@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Late content (test page)</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Late content</h1>
+  <p id="late">Loading…</p>
+  <div style="height: 6000px" aria-hidden="true"></div>
+  <img id="far" src="/assets/photo3.jpg" loading="lazy" width="600" height="400" alt="Bread on a shelf">
+</main>
+<script>
+  // Text that only appears after the load event, to test waiting.
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      document.getElementById("late").textContent = "Fresh bread from 7 am.";
+    }, 800);
+  });
+</script>
+</body>
+</html>

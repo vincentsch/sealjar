@@ -93,7 +93,14 @@ func Start(ctx context.Context, path string, visible bool, testOptions ...chrome
 	opts = append(opts, testOptions...)
 	ac, ca := chromedp.NewExecAllocator(ctx, opts...)
 	tc, ct := chromedp.NewContext(ac)
-	close := func() { ct(); ca(); os.RemoveAll(profile) }
+	close := func() {
+		closing, cancel := context.WithTimeout(tc, 5*time.Second)
+		defer cancel()
+		chromedp.Cancel(closing)
+		ct()
+		ca()
+		os.RemoveAll(profile)
+	}
 	startup := time.AfterFunc(15*time.Second, ct)
 	defer startup.Stop()
 	if e := chromedp.Do(tc); e != nil {

@@ -26,6 +26,7 @@ import (
 
 	"github.com/digitorus/pkcs7"
 	"github.com/digitorus/timestamp"
+	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
 )
 
 //go:embed roots/freetsa-cacert.pem
@@ -43,6 +44,7 @@ type Result struct {
 	Time          string `json:"time"`
 	Serial        string `json:"serial"`
 	Accuracy      string `json:"accuracy"`
+	Demo          bool   `json:"demo"`
 	Trusted       bool   `json:"trusted"`
 	Reason        string `json:"reason"`
 	Invalid       bool   `json:"invalid"`
@@ -260,6 +262,11 @@ func Check(der, manifest []byte, roots *x509.CertPool) Result {
 			intermediate.AddCert(c)
 		}
 	}
+	demoRoots := x509.NewCertPool()
+	demoRoots.AddCert(demotsa.Root())
+	if _, err := signer.Verify(x509.VerifyOptions{Roots: demoRoots, Intermediates: intermediate, CurrentTime: inf.Time, KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageTimeStamping}}); err == nil {
+		r.Demo = true
+	}
 	_, e = signer.Verify(x509.VerifyOptions{Roots: roots, Intermediates: intermediate, CurrentTime: inf.Time, KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageTimeStamping}})
 	if e != nil {
 		r.Reason = "Untrusted certificate chain at genTime: " + e.Error()
@@ -446,6 +453,9 @@ func request(ctx context.Context, manifest []byte, endpoint string, roots *x509.
 }
 
 func (r Result) DisplayAuthority() string {
+	if r.Demo {
+		return demotsa.Label
+	}
 	name := r.AuthorityName
 	if name == "" {
 		return r.Authority

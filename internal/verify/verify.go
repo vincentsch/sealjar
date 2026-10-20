@@ -10,6 +10,7 @@ import (
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
 	"github.com/vincentsch/signetleaf/internal/repo"
 	"github.com/vincentsch/signetleaf/internal/tsa"
+	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
 )
 
 type Answer struct {
@@ -100,6 +101,15 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 	}
 	if code == 10 {
 		result.Timestamp = Answer{"Invalid", "A timestamp has a structural, imprint or signature failure."}
+	}
+	for _, token := range result.Tokens {
+		if token.Demo {
+			result.Timestamp.Detail += " " + demotsa.Label + "."
+			if token.Trusted {
+				result.Timestamp.Detail += " The supplied root grants trust separately from demo provenance."
+			}
+			break
+		}
 	}
 	result.Limitations = append(result.Limitations, "Signetleaf does not assess eIDAS qualification.")
 	if len(differences) > 0 {

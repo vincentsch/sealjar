@@ -1,0 +1,6 @@
+{
+  "name": "bergblick-site",
+  "private": true,
+  "scripts": { "serve": "npx serve src" },
+  "devDependencies": {}
+}

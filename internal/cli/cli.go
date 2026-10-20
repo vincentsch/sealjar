@@ -25,6 +25,7 @@ import (
 	"github.com/vincentsch/signetleaf/internal/repo"
 	"github.com/vincentsch/signetleaf/internal/report"
 	"github.com/vincentsch/signetleaf/internal/tsa"
+	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
 	"github.com/vincentsch/signetleaf/internal/web"
 )
@@ -85,6 +86,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	app.AddCommand(stampCommand())
 	app.AddCommand(doctorCommand())
 	app.AddCommand(reportCommand())
+	app.AddCommand(demoCommand())
 	code := app.RunIO(args, stdin, stdout, stderr)
 	// Completed verdicts are data, not invocation failures. Returning nil to
 	// rungrad avoids a second generic error document after the result.
@@ -102,6 +104,8 @@ type captureOptions struct {
 	labels, exclude                            []string
 	untracked, history, confirmed, noTimestamp bool
 	strict                                     bool
+	fallback                                   string
+	completed                                  func(captureResult) error
 	authorities                                []string
 	root                                       string
 	chrome, auth                               string
@@ -164,7 +168,9 @@ func waitForLoginEnter(ctx context.Context, input io.Reader) error {
 	}
 }
 func captureCommand(verdict *int) *rungrad.Command {
-	opt := captureOptions{}
+	return captureWithOptions(verdict, captureOptions{})
+}
+func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 	c := command("capture <target>...", "Capture web pages and current files from one Git repository")
 	c.Mutates = true
 	c.Args = cobra.MinimumNArgs(1)
@@ -201,7 +207,7 @@ func captureCommand(verdict *int) *rungrad.Command {
 		if opt.login && !f.CanPrompt() {
 			return rungrad.NewError(1, "--login requires an interactive terminal. Run capture from a terminal and press Enter after login.")
 		}
-		if opt.auth == "" {
+		if opt.auth == "" && opt.completed == nil {
 			opt.auth = os.Getenv("SIGNETLEAF_AUTH")
 		}
 		if opt.auth != "" {
@@ -431,6 +437,9 @@ func captureCommand(verdict *int) *rungrad.Command {
 
 		if !opt.noTimestamp {
 			m.TimestampAuthorities = authorities
+			if opt.fallback != "" {
+				m.TimestampAuthorities = append(append([]string{}, authorities...), opt.fallback)
+			}
 		}
 		if err = report.Thumbnails(work); err != nil {
 			return failure(2, err)
@@ -475,12 +484,26 @@ func captureCommand(verdict *int) *rungrad.Command {
 				return failure(2, e)
 			}
 			result.Attempts = tsa.Acquire(ctx, manifest, opt.authorities, roots)
+			if opt.fallback != "" {
+				usable := false
+				for _, a := range result.Attempts {
+					usable = usable || len(a.DER) > 0
+				}
+				if !usable {
+					result.Attempts = append(result.Attempts, tsa.Acquire(ctx, manifest, []string{opt.fallback}, roots)...)
+				}
+			}
 			count, e := storeTokens(work, result.Attempts)
 			if e != nil {
 				return failure(2, e)
 			}
 			if count > 0 {
 				result.Timestamp = "Timestamped"
+				for _, a := range result.Attempts {
+					if a.Token != nil && a.Token.Demo {
+						result.Timestamp = demotsa.Label
+					}
+				}
 				for _, attempt := range result.Attempts {
 					if attempt.Token != nil && attempt.Token.Trusted {
 						result.Limitations = append(result.Limitations[:1], result.Limitations[2:]...)
@@ -522,6 +545,9 @@ func captureCommand(verdict *int) *rungrad.Command {
 		result.ReaderFolder = resultPath(reader)
 		result.Package = resultPath(output)
 		result.Size = info.Size()
+		if opt.completed != nil {
+			return opt.completed(result)
+		}
 		return f.WriteResult(result, func(w io.Writer) {
 			fmt.Fprintf(w, "\nSealed  %s (%s)\n", result.Package, humanSize(result.Size))
 			renderAttempts(w, result.Attempts)
