@@ -44,3 +44,5 @@ credentials, private captures or machine-specific files.
 Documentation checks run with `python3 scripts/test-docs.py` as part of `make test`.
 For local capture examples, use the [fixture quickstart](docs/quickstart.md#try-the-instructions-without-an-external-site).
 The test site includes basic-auth and login routes; a static server cannot replace it.
+
+Maintainers prepare releases with [RELEASE.md](RELEASE.md).

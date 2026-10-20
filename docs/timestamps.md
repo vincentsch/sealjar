@@ -59,6 +59,7 @@ Timestamp requests use `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`, with a
 connections, sends no timestamp request and does not honour proxy settings.
 
 Demo tries the default authority. If unavailable, it uses a local token labelled
-“Demo timestamp, not trusted”. Its public demo root identifies provenance,
-without granting trust. Verify normally exits 11 for that fallback. Do not
-present it as independent timestamp evidence.
+“Demo timestamp, not trusted”. Its public demo root identifies the demo
+without granting trust. Verify normally exits 11 for that fallback. The signing
+key is public, so anyone can make such a token. It gives no independent time
+evidence, even if an explicitly supplied root grants it trust.

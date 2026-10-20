@@ -15,8 +15,8 @@
 
 Signetleaf saves web pages and current code in one ZIP file. It takes desktop
 and mobile screenshots, records the rendered page and repository files, and
-adds a report in English and German. An independent timestamp helps someone
-later check when the sealed files already existed.
+adds a report in English and German. An independent timestamp gives an upper
+bound for when these files existed.
 
 ## Capture with your coding agent
 
@@ -69,12 +69,15 @@ signetleaf demo --out ../bakery-demo
 The demo serves a bakery website on your computer and captures an example
 repository. It writes a ZIP, a reader folder and a tampered ZIP for trying verify.
 If the public timestamp service is unavailable, it uses a local token labelled
-“Demo timestamp, not trusted”. That fallback gives verify exit 11.
+“Demo timestamp, not trusted”. That fallback gives verify exit 11. Its signing
+key is public, so it supplies no independent time evidence, even if a supplied
+root grants it trust.
 
-<p><img src="docs/media/demo-report.png" alt="Capture report from the bakery demo, showing example capture provenance" width="820"></p>
-<p><img src="docs/media/demo-seal.png" alt="Demo seal page with the visible untrusted demo timestamp warning" width="820"></p>
+<p><img src="docs/media/demo-report.png" alt="Bakery demo report opening with labelled capture details and page screenshots" width="820"></p>
+<p><img src="docs/media/demo-seal.png" alt="Bilingual bakery demo seal showing a trusted DigiCert timestamp and verification limits" width="820"></p>
 
-These images come from actual demo output using its labelled local fallback.
+These images show actual demo output with a trusted DigiCert timestamp.
+The report points to the seal and verify for timestamp results.
 
 ## Capture by hand
 
@@ -155,5 +158,4 @@ German guides cover [Abnahme](docs/de/abnahme.md) and
 [empfangene Pakete](docs/de/fuer-empfaenger.md).
 
 Signetleaf is [MIT licensed](LICENSE). For source changes, read
-[CONTRIBUTING.md](CONTRIBUTING.md). [Release checks](RELEASE.md) distinguish
-local validation from publication and native-platform checks still pending.
+[CONTRIBUTING.md](CONTRIBUTING.md).

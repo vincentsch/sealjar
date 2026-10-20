@@ -30,7 +30,6 @@ go env GOBIN GOPATH
 ```
 
 Use GOBIN when set, otherwise the first GOPATH entry's `bin` directory.
-See [release checks](../RELEASE.md) for pre-publication limitations.
 
 ## Native Windows
 
@@ -84,7 +83,10 @@ signetleaf demo --out ../bakery-demo
 ```
 
 Read the printed report path. Demo also writes a tampered ZIP; verify names the
-changed screenshot. The demo fallback timestamp is explicitly untrusted.
+changed screenshot. If online timestamping fails, the demo uses a local token labelled
+“Demo timestamp, not trusted”; verify exits 11. The signing key is public.
+Even if a supplied root grants this token trust, it gives no independent
+time evidence.
 
 ## Capture your project
 

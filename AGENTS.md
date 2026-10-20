@@ -105,6 +105,9 @@ German report). Open the report when the environment allows it and the user
 has not excluded GUI use. Otherwise print its path. Explain capture problems.
 Keep the captured files and original ZIP unchanged. Never send a package anywhere.
 
+The demo fallback uses a public signing key. It gives no independent time
+evidence, even if an explicitly supplied root grants the token trust.
+
 Matching hashes alone cannot authenticate an untimestamped manifest. A trusted
 timestamp gives an upper bound for when sealed files existed, not an independently
 checked capture time. It cannot establish truthful or complete content, honest

@@ -27,6 +27,9 @@ All available answers are printed, including on exits 10 and 11.
 Preserve the original ZIP and extracted files. Do not repair captured files to
 make them pass. Request another capture or investigate the difference separately.
 
+The demo fallback uses a public signing key. It gives no independent time
+evidence, even if an explicitly supplied root grants the token trust.
+
 ## Without installing Signetleaf
 
 Reading HTML or PDF needs no tools beyond a browser or PDF reader. Independent

@@ -40,6 +40,9 @@ supplied explicit roots. Certificates merely carried in the package do not
 establish trust. Offline checks cannot see later revocation. Signetleaf v0.1
 does not assess eIDAS qualification or label a timestamp qualified.
 
+The demo fallback uses a public signing key. It gives no independent time
+evidence, even if an explicitly supplied root grants the token trust.
+
 ## Check without installing Signetleaf
 
 `VERIFY.txt` in the ZIP and the [verification guide](verify.md#without-installing-signetleaf)

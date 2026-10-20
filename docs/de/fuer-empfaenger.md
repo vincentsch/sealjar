@@ -44,6 +44,12 @@ Diese Schritte benötigen Python und OpenSSL. Vertrauensanker müssen unabhängi
 bezogen werden. Mit `-attime` erfolgt die Zertifikatsprüfung zum Zeitpunkt
 `genTime` des Tokens. Die reine Textanzeige eines Tokens prüft keine Signatur.
 
+Wenn die Demo keinen Online-Zeitstempel erhält, nutzt sie einen lokalen Token
+mit dem Hinweis „Demo timestamp, not trusted“. Die Prüfung endet dann mit Code 11.
+Der Signaturschlüssel ist öffentlich. Auch wenn ein ausdrücklich angegebenes
+Wurzelzertifikat dem Token Vertrauen gewährt, liefert er keinen unabhängigen
+Zeitnachweis.
+
 ## Was sich daraus ableiten lässt
 
 Passende Prüfsummen zeigen, dass die gelisteten Dateien mit dem Manifest
@@ -59,7 +65,7 @@ Zertifikate, die lediglich im Paket mitgeliefert werden, begründen kein Vertrau
 Offline-Prüfungen erkennen spätere Zertifikatswiderrufe nicht. Signetleaf v0.1
 bewertet keine eIDAS-Qualifikation und bezeichnet Zeitstempel nicht als qualifiziert.
 
-Das Paket belegt weder Wahrheit und Vollständigkeit der Inhalte noch ehrliche
+Das Paket belegt weder Wahrheit noch Vollständigkeit der Inhalte noch ehrliche
 Bedienung oder die Herkunft der Bytes vom Server. Es bestätigt auch keine
 Lieferung oder Abnahme und keinen Zusammenhang zwischen erfasstem Code und
 Website. Eine rechtliche Wirkung oder Zulässigkeit als Beweismittel wird nicht

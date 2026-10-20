@@ -43,6 +43,9 @@ explicit roots, never certificates merely carried in the package. Offline checks
 cannot see later revocation. Signetleaf v0.1 does not assess eIDAS qualification
 or label timestamps qualified. The demo fallback is explicitly untrusted.
 
+The demo fallback uses a public signing key. It gives no independent time
+evidence, even if an explicitly supplied root grants the token trust.
+
 ## Does capture remove secrets?
 
 No. Exclusions and metadata masking reduce exposure, but cannot remove private

@@ -52,7 +52,7 @@ signetleaf verify paket.signetleaf.zip
 ```
 
 Der tatsächliche ZIP-Pfad ersetzt den Beispielnamen. Drei Ergebnisse bleiben
-getrennt: Erfassung, Dateien und Zeitstempel. Code 0 sagt, dass die Dateien
+getrennt: Erfassung, Dateien und Zeitstempel. Code 0 bedeutet, dass die Dateien
 übereinstimmen und mindestens ein Zeitstempel vertrauenswürdig ist. Probleme
 bei der Erfassung können trotzdem vorliegen. Code 10 bezeichnet veränderte oder
 ungültige Inhalte, Code 11 einen fehlenden vertrauenswürdigen Zeitstempel.
@@ -66,7 +66,7 @@ Ohne authentifiziertes Manifest könnten Dateien und Prüfsummen gemeinsam erset
 worden sein. Ein vertrauenswürdiger Zeitstempel belegt eine zeitliche Obergrenze
 für das Vorliegen der versiegelten Dateien, keine unabhängig geprüfte Erfassungszeit.
 
-Das Paket belegt weder Wahrheit oder Vollständigkeit noch ehrliche Bedienung
+Das Paket belegt weder Wahrheit noch Vollständigkeit noch ehrliche Bedienung
 oder die Herkunft der Bytes vom Server. Auch Lieferung, Abnahme und der Zusammenhang
 zwischen erfasstem Code und Website bleiben offen. Eine bestimmte rechtliche
 Wirkung oder Zulässigkeit als Beweismittel wird nicht zugesagt. Bei wichtigen
@@ -87,5 +87,11 @@ Zeitstempelanfragen beachten Standard-Proxys, die Verbindungsproben von `doctor`
 nicht. Maskierung und Ausschlüsse entfernen keine privaten Inhalte aus
 Bildschirmfotos, DOM, Code oder Historie. Gerade die Historie kann alte Geheimnisse
 enthalten. Vor der Weitergabe ist eine Prüfung des Pakets nötig.
+
+Wenn die Demo keinen Online-Zeitstempel erhält, nutzt sie einen lokalen Token
+mit dem Hinweis „Demo timestamp, not trusted“. Die Prüfung endet dann mit Code 11.
+Der Signaturschlüssel ist öffentlich. Auch wenn ein ausdrücklich angegebenes
+Wurzelzertifikat dem Token Vertrauen gewährt, liefert er keinen unabhängigen
+Zeitnachweis.
 
 Weiter geht es mit [Pakete lesen und prüfen](fuer-empfaenger.md).
