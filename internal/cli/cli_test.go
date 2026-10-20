@@ -236,7 +236,7 @@ func TestCaptureVerifyRestoreWorkingTree(t *testing.T) {
 		}
 		previous = rec.Path
 	}
-	if len(m.Files) != len(files)-1 {
+	if len(m.Files) != len(files)-2 {
 		t.Fatal("manifest does not cover payload")
 	}
 	b, stderr := invoke(t, 11, "verify", pkg, "--json")

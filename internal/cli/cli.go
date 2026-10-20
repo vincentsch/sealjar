@@ -20,14 +20,18 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
+	"github.com/vincentsch/signetleaf/internal/browser"
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
 	"github.com/vincentsch/signetleaf/internal/repo"
+	"github.com/vincentsch/signetleaf/internal/report"
 	"github.com/vincentsch/signetleaf/internal/tsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
 	"github.com/vincentsch/signetleaf/internal/web"
 )
 
 const Version = "0.1.0"
+
+var findChrome = browser.Find
 
 var slugPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`)
 var slugReplace = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
@@ -94,7 +98,7 @@ func command(use, short string) *rungrad.Command {
 }
 
 type captureOptions struct {
-	out, name                                  string
+	out, name, lang                            string
 	labels, exclude                            []string
 	untracked, history, confirmed, noTimestamp bool
 	strict                                     bool
@@ -105,6 +109,7 @@ type captureOptions struct {
 	wait                                       time.Duration
 }
 type captureResult struct {
+	PDFNote      string              `json:"pdf_note,omitempty"`
 	Targets      []packagefmt.Target `json:"targets,omitempty"`
 	Pages        []string            `json:"pages,omitempty"`
 	Widths       []int               `json:"widths,omitempty"`
@@ -125,7 +130,12 @@ func renderPlan(w io.Writer, p *repo.Plan) {
 		return
 	}
 	f := p.Facts
-	fmt.Fprintf(w, "Signetleaf will capture:\n\n  Code      %s (git, branch %s, %s, %d uncommitted changes)\n            %d files, %d bytes\n", f.Name, f.Branch, f.Commit, f.Status.Modified+f.Status.Added+f.Status.Deleted, len(p.Paths), p.TotalSize)
+	changes := f.Status.Modified + f.Status.Added + f.Status.Deleted
+	word := "changes"
+	if changes == 1 {
+		word = "change"
+	}
+	fmt.Fprintf(w, "Signetleaf will capture:\n\n  Code      %s (git, branch %s, %s, %d uncommitted %s)\n            %d files, %d bytes\n", f.Name, f.Branch, f.Commit, changes, word, len(p.Paths), p.TotalSize)
 	for _, e := range f.Excluded {
 		fmt.Fprintf(w, "  Left out  %s (%s)\n", e.Path, e.Reason)
 	}
@@ -162,6 +172,7 @@ func captureCommand(verdict *int) *rungrad.Command {
 	c.Related = []string{"signetleaf verify", "signetleaf restore"}
 	c.Configure = func(cmd *cobra.Command) {
 		f := cmd.Flags()
+		f.StringVar(&opt.lang, "lang", "both", "Report language: en, de or both")
 		f.StringVar(&opt.out, "out", ".", "Write the package in this folder")
 		f.StringVar(&opt.name, "name", "", "Use this package name (letters, numbers, hyphens and underscores)")
 		f.StringArrayVar(&opt.labels, "label", nil, "Record a label as key=value (repeatable)")
@@ -181,6 +192,9 @@ func captureCommand(verdict *int) *rungrad.Command {
 	}
 	c.Run = func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
+		if !report.ValidLanguage(opt.lang) {
+			return rungrad.NewError(1, "Report language must be en, de or both.")
+		}
 		if opt.wait < 0 || opt.wait > 30*time.Second {
 			return rungrad.NewError(1, "--wait must be between 0s and 30s.")
 		}
@@ -260,7 +274,11 @@ func captureCommand(verdict *int) *rungrad.Command {
 			}
 		}
 
+		chromePath, chromeErr := findChrome(opt.chrome)
 		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Signetleaf does not assess eIDAS qualification."}}
+		if chromeErr != nil && len(urls) == 0 {
+			result.PDFNote = "Chrome is unavailable. Reports will be HTML only; no report PDFs will be stored."
+		}
 		if len(urls) > 0 {
 			result.Widths = []int{1440, 390}
 			if opt.tablet {
@@ -273,6 +291,9 @@ func captureCommand(verdict *int) *rungrad.Command {
 		}
 		renderCapturePlan := func(w io.Writer) {
 			renderPlan(w, p)
+			if result.PDFNote != "" {
+				fmt.Fprintln(w, result.PDFNote)
+			}
 			for _, u := range result.Pages {
 				fmt.Fprintf(w, "  Page      %s (widths %v)\n", u, result.Widths)
 			}
@@ -320,6 +341,14 @@ func captureCommand(verdict *int) *rungrad.Command {
 			return failure(2, err)
 		}
 		defer os.RemoveAll(work)
+		var captureBrowser *browser.Browser
+		if chromeErr == nil {
+			captureBrowser, err = browser.Start(ctx, chromePath, opt.login)
+			if err != nil {
+				return failure(2, err)
+			}
+			defer captureBrowser.Close()
+		}
 		targets := []packagefmt.Target{}
 		var webResult web.Result
 		if p != nil {
@@ -337,7 +366,7 @@ func captureCommand(verdict *int) *rungrad.Command {
 			targets = append(targets, packagefmt.Target{Kind: "repo", Name: p.Facts.Name, State: "complete", Commit: p.Facts.Commit, Changes: p.Facts.Status.Modified + p.Facts.Status.Added + p.Facts.Status.Deleted, Payload: payload})
 		}
 		if len(urls) > 0 {
-			webResult, err = web.Capture(ctx, work, urls, positions, web.Options{Progress: func(message string) { f.Infof("%s", message) }, Chrome: opt.chrome, Tablet: opt.tablet, Wait: opt.wait, Auth: opt.auth, Login: opt.login, LoginWait: func(ctx context.Context) error {
+			webResult, err = web.Capture(ctx, work, urls, positions, web.Options{Browser: captureBrowser, Progress: func(message string) { f.Infof("%s", message) }, Chrome: opt.chrome, Tablet: opt.tablet, Wait: opt.wait, Auth: opt.auth, Login: opt.login, LoginWait: func(ctx context.Context) error {
 				fmt.Fprintln(f.Stderr, "Log in in the Chrome window, then press Enter here to capture.")
 				return waitForLoginEnter(ctx, f.Stdin)
 			}})
@@ -369,9 +398,6 @@ func captureCommand(verdict *int) *rungrad.Command {
 		}
 		result.Targets = targets
 
-		if err = os.WriteFile(filepath.Join(work, "VERIFY.txt"), packagefmt.Instructions, 0600); err != nil {
-			return failure(2, err)
-		}
 		zone := time.Now().Location().String()
 		if zone == "Local" {
 			if b, e := os.ReadFile("/etc/timezone"); e == nil {
@@ -392,6 +418,12 @@ func captureCommand(verdict *int) *rungrad.Command {
 		env := webResult.Environment
 		env.OS = runtime.GOOS
 		env.Arch = runtime.GOARCH
+		if env.ChromeVersion == "" && captureBrowser != nil {
+			env.ChromeVersion, err = captureBrowser.Version(ctx)
+			if err != nil {
+				return failure(2, err)
+			}
+		}
 		if p != nil {
 			env.GitVersion = repo.GitVersion(ctx)
 		}
@@ -399,6 +431,40 @@ func captureCommand(verdict *int) *rungrad.Command {
 
 		if !opt.noTimestamp {
 			m.TimestampAuthorities = authorities
+		}
+		if err = report.Thumbnails(work); err != nil {
+			return failure(2, err)
+		}
+		if err = os.WriteFile(filepath.Join(work, "VERIFY.txt"), packagefmt.Instructions, 0600); err != nil {
+			return failure(2, err)
+		}
+		// Collect payload hashes before rendering; reports and instructions are excluded from this view.
+		if err = packagefmt.CollectFiles(work, &m); err != nil {
+			return failure(2, err)
+		}
+		payload := m.Files[:0]
+		for _, rec := range m.Files {
+			if rec.Path != "VERIFY.txt" {
+				payload = append(payload, rec)
+			}
+		}
+		m.Files = payload
+		reportName := opt.name
+		if reportName == "" {
+			if p != nil {
+				reportName = p.Facts.Name
+			} else {
+				u, _ := url.Parse(urls[0])
+				reportName = u.Hostname()
+			}
+		}
+		if err = report.Render(work, reportName, opt.lang, m); err != nil {
+			return failure(2, err)
+		}
+		if captureBrowser != nil {
+			if err = report.PDFs(captureBrowser, work, opt.lang); err != nil {
+				return failure(2, err)
+			}
 		}
 		if err = packagefmt.BuildManifest(work, &m); err != nil {
 			return failure(2, err)
@@ -415,6 +481,12 @@ func captureCommand(verdict *int) *rungrad.Command {
 			}
 			if count > 0 {
 				result.Timestamp = "Timestamped"
+				for _, attempt := range result.Attempts {
+					if attempt.Token != nil && attempt.Token.Trusted {
+						result.Limitations = append(result.Limitations[:1], result.Limitations[2:]...)
+						break
+					}
+				}
 			} else {
 				result.NextStep = "Add a timestamp later with signetleaf stamp <package>."
 				if opt.strict {
@@ -431,6 +503,9 @@ func captureCommand(verdict *int) *rungrad.Command {
 				name = slug(u.Hostname())
 			}
 		}
+		if err = report.SealDirectory(work, name, roots); err != nil {
+			return failure(2, err)
+		}
 		output, err := packagefmt.Write(work, opt.out, name, started)
 		if err != nil {
 			return failure(2, err)
@@ -439,25 +514,52 @@ func captureCommand(verdict *int) *rungrad.Command {
 		if err != nil {
 			return failure(2, err)
 		}
+		reader, err := writePackageReader(output, "both", true, roots)
+		if err != nil {
+			os.Remove(output)
+			return failure(2, err)
+		}
+		result.ReaderFolder = resultPath(reader)
 		result.Package = resultPath(output)
 		result.Size = info.Size()
 		return f.WriteResult(result, func(w io.Writer) {
-			fmt.Fprintf(w, "\nCaptured  %s (%d bytes)\n          Timestamp: %s\n", result.Package, result.Size, result.Timestamp)
+			fmt.Fprintf(w, "\nSealed  %s (%s)\n", result.Package, humanSize(result.Size))
+			renderAttempts(w, result.Attempts)
+			if len(result.Attempts) == 0 {
+				fmt.Fprintln(w, "        Timestamp: Not timestamped")
+			}
+			reportLang := report.Languages(opt.lang)[0]
+			fmt.Fprintf(w, "        Report: %s/report/report.%s.html (copy)\n", result.ReaderFolder, reportLang)
+			if result.PDFNote != "" {
+				fmt.Fprintln(w, result.PDFNote)
+			}
+			problems := false
 			for _, target := range targets {
-				if target.Kind == "web" {
-					fmt.Fprintf(w, "Page %s: %s\n", target.URL, target.State)
-					for _, note := range target.Notes {
-						fmt.Fprintln(w, "  "+note)
-					}
+				if target.State == "complete" {
+					continue
+				}
+				if !problems {
+					fmt.Fprintln(w, "\nProblems")
+					problems = true
+				}
+				fmt.Fprintf(w, "  %s: %s\n", target.URL, target.State)
+				for _, note := range target.Notes {
+					fmt.Fprintln(w, "    "+note)
 				}
 			}
-			renderAttempts(w, result.Attempts)
+
 			if !opt.noTimestamp && result.Timestamp == "Not timestamped" {
 				fmt.Fprintln(w, "No authority returned a usable timestamp. Add one later with signetleaf stamp <package>.")
 			}
-			for _, limitation := range result.Limitations[1:] {
-				fmt.Fprintln(w, limitation)
+
+			trusted := false
+			for _, attempt := range result.Attempts {
+				trusted = trusted || attempt.Token != nil && attempt.Token.Trusted
 			}
+			if !trusted {
+				fmt.Fprintln(w, "Hashes alone do not establish the authenticity of an untimestamped manifest.")
+			}
+			fmt.Fprintf(w, "Check timestamps with signetleaf verify %s\n", result.Package)
 		})
 	}
 	return c
@@ -656,3 +758,13 @@ func restoreCommand() *rungrad.Command {
 	return c
 }
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
+
+func humanSize(n int64) string {
+	if n < 1000 {
+		return fmt.Sprintf("%d bytes", n)
+	}
+	if n < 1000000 {
+		return fmt.Sprintf("%.1f kB", float64(n)/1000)
+	}
+	return fmt.Sprintf("%.1f MB", float64(n)/1000000)
+}

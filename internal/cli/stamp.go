@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
+	"github.com/vincentsch/signetleaf/internal/report"
 	"github.com/vincentsch/signetleaf/internal/tsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
 )
@@ -20,7 +21,11 @@ func renderAttempts(w io.Writer, attempts []tsa.Attempt) {
 			fmt.Fprintf(w, "  Timestamp authority %s: %s\n", a.URL, a.Error)
 		} else if a.Token != nil {
 			t := a.Token
-			fmt.Fprintf(w, "  Timestamp authority %s: %s; time %s; serial %s; accuracy %s; trusted %t. %s\n", a.URL, t.Authority, t.Time, t.Serial, t.Accuracy, t.Trusted, t.Reason)
+			state := "The certificate chain is untrusted."
+			if t.Trusted {
+				state = "The token is valid and its certificate chain is trusted."
+			}
+			fmt.Fprintf(w, "        Timestamp: %s, %s. %s\n", t.DisplayAuthority(), t.DisplayTime(), state)
 		}
 	}
 }
@@ -92,6 +97,7 @@ func stampCommand() *rungrad.Command {
 			return failure(10, fmt.Errorf("stamp stopped: %s", b.String()))
 		}
 		result := struct {
+			ReaderFolder string        `json:"reader_folder,omitempty"`
 			Package      string        `json:"package,omitempty"`
 			DryRun       bool          `json:"dry_run"`
 			Attempts     []tsa.Attempt `json:"timestamp_attempts"`
@@ -149,11 +155,20 @@ func stampCommand() *rungrad.Command {
 		if _, e = storeTokens(work, result.Attempts); e != nil {
 			return failure(2, e)
 		}
+		if e = report.SealDirectory(work, filepath.Base(args[0]), roots); e != nil {
+			return failure(2, e)
+		}
 		stem := strings.TrimSuffix(filepath.Base(args[0]), ".signetleaf.zip") + "-stamped"
 		output, e := packagefmt.WriteStem(work, out, stem)
 		if e != nil {
 			return failure(2, e)
 		}
+		reader, e := writePackageReader(output, "both", true, roots)
+		if e != nil {
+			os.Remove(output)
+			return failure(2, e)
+		}
+		result.ReaderFolder = resultPath(reader)
 		result.Package = resultPath(output)
 		return f.WriteResult(result, func(w io.Writer) { fmt.Fprintf(w, "Stamped  %s\n", result.Package); renderAttempts(w, result.Attempts) })
 	}

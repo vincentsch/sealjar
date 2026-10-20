@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/digitorus/pkcs7"
@@ -36,15 +37,16 @@ var ekuOID = asn1.ObjectIdentifier{2, 5, 29, 37}
 var timestampOID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 3, 8}
 
 type Result struct {
-	Path      string `json:"path,omitempty"`
-	Authority string `json:"authority"`
-	Time      string `json:"time"`
-	Serial    string `json:"serial"`
-	Accuracy  string `json:"accuracy"`
-	Trusted   bool   `json:"trusted"`
-	Reason    string `json:"reason"`
-	Invalid   bool   `json:"invalid"`
-	Usable    bool   `json:"-"`
+	Path          string `json:"path,omitempty"`
+	Authority     string `json:"authority"`
+	AuthorityName string `json:"authority_name"`
+	Time          string `json:"time"`
+	Serial        string `json:"serial"`
+	Accuracy      string `json:"accuracy"`
+	Trusted       bool   `json:"trusted"`
+	Reason        string `json:"reason"`
+	Invalid       bool   `json:"invalid"`
+	Usable        bool   `json:"-"`
 }
 type Attempt struct {
 	URL   string  `json:"url"`
@@ -184,6 +186,10 @@ func Check(der, manifest []byte, roots *x509.CertPool) Result {
 	signer := p.GetOnlySigner()
 	if signer != nil {
 		r.Authority = signer.Subject.String()
+		r.AuthorityName = signer.Subject.CommonName
+		if len(signer.Subject.Organization) > 0 {
+			r.AuthorityName = strings.Join(signer.Subject.Organization, ", ")
+		}
 	}
 	digest := sha256.Sum256(manifest)
 	if !inf.Imprint.Algorithm.Algorithm.Equal(sha256OID) || !bytes.Equal(digest[:], inf.Imprint.Digest) {
@@ -437,4 +443,25 @@ func request(ctx context.Context, manifest []byte, endpoint string, roots *x509.
 	}
 	a.DER = b
 	return a
+}
+
+func (r Result) DisplayAuthority() string {
+	name := r.AuthorityName
+	if name == "" {
+		return r.Authority
+	}
+	if strings.HasPrefix(name, "DigiCert") {
+		return "DigiCert"
+	}
+	if name == "Free TSA" || name == "FreeTSA" {
+		return "FreeTSA"
+	}
+	return name
+}
+func (r Result) DisplayTime() string {
+	t, e := time.Parse(time.RFC3339Nano, r.Time)
+	if e != nil {
+		return r.Time
+	}
+	return t.UTC().Format("2006-01-02 15:04:05 UTC")
 }

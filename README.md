@@ -4,8 +4,8 @@ Signetleaf captures web pages and current Git files in a portable package.
 It records capture problems, checks file hashes, adds independent timestamps
 and restores repository snapshots into a new folder.
 
-This version captures websites and repositories and verifies RFC 3161 timestamps
-offline. Report generation is still being developed.
+Capture writes English and German HTML reports and PDFs, a bilingual seal page,
+and a reader folder beside the ZIP. Timestamp checks work offline.
 
 ## Build and capture
 
@@ -134,7 +134,41 @@ facts come from separate connections and include metadata lookup failures.
 
 The ZIP stores page files under numbered `web/` folders and host facts under
 `hosts/<origin-id>/`, where the ID is the SHA-256 of the canonical origin.
-Reports, thumbnails, seal pages and reader folders are not generated yet.
+Each screenshot also has a 600 px JPEG thumbnail linked to its full PNG in the report.
+
+## Read and share reports
+
+Capture stores reports at `report/report.en.html`, `report/report.de.html` and
+matching `.pdf` paths. Use `--lang en`, `--lang de` or `--lang both` (the default).
+PDF generation uses Chrome. A repository capture without Chrome stores HTML
+only and explains the missing PDFs before and after capture.
+
+The reader folder is next to the ZIP, with the same name minus `.zip`.
+Open `<reader folder>/report/report.en.html` or the German report locally.
+The folder includes all report images, available report PDFs, `VERIFY.txt` and
+`SEAL.html`. Send the ZIP for verification, or a PDF for a standalone report.
+
+```sh
+bin/signetleaf report capture.signetleaf.zip --out reader --lang de --pdf
+bin/signetleaf report capture.signetleaf.zip --out html-reader --lang both
+```
+
+`report` checks files and timestamp tokens before writing. It copies the
+selected stored HTML reports and images. `--pdf` also copies stored PDFs;
+extraction needs no Chrome. Without `--out`, it uses the package path minus
+`.zip`. A non-empty destination is refused with exit 1. An absent requested
+language or PDF returns exit 5; changed or missing authenticated files return
+exit 10. No reader output is written in these cases.
+
+The seal page shows the manifest hash and timestamp trust. It is outside the
+manifest and serves as a reading aid. Capture, stamp and report generate it
+from checked data; report never copies a stored seal page. `--tsa-root` adds
+independently obtained trust roots for report extraction too. An intact package
+with missing or untrusted timestamps can still be extracted; matching hashes
+alone do not establish an untimestamped manifest's authenticity.
+
+Stamp writes a fresh reader folder beside its new ZIP. It refreshes the seal
+while preserving reports, payload, manifest and existing tokens byte for byte.
 
 ## Check and restore
 
@@ -147,8 +181,8 @@ bin/signetleaf restore capture.signetleaf.zip --to recovered --dry-run
 bin/signetleaf restore capture.signetleaf.zip --to recovered
 ```
 
-Verify gives separate capture, file and timestamp answers, including each
-token’s authority, time, serial, accuracy and trust reason. Matching files with
+Verify gives separate capture, file and timestamp answers, with authority, time and trust in normal text. `--json` also gives the full
+signer subject, serial, accuracy and trust reason. Matching files with
 at least one trusted timestamp exit **0**. No trusted timestamp exits **11**.
 Changed, missing or unexpected files, malformed tokens, bad signatures and
 manifest imprint mismatches exit **10**, even if another token is trusted.

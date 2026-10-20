@@ -10,6 +10,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/spf13/cobra v1.10.2
 	github.com/vincentsch/rungrad v0.3.2
+	golang.org/x/image v0.20.0
 )
 
 require (

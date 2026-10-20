@@ -158,7 +158,7 @@ func (r *Reader) Check() ([]Difference, int, error) {
 	sort.Slice(differences, func(i, j int) bool { return differences[i].Path < differences[j].Path })
 	return differences, matching, nil
 }
-func BuildManifest(dir string, m *Manifest) error {
+func CollectFiles(dir string, m *Manifest) error {
 	m.Files = []File{}
 	err := filepath.WalkDir(dir, func(full string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -198,7 +198,10 @@ func BuildManifest(dir string, m *Manifest) error {
 		return err
 	}
 	sort.Slice(m.Files, func(i, j int) bool { return m.Files[i].Path < m.Files[j].Path })
-	if err = m.Validate(); err != nil {
+	return m.Validate()
+}
+func BuildManifest(dir string, m *Manifest) error {
+	if err := CollectFiles(dir, m); err != nil {
 		return err
 	}
 	b, err := JSON(m)

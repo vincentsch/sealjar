@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -72,6 +75,66 @@ func TestStrictWebCaptureJSONAndMixedRestore(t *testing.T) {
 	for _, h := range r.Manifest.Hosts {
 		if _, e = r.Read("hosts/" + h.OriginID + "/tls.json"); e != nil {
 			t.Fatal(e)
+		}
+	}
+
+	allFiles := entries(t, result.Package)
+	expected := []string{"SEAL.html", "VERIFY.txt", "report/report.de.html", "report/report.de.pdf", "report/report.en.html", "report/report.en.pdf"}
+	for n := range allFiles {
+		if strings.HasPrefix(n, "web/") && (strings.HasSuffix(n, ".png") || strings.HasSuffix(n, ".jpg")) {
+			expected = append(expected, n)
+		}
+	}
+	sort.Strings(expected)
+	if got := readerFiles(t, result.ReaderFolder); !reflect.DeepEqual(got, expected) {
+		t.Fatalf("capture reader: %v, wanted %v", got, expected)
+	}
+	for _, l := range []string{"en", "de"} {
+		if !bytes.HasPrefix(allFiles["report/report."+l+".pdf"], []byte("%PDF-")) {
+			t.Fatal("missing stored report PDF")
+		}
+		if bytes.Contains(allFiles["report/report."+l+".pdf"], []byte("file://")) {
+			t.Fatal("stored report PDF contains a local file link")
+		}
+		if !bytes.Contains(allFiles["report/report."+l+".html"], []byte(`href="../SEAL.html"`)) {
+			t.Fatal("printing removed links from stored HTML")
+		}
+	}
+	for _, pdf := range []bool{false, true} {
+		dest := filepath.Join(t.TempDir(), "reader")
+		args := []string{"report", result.Package, "--lang", "de", "--out", dest}
+		if pdf {
+			args = append(args, "--pdf")
+		}
+		invoke(t, 0, args...)
+		want := []string{}
+		for _, n := range expected {
+			if strings.HasPrefix(n, "report/") && (strings.Contains(n, ".en.") || !pdf && strings.HasSuffix(n, ".pdf")) {
+				continue
+			}
+			want = append(want, n)
+		}
+		if got := readerFiles(t, dest); !reflect.DeepEqual(got, want) {
+			t.Fatalf("extracted reader: %v, wanted %v", got, want)
+		}
+	}
+	for _, name := range []string{"report/report.en.pdf", result.Targets[1].Payload + "/desktop.png"} {
+		altered := entries(t, result.Package)
+		if strings.HasSuffix(name, ".pdf") {
+			delete(altered, name)
+		} else {
+			altered[name] = append(altered[name], []byte("changed")...)
+		}
+		bad := filepath.Join(t.TempDir(), "changed.zip")
+		zipEntries(t, bad, altered)
+		v := assertVerify(t, 10, bad)
+		if len(v.Files.Differences) != 1 || v.Files.Differences[0].Path != name {
+			t.Fatalf("changed file not named: %+v", v.Files)
+		}
+		dest := filepath.Join(t.TempDir(), "reader")
+		invoke(t, 10, "report", bad, "--out", dest)
+		if _, e := os.Stat(dest); !os.IsNotExist(e) {
+			t.Fatal("corruption wrote reader")
 		}
 	}
 	allFail := t.TempDir()

@@ -25,6 +25,7 @@ import (
 )
 
 type Options struct {
+	Browser  *browser.Browser
 	Progress func(string)
 	Chrome   string
 	Tablet   bool
@@ -283,15 +284,19 @@ func boolPtr(v bool) *bool { return &v }
 
 func Capture(ctx context.Context, work string, urls []string, positions []int, opt Options) (Result, error) {
 	result := Result{}
-	path, e := browser.Find(opt.Chrome)
-	if e != nil {
-		return result, e
+	b := opt.Browser
+	var e error
+	if b == nil {
+		path, err := browser.Find(opt.Chrome)
+		if err != nil {
+			return result, err
+		}
+		b, e = browser.Start(ctx, path, opt.Login, opt.TestBrowserOptions...)
+		if e != nil {
+			return result, e
+		}
+		defer b.Close()
 	}
-	b, e := browser.Start(ctx, path, opt.Login, opt.TestBrowserOptions...)
-	if e != nil {
-		return result, e
-	}
-	defer b.Close()
 	ctx = b.Context
 	t := chromedp.FromContext(ctx).Target
 	if _, e = cdp.Call(ctx, t, network.Enable, network.EnableParams{}); e != nil {

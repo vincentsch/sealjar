@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"crypto/x509"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
+	"github.com/vincentsch/signetleaf/internal/report"
 	"github.com/vincentsch/signetleaf/internal/tsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
 )
@@ -64,7 +66,7 @@ func reportCommand() *rungrad.Command {
 			}
 			for _, name := range names {
 				if _, ok := r.Entries[name]; !ok {
-					return rungrad.NewError(5, "The package has no stored "+name+". Report generation is not yet available during capture.")
+					return rungrad.NewError(5, "The package has no stored "+name+".")
 				}
 				selected = append(selected, name)
 			}
@@ -77,10 +79,9 @@ func reportCommand() *rungrad.Command {
 		if out == "" {
 			out = strings.TrimSuffix(args[0], ".zip")
 		}
-		if _, e = os.Lstat(out); e == nil {
-			return rungrad.NewError(1, "Reader folder already exists. Choose another --out folder.")
-		} else if !os.IsNotExist(e) {
-			return failure(2, e)
+		out = filepath.Clean(out)
+		if e = readerDestination(out); e != nil {
+			return failure(1, e)
 		}
 		result := struct {
 			Directory    string        `json:"directory"`
@@ -88,58 +89,13 @@ func reportCommand() *rungrad.Command {
 			Verification verify.Result `json:"verification"`
 		}{resultPath(out), f.DryRun(), v}
 		if !f.DryRun() {
-			stage, e := os.MkdirTemp(filepath.Dir(out), ".signetleaf-reader-")
+			seal, e := report.Seal(r.Manifest, r.ManifestBytes, v.Tokens, filepath.Base(strings.TrimSuffix(args[0], ".zip")))
 			if e != nil {
 				return failure(2, e)
 			}
-			defer os.RemoveAll(stage)
-			for _, n := range selected {
-				dest := filepath.Join(stage, filepath.FromSlash(n))
-				if e = os.MkdirAll(filepath.Dir(dest), 0700); e != nil {
-					return failure(2, e)
-				}
-				in, e := r.Entries[n].Open()
-				if e != nil {
-					return inputError(e)
-				}
-				dst, e := os.OpenFile(dest, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-				if e != nil {
-					in.Close()
-					return failure(2, e)
-				}
-				_, e = io.Copy(dst, in)
-				ce := in.Close()
-				de := dst.Close()
-				if e != nil {
-					return failure(2, e)
-				}
-				if ce != nil {
-					return inputError(ce)
-				}
-				if de != nil {
-					return failure(2, de)
-				}
-			}
-			// Mkdir reserves the destination without replacing another writer's folder.
-			if e = os.Mkdir(out, 0700); e != nil {
+			if e = extractReader(r, out, selected, seal); e != nil {
 				return failure(2, e)
 			}
-			committed := false
-			defer func() {
-				if !committed {
-					os.RemoveAll(out)
-				}
-			}()
-			children, e := os.ReadDir(stage)
-			if e != nil {
-				return failure(2, e)
-			}
-			for _, child := range children {
-				if e = os.Rename(filepath.Join(stage, child.Name()), filepath.Join(out, child.Name())); e != nil {
-					return failure(2, e)
-				}
-			}
-			committed = true
 		}
 		return f.WriteResult(result, func(w io.Writer) {
 			if f.DryRun() {
@@ -151,4 +107,103 @@ func reportCommand() *rungrad.Command {
 		})
 	}
 	return c
+}
+
+func readerDestination(out string) error {
+	info, e := os.Lstat(out)
+	if os.IsNotExist(e) {
+		return nil
+	}
+	if e != nil {
+		return e
+	}
+	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("Reader destination must be an empty folder. Choose another --out folder.")
+	}
+	entries, e := os.ReadDir(out)
+	if e != nil {
+		return e
+	}
+	if len(entries) > 0 {
+		return fmt.Errorf("Reader folder is not empty. Choose another --out folder.")
+	}
+	return nil
+}
+func extractReader(r *packagefmt.Reader, out string, names []string, seal []byte) error {
+	stage, e := os.MkdirTemp(filepath.Dir(out), ".signetleaf-reader-")
+	if e != nil {
+		return e
+	}
+	defer os.RemoveAll(stage)
+	for _, n := range names {
+		dest := filepath.Join(stage, filepath.FromSlash(n))
+		if e = os.MkdirAll(filepath.Dir(dest), 0700); e != nil {
+			return e
+		}
+		in, e := r.Entries[n].Open()
+		if e != nil {
+			return e
+		}
+		dst, e := os.OpenFile(dest, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if e != nil {
+			in.Close()
+			return e
+		}
+		_, e = io.Copy(dst, in)
+		ce := in.Close()
+		de := dst.Close()
+		if e != nil {
+			return e
+		}
+		if ce != nil {
+			return ce
+		}
+		if de != nil {
+			return de
+		}
+	}
+	if e = os.WriteFile(filepath.Join(stage, "SEAL.html"), seal, 0600); e != nil {
+		return e
+	}
+	if e = readerDestination(out); e != nil {
+		return e
+	}
+	// Remove accepts only an empty destination; it cannot remove another reader tree.
+	if _, err := os.Lstat(out); err == nil {
+		if e = os.Remove(out); e != nil {
+			return e
+		}
+	}
+	return os.Rename(stage, out)
+}
+func writePackageReader(name, lang string, pdf bool, roots *x509.CertPool) (string, error) {
+	r, e := packagefmt.Open(name)
+	if e != nil {
+		return "", e
+	}
+	defer r.Close()
+	v, code, e := verify.Check(r, roots)
+	if e != nil {
+		return "", e
+	}
+	if code == 10 {
+		return "", fmt.Errorf("new package failed integrity checks: %s", v.Files.Detail)
+	}
+	selected := []string{}
+	for _, n := range r.Names {
+		if n == "VERIFY.txt" || strings.HasPrefix(n, "web/") && (strings.HasSuffix(n, ".png") || strings.HasSuffix(n, ".jpg")) {
+			selected = append(selected, n)
+		}
+		for _, l := range report.Languages(lang) {
+			if n == "report/report."+l+".html" || pdf && n == "report/report."+l+".pdf" {
+				selected = append(selected, n)
+			}
+		}
+	}
+	seal, e := report.Seal(r.Manifest, r.ManifestBytes, v.Tokens, filepath.Base(strings.TrimSuffix(name, ".zip")))
+	if e != nil {
+		return "", e
+	}
+	out := strings.TrimSuffix(name, ".zip")
+	return out, extractReader(r, out, selected, seal)
 }

@@ -51,7 +51,11 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 			targets = append(targets, fmt.Sprintf("Page %s: %s. %s", t.URL, t.State, strings.Join(t.Notes, "; ")))
 			continue
 		}
-		targets = append(targets, fmt.Sprintf("Repository %s at %s with %d uncommitted changes.", t.Name, t.Commit, t.Changes))
+		word := "changes"
+		if t.Changes == 1 {
+			word = "change"
+		}
+		targets = append(targets, fmt.Sprintf("Repository %s at %s with %d uncommitted %s.", t.Name, t.Commit, t.Changes, word))
 	}
 	result := Result{
 		Capture:     Answer{"Complete", strings.Join(targets, " ")},
@@ -88,6 +92,7 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 		result.Timestamp = Answer{"Untrusted", "No timestamp is trusted."}
 	}
 	if trusted {
+		result.Limitations = result.Limitations[1:]
 		result.Timestamp = Answer{"Trusted", "At least one timestamp has a valid signature and trusted certificate chain."}
 		if code != 10 {
 			code = 0
@@ -130,7 +135,11 @@ func Render(w io.Writer, r Result) {
 	}
 	fmt.Fprintf(w, "\nTimestamp\n  %s. %s\n", r.Timestamp.State, r.Timestamp.Detail)
 	for _, t := range r.Tokens {
-		fmt.Fprintf(w, "  %s: %s; time %s; serial %s; accuracy %s; trusted %t. %s\n", t.Path, t.Authority, t.Time, t.Serial, t.Accuracy, t.Trusted, t.Reason)
+		if t.Trusted {
+			fmt.Fprintf(w, "  Timestamped by %s at %s. The token is valid and its certificate chain is trusted.\n", t.DisplayAuthority(), t.DisplayTime())
+		} else {
+			fmt.Fprintf(w, "  %s at %s: %s\n", t.DisplayAuthority(), t.DisplayTime(), t.Reason)
+		}
 	}
 	for _, line := range r.Limitations {
 		fmt.Fprintln(w, "  "+line)
