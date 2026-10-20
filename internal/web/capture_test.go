@@ -8,6 +8,7 @@ import (
 	"github.com/vincentsch/signetleaf/internal/browser"
 	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
 	"github.com/vincentsch/signetleaf/internal/testsite"
+	"github.com/vincentsch/signetleaf/internal/testutil"
 	site "github.com/vincentsch/signetleaf/testdata/site"
 	"image/png"
 	"net/http"
@@ -25,7 +26,7 @@ func chrome(t *testing.T) string {
 	t.Helper()
 	p, e := browser.Find("")
 	if e != nil {
-		t.Skip(e)
+		testutil.RequireChrome(t, e)
 	}
 	return p
 }

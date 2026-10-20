@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/vincentsch/signetleaf/internal/testutil"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +42,7 @@ func TestWebDryRunAndValidation(t *testing.T) {
 }
 func TestStrictWebCaptureJSONAndMixedRestore(t *testing.T) {
 	if _, e := browser.Find(""); e != nil {
-		t.Skip(e)
+		testutil.RequireChrome(t, e)
 	}
 	s := httptest.NewServer(testsite.Handler())
 	defer s.Close()
@@ -208,7 +209,7 @@ func TestDoctorUsesTLSForHTTPS(t *testing.T) {
 
 func TestBasicAuthFlagAndEnvironment(t *testing.T) {
 	if _, e := browser.Find(""); e != nil {
-		t.Skip(e)
+		testutil.RequireChrome(t, e)
 	}
 	s := httptest.NewServer(testsite.Handler())
 	defer s.Close()
@@ -273,7 +274,7 @@ func TestRepositoryCaptureDoesNotClaimBasicAuth(t *testing.T) {
 }
 func TestFailedCertificateIsExplained(t *testing.T) {
 	if _, e := browser.Find(""); e != nil {
-		t.Skip(e)
+		testutil.RequireChrome(t, e)
 	}
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Page") }))
 	defer server.Close()

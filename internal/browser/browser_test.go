@@ -2,6 +2,7 @@ package browser
 
 import (
 	"context"
+	"github.com/vincentsch/signetleaf/internal/testutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,7 +13,7 @@ import (
 func TestIsolatedProfileCleanup(t *testing.T) {
 	p, e := Find("")
 	if e != nil {
-		t.Skip(e)
+		testutil.RequireChrome(t, e)
 	}
 	b, e := Start(context.Background(), p, false)
 	if e != nil {
@@ -36,7 +37,7 @@ func TestDiscoveryFailure(t *testing.T) {
 func TestVersionUsesIsolatedBrowser(t *testing.T) {
 	path, err := Find("")
 	if err != nil {
-		t.Skip(err)
+		testutil.RequireChrome(t, err)
 	}
 	b, err := Start(context.Background(), path, false)
 	if err != nil {
@@ -59,7 +60,7 @@ func TestVersionNeverLaunchesWithoutProfile(t *testing.T) {
 	}
 	path, err := Find("")
 	if err != nil {
-		t.Skip(err)
+		testutil.RequireChrome(t, err)
 	}
 	work := t.TempDir()
 	launcher := filepath.Join(work, "chrome-probe")

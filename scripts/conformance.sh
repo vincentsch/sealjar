@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-repo_root=$PWD
-mkdir -p .vroni/wip/scratch
-scratch=$(mktemp -d "$repo_root/.vroni/wip/scratch/conformance-XXXXXX")
+scratch=$(mktemp -d /tmp/sl-conf.XXXXXX)
 tsa_pid=
 cleanup() {
   if [[ -n "$tsa_pid" ]]; then kill "$tsa_pid" 2>/dev/null || true; wait "$tsa_pid" 2>/dev/null || true; fi
   rm -rf "$scratch"
 }
 trap cleanup EXIT
-mkdir "$scratch/tmp"
-export TMPDIR="$scratch/tmp"
+export TMPDIR="$scratch"
 export GIT_CONFIG_NOSYSTEM=1
 export GIT_CONFIG_GLOBAL=/dev/null
 CGO_ENABLED=0 go build -o "$scratch/signetleaf" ./cmd/signetleaf

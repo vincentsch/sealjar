@@ -27,10 +27,9 @@ import (
 	"github.com/vincentsch/signetleaf/internal/tsa"
 	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
 	"github.com/vincentsch/signetleaf/internal/verify"
+	"github.com/vincentsch/signetleaf/internal/version"
 	"github.com/vincentsch/signetleaf/internal/web"
 )
-
-const Version = "0.1.0"
 
 var findChrome = browser.Find
 
@@ -78,15 +77,8 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	restoreSignals := context.AfterFunc(ctx, stop)
 	defer restoreSignals()
 	verdict := 0
-	app := rungrad.New(rungrad.AppConfig{Name: "signetleaf", Short: "Capture websites and repository snapshots", Long: "Keep web pages and current Git files in a portable package. Check its hashes and timestamps offline.", Version: Version})
+	app := NewApp(&verdict)
 	app.Root().SetContext(ctx)
-	app.AddCommand(captureCommand(&verdict))
-	app.AddCommand(verifyCommand(&verdict))
-	app.AddCommand(restoreCommand())
-	app.AddCommand(stampCommand())
-	app.AddCommand(doctorCommand())
-	app.AddCommand(reportCommand())
-	app.AddCommand(demoCommand())
 	code := app.RunIO(args, stdin, stdout, stderr)
 	// Completed verdicts are data, not invocation failures. Returning nil to
 	// rungrad avoids a second generic error document after the result.
@@ -95,6 +87,20 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	}
 	return code
 }
+
+// NewApp builds the command tree shared by execution and reference generation.
+func NewApp(verdict *int) *rungrad.App {
+	app := rungrad.New(rungrad.AppConfig{Name: "signetleaf", Short: "Capture websites and repository snapshots", Long: "Keep web pages and current Git files in a portable package. Check its hashes and timestamps offline.", Version: version.Version + " (" + version.Commit + ")"})
+	app.AddCommand(captureCommand(verdict))
+	app.AddCommand(verifyCommand(verdict))
+	app.AddCommand(restoreCommand())
+	app.AddCommand(stampCommand())
+	app.AddCommand(doctorCommand())
+	app.AddCommand(reportCommand())
+	app.AddCommand(demoCommand())
+	return app
+}
+
 func command(use, short string) *rungrad.Command {
 	return &rungrad.Command{Use: use, Short: short, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}}
 }
@@ -174,7 +180,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 	c := command("capture <target>...", "Capture web pages and current files from one Git repository")
 	c.Mutates = true
 	c.Args = cobra.MinimumNArgs(1)
-	c.Examples = []string{"signetleaf capture . --confirm --no-timestamp", "signetleaf capture . --dry-run --no-timestamp --include-untracked"}
+	c.Examples = []string{"signetleaf capture . --confirm --no-timestamp --out ../signetleaf-captures", "signetleaf capture . --dry-run --no-timestamp --include-untracked --out ../signetleaf-captures"}
 	c.Related = []string{"signetleaf verify", "signetleaf restore"}
 	c.Configure = func(cmd *cobra.Command) {
 		f := cmd.Flags()
@@ -433,7 +439,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		if p != nil {
 			env.GitVersion = repo.GitVersion(ctx)
 		}
-		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: opt.noTimestamp, ManualLogin: opt.login, BasicAuth: opt.auth != "" && len(urls) > 0, Wait: opt.wait.String(), Widths: result.Widths}, Targets: targets, Environment: env, Hosts: webResult.Hosts, TimestampAuthorities: []string{}}
+		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: version.Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: opt.noTimestamp, ManualLogin: opt.login, BasicAuth: opt.auth != "" && len(urls) > 0, Wait: opt.wait.String(), Widths: result.Widths}, Targets: targets, Environment: env, Hosts: webResult.Hosts, TimestampAuthorities: []string{}}
 
 		if !opt.noTimestamp {
 			m.TimestampAuthorities = authorities

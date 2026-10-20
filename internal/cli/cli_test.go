@@ -7,6 +7,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"github.com/vincentsch/signetleaf/internal/version"
 	"io"
 	"io/fs"
 	"os"
@@ -361,7 +362,7 @@ func TestConfirmationAndDryRuns(t *testing.T) {
 		t.Fatal("restore dry run created bundle")
 	}
 	b, _ = invoke(t, 0, "--version")
-	if !strings.Contains(string(b), Version) {
+	if !strings.Contains(string(b), version.Version) || !strings.Contains(string(b), version.Commit) {
 		t.Fatal("version missing")
 	}
 	invoke(t, 5, "verify", filepath.Join(parent, "missing.zip"))

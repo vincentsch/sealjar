@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/vincentsch/signetleaf/internal/testutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +32,7 @@ func TestDemoDryRunNeedsNoPrerequisitesOrFiles(t *testing.T) {
 }
 func TestDemoFallbackJSONAndRepeatArtifacts(t *testing.T) {
 	if _, err := browser.Find(""); err != nil {
-		t.Skip(err)
+		testutil.RequireChrome(t, err)
 	}
 	old := tsa.Defaults
 	tsa.Defaults = []string{"http://127.0.0.1:1", "http://127.0.0.1:2"}
