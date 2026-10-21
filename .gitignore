@@ -12,3 +12,6 @@ coverage.*
 *.log
 .DS_Store
 /tmp/
+
+# Local scratch output from QA helpers
+.vroni/
