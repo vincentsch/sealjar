@@ -8,7 +8,11 @@ the dark variant uses paper `#F4F3EF` for the lettering and outline.
 `demo-report.png` and `demo-seal.png` show actual bundled demo output with its
 trusted DigiCert timestamp. The report opening and bilingual seal were captured
 from the paired reader folder at 1440×1500 pixels, then losslessly compressed
-as PNGs. The report points to the seal and verify for timestamp results.
+as PNGs. They use clean source version `e307d1d` and an `en-US` capture locale.
+Headless Chrome used the same locale and device scale 1, with fonts and linked
+images loaded before taking each screenshot from the page top. Compression
+preserved the decoded pixels. The report points to the seal and verify for
+timestamp results.
 
 An offline demo can instead use a local token labelled “Demo timestamp, not
 trusted”, giving verify exit 11. Its signing key is public. Even if an explicit

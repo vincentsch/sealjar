@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/media/wordmark-dark.svg">
-    <img src="docs/media/wordmark-light.svg" alt="Sealjar" width="380">
+    <img src="docs/media/wordmark-light.svg" alt="Sealjar" width="287">
   </picture>
 </p>
 <p align="center"><b>Timestamped captures of your website and code.</b></p>
