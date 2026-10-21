@@ -77,9 +77,8 @@ root grants it trust.
 <p><img src="docs/media/demo-report.png" alt="Bakery demo report opening with labelled capture details and page screenshots" width="820"></p>
 <p><img src="docs/media/demo-seal.png" alt="Bilingual bakery demo seal showing a trusted DigiCert timestamp and verification limits" width="820"></p>
 
-These images show earlier demo output with placeholder artwork and a trusted
-DigiCert timestamp.
-The report points to the seal and verify for timestamp results.
+These images come from a demo run that received a trusted DigiCert timestamp.
+The report points to the seal and `sealjar verify` for timestamp results.
 
 ## Capture by hand
 
