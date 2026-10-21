@@ -353,13 +353,15 @@ func Capture(ctx context.Context, work string, urls []string, positions []int, o
 						continue
 					}
 					headers := []*fetch.HeaderEntry{}
+					hasAuthorization := false
 					for k, v := range ev.Request.Headers {
-						if !strings.EqualFold(k, "Authorization") {
-							headers = append(headers, &fetch.HeaderEntry{Name: k, Value: toString(v)})
+						if strings.EqualFold(k, "Authorization") {
+							hasAuthorization = true
 						}
+						headers = append(headers, &fetch.HeaderEntry{Name: k, Value: toString(v)})
 					}
 					origin, _ := Origin(ev.Request.URL)
-					if opt.Auth != "" && allowed[origin] {
+					if !hasAuthorization && opt.Auth != "" && allowed[origin] {
 						headers = append(headers, &fetch.HeaderEntry{Name: "Authorization", Value: "Basic " + base64.StdEncoding.EncodeToString([]byte(opt.Auth))})
 					}
 					call, c := context.WithTimeout(authCtx, 5*time.Second)

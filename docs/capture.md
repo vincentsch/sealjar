@@ -54,6 +54,9 @@ sealjar capture https://staging.example.com/private/ --out .. --confirm --no-pro
 
 `SEALJAR_AUTH` and `--auth user:password` are sent only to listed target
 origins, never another origin after a redirect or a third-party resource.
+Application Authorization headers, such as bearer tokens, are preserved for requests
+the browser permits, including API requests to another origin. Sealjar adds Basic
+credentials only when a request has no application Authorization header.
 Do not put credentials inside URLs. The [local fixture](quickstart.md#try-the-instructions-without-an-external-site)
 uses `--auth client:handover` for testing.
 

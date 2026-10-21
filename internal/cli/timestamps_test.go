@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -200,7 +201,18 @@ func TestTimestampDryRunsAndVerdictPrecedence(t *testing.T) {
 		t.Fatal("dry run created output")
 	}
 	unsigned := captured(t, repo, t.TempDir())
-	invoke(t, 0, "stamp", unsigned, "--tsa", spy.URL, "--dry-run", "--json")
+	before, _ := os.ReadDir(filepath.Dir(unsigned))
+	b, _ := invoke(t, 0, "stamp", unsigned, "--tsa", spy.URL, "--dry-run", "--json")
+	var dry struct {
+		Package      string        `json:"package"`
+		DryRun       bool          `json:"dry_run"`
+		Verification verify.Result `json:"verification"`
+	}
+	oneJSON(t, b, &dry)
+	after, _ := os.ReadDir(filepath.Dir(unsigned))
+	if !dry.DryRun || dry.Package != "" || dry.Verification.Timestamp.State != "Not timestamped" || len(before) != len(after) {
+		t.Fatal("dry-run did not describe input without writing")
+	}
 	if requests.Load() != 0 {
 		t.Fatal("dry run contacted authority")
 	}
@@ -446,5 +458,39 @@ func TestPlainTimestampFailuresKeepJSONDiagnostics(t *testing.T) {
 	renderAttempts(&b, []tsa.Attempt{{Token: &token, Error: "raw diagnostic"}})
 	if !strings.Contains(b.String(), "different manifest") || strings.Contains(b.String(), "raw diagnostic") {
 		t.Fatal(b.String())
+	}
+}
+
+func TestStampVerificationDescribesOutput(t *testing.T) {
+	repo := fixture(t)
+	unsigned := captured(t, repo, t.TempDir())
+	before, err := os.ReadFile(unsigned)
+	if err != nil {
+		t.Fatal(err)
+	}
+	url, root := localTSA(t, testtsa.Options{})
+	for _, trusted := range []bool{true, false} {
+		args := []string{"stamp", unsigned, "--json", "--tsa", url}
+		flags := []string{}
+		code, state := 11, "Untrusted"
+		if trusted {
+			flags = []string{"--tsa-root", root}
+			code, state = 0, "Trusted"
+		}
+		args = append(args, flags...)
+		b, _ := invoke(t, 0, args...)
+		var result struct {
+			Package      string        `json:"package"`
+			Verification verify.Result `json:"verification"`
+		}
+		oneJSON(t, b, &result)
+		actual := assertVerify(t, code, result.Package, flags...)
+		if !reflect.DeepEqual(result.Verification, actual) || actual.Timestamp.State != state {
+			t.Errorf("stamp verdict differs from output verify: stamp=%+v verify=%+v", result.Verification, actual)
+		}
+	}
+	after, err := os.ReadFile(unsigned)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("stamp changed input ZIP")
 	}
 }

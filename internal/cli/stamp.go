@@ -178,6 +178,20 @@ func stampCommand() *rungrad.Command {
 		if e != nil {
 			return failure(2, e)
 		}
+		completed, e := packagefmt.Open(output)
+		if e != nil {
+			os.Remove(output)
+			return failure(2, e)
+		}
+		result.Verification, _, e = verify.Check(completed, roots)
+		closeErr := completed.Close()
+		if e == nil {
+			e = closeErr
+		}
+		if e != nil {
+			os.Remove(output)
+			return failure(2, e)
+		}
 		reader, e := writePackageReader(output, "both", true, roots)
 		if e != nil {
 			os.Remove(output)

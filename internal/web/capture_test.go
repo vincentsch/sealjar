@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -398,5 +399,120 @@ func TestEventStreamDoesNotBlockIdle(t *testing.T) {
 	}
 	if time.Since(start) > 15*time.Second {
 		t.Fatal("event stream delayed capture")
+	}
+}
+
+func TestApplicationAuthorization(t *testing.T) {
+	const bearer = "Bearer fixture-app-token"
+	const basic = "Basic Zml4dHVyZTpoYW5kb3Zlcg=="
+	for _, auth := range []string{"", "fixture:handover"} {
+		t.Run(fmt.Sprintf("basic=%t", auth != ""), func(t *testing.T) {
+			var mu sync.Mutex
+			received := map[string][]string{}
+			record := func(key, value string) {
+				mu.Lock()
+				defer mu.Unlock()
+				received[key] = append(received[key], value)
+			}
+			api := func(origin string) http.HandlerFunc {
+				return func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Access-Control-Allow-Origin", "*")
+					w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+					if r.Method == "OPTIONS" {
+						return
+					}
+					key := origin + "/" + r.URL.Query().Get("viewport")
+					if r.URL.Path == "/plain" {
+						record(key+"/plain", r.Header.Get("Authorization"))
+						fmt.Fprint(w, "public")
+						return
+					}
+					record(key, r.Header.Get("Authorization"))
+					if r.Header.Get("Authorization") != bearer {
+						w.WriteHeader(401)
+						return
+					}
+					fmt.Fprint(w, "authorized")
+					record(key+"/authorized", "200")
+				}
+			}
+			other := httptest.NewServer(api("other"))
+			defer other.Close()
+			page := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/api" || r.URL.Path == "/plain" {
+					api("same")(w, r)
+					return
+				}
+				record("page", r.Header.Get("Authorization"))
+				fmt.Fprintf(w, `<!doctype html><title>API check</title><p id="result">waiting</p><script>
+const viewport = innerWidth === 1440 ? 'desktop' : 'mobile';
+['/plain', %q + '/plain'].forEach(url => fetch(url + '?viewport=' + viewport));
+Promise.all(['/api', %q].map(url => fetch(url + '?viewport=' + viewport,
+{headers:{Authorization:%q}}).then(r => {if (!r.ok) throw Error('API failed'); return r.text()})))
+.then(() => document.querySelector('#result').textContent = 'Both APIs authorized');
+</script>`, other.URL, other.URL, bearer)
+			}))
+			defer page.Close()
+			r, work := runCapture(t, []string{page.URL}, Options{Auth: auth})
+			mu.Lock()
+			defer mu.Unlock()
+			for _, origin := range []string{"same", "other"} {
+				for _, viewport := range []string{"desktop", "mobile"} {
+					key := origin + "/" + viewport
+					if len(received[key+"/authorized"]) == 0 {
+						t.Errorf("%s %s API never returned an authorized response", origin, viewport)
+					}
+					plain := received[key+"/plain"]
+					if len(plain) == 0 {
+						t.Errorf("%s %s plain request missing", origin, viewport)
+					}
+					plainWant := ""
+					if origin == "same" && auth != "" {
+						plainWant = basic
+					}
+					for _, value := range plain {
+						if value != plainWant {
+							t.Errorf("%s %s plain authorization differs", origin, viewport)
+						}
+					}
+					values := received[key]
+					if len(values) == 0 {
+						t.Errorf("no %s %s API request", origin, viewport)
+					}
+					for _, value := range values {
+						if value != bearer {
+							t.Errorf("%s %s API authorization lost", origin, viewport)
+						}
+					}
+				}
+			}
+			want := ""
+			if auth != "" {
+				want = basic
+			}
+			for _, value := range received["page"] {
+				if value != want {
+					t.Error("page basic authorization differs")
+				}
+			}
+			if !strings.Contains(read(t, work, r.Targets[0].Payload+"/dom.html"), ">Both APIs authorized<") {
+				t.Error("page did not render API success")
+			}
+			for _, name := range []string{"network.json", "headers.json", "console.json", "redirects.json"} {
+				text := read(t, work, r.Targets[0].Payload+"/"+name)
+				for _, secret := range []string{bearer, basic, "fixture:handover"} {
+					if strings.Contains(text, secret) {
+						t.Errorf("%s leaked authorization", name)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestMaskBearerAuthorization(t *testing.T) {
+	got := maskHeaders(map[string]any{"aUtHoRiZaTiOn": "Bearer fixture-app-token"}, "")
+	if got["aUtHoRiZaTiOn"] != "<masked>" {
+		t.Fatal("bearer authorization was not masked")
 	}
 }

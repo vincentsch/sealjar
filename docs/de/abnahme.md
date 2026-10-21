@@ -36,7 +36,10 @@ Pfade beziehen sich auf den aktuellen Arbeitsordner. Der Trockenlauf startet
 keinen Browser, greift nicht aufs Netz zu und schreibt keine Dateien.
 Bei Formularanmeldung ist `--login` nur mit einer anwesenden Person möglich.
 HTTP-Basic-Auth kann über `SEALJAR_AUTH` übergeben werden. Zugangsdaten gehören
-weder in URLs noch in Protokolle. Weitere Optionen stehen unter [Capture](../capture.md).
+weder in URLs noch in Protokolle. Authorization-Header der Anwendung, etwa
+Bearer-Tokens für eine API, bleiben erhalten. Sealjar ergänzt Basic-Auth nur
+bei Anfragen ohne eigenen Authorization-Header und nur für die aufgeführten
+Zielursprünge. Weitere Optionen stehen unter [Capture](../capture.md).
 
 ## Ergebnis lesen und prüfen
 

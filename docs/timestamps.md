@@ -63,3 +63,6 @@ Demo tries the default authority. If unavailable, it uses a local token labelled
 without granting trust. Verify normally exits 11 for that fallback. The signing
 key is public, so anyone can make such a token. It gives no independent time
 evidence, even if an explicitly supplied root grants it trust.
+
+With `stamp --json`, `verification` describes the completed output package,
+checked with the supplied roots. In a dry run it describes the input package.

@@ -197,3 +197,43 @@ func TestSealTokenPresentation(t *testing.T) {
 	}
 }
 func templateEscape(s string) string { return template.HTMLEscapeString(s) }
+
+func TestReportExplainsConditionalTimeEvidence(t *testing.T) {
+	for _, lang := range []string{"en", "de"} {
+		dir := t.TempDir()
+		if err := Render(dir, "capture", lang, packagefmt.Manifest{}); err != nil {
+			t.Fatal(err)
+		}
+		raw, err := os.ReadFile(filepath.Join(dir, "report/report."+lang+".html"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		text := string(raw)
+		sections := strings.Split(text, "<section>")
+		for _, section := range []string{sections[1], sections[5]} {
+			needs := map[string][]string{
+				"en": {"independent trusted authority", "public demo key", "even when explicitly trusted", "SEAL.html", "sealjar verify"},
+				"de": {"unabhängigen, vertrauenswürdigen Zeitstempelstelle", "öffentlichen Demo-Schlüssel", "auch bei ausdrücklich gewährtem Vertrauen", "SEAL.html", "sealjar verify"},
+			}[lang]
+			for _, need := range needs {
+				if !strings.Contains(section, need) {
+					t.Errorf("%s section lacks %q", lang, need)
+				}
+			}
+		}
+		for _, old := range []string{"files match the authenticated manifest", "Dateien mit dem authentifizierten Manifest", "A timestamp's time is an upper bound", "Die Zeit eines Zeitstempels ist eine Obergrenze"} {
+			if strings.Contains(text, old) {
+				t.Errorf("unconditional claim: %s", old)
+			}
+		}
+		method := sections[5]
+		for _, need := range map[string][]string{
+			"en": {"Matching hashes show agreement with the manifest", "alone do not authenticate", "revocation"},
+			"de": {"Passende Prüfsummen zeigen", "allein authentifiziert", "Zertifikatswiderrufe"},
+		}[lang] {
+			if !strings.Contains(method, need) {
+				t.Errorf("%s method lacks %q", lang, need)
+			}
+		}
+	}
+}
