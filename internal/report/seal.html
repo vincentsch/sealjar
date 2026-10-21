@@ -1,1 +1,76 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'"><title>Seal / Siegel · {{.Name}}</title><style>{{css}}</style><body><main><h1>Seal / Siegel</h1><p>{{.Name}} · <code>{{.M.CaptureID}}</code></p><p>Manifest SHA-256</p><p class="hash" data-sha256="{{.Hash}}"><code>{{groupHash .Hash}}</code></p><div class="columns"><section lang="en"><h2>Timestamp check</h2><p>Trust was checked when this page was made. Run <code>sealjar verify</code> to check again using current roots.</p>{{range .Tokens}}<h3>{{authority . "en"}}</h3><p>{{if .Trusted}}Trusted{{else}}Untrusted{{end}} · {{tokenReason . "en"}}</p>{{if .Demo}}<p class="warning">{{provenance . "en"}}</p>{{end}}<p>{{tokenTime .Time $.M.TimeZone "en"}}</p><p>Serial: <code>{{serial .Serial "en"}}</code><br>Accuracy: {{accuracy .Accuracy "en"}}<br>Token: {{.Path}}</p><p><strong>Certificate details</strong>: {{.Authority}}</p>{{if not .Trusted}}<p><strong>Technical reason</strong>: {{.Reason}}</p>{{end}}{{else}}<p class="warning">Not timestamped. Add a timestamp later: <code>sealjar stamp &lt;package&gt;</code></p>{{end}}<p>This page is made from the manifest and timestamp tokens. It is outside the manifest; <code>sealjar verify</code> checks tokens directly.</p><p>{{timeLimit "en"}} It does not independently confirm the capture time. Offline checks cannot see later certificate revocation. Sealjar does not assess eIDAS qualification.</p></section><section lang="de"><h2>Zeitstempel prüfen</h2><p>Das Vertrauen wurde beim Erstellen dieser Seite geprüft. <code>sealjar verify</code> prüft erneut mit den aktuellen Vertrauensankern.</p>{{range .Tokens}}<h3>{{authority . "de"}}</h3><p>{{if .Trusted}}Vertrauenswürdig{{else}}Nicht vertrauenswürdig{{end}} · {{tokenReason . "de"}}</p>{{if .Demo}}<p class="warning">{{provenance . "de"}}</p>{{end}}<p>{{tokenTime .Time $.M.TimeZone "de"}}</p><p>Seriennummer: <code>{{serial .Serial "de"}}</code><br>Genauigkeit: {{accuracy .Accuracy "de"}}<br>Token: {{.Path}}</p><p><strong>Zertifikatsdetails</strong>: {{.Authority}}</p>{{if not .Trusted}}<p><strong>Technische Angabe</strong>: {{.Reason}}</p>{{end}}{{else}}<p class="warning">Kein Zeitstempel vorhanden. Später hinzufügen: <code>sealjar stamp &lt;package&gt;</code></p>{{end}}<p>Diese Seite entsteht aus dem Manifest und den Zeitstempeln. Sie selbst ist nicht im Manifest enthalten. <code>sealjar verify</code> prüft die Tokens direkt.</p><p>{{timeLimit "de"}} Er bestätigt nicht unabhängig den Erfassungszeitpunkt. Eine Offline-Prüfung erkennt spätere Zertifikatswiderrufe nicht. Sealjar bewertet keine eIDAS-Qualifikation.</p></section></div><p><a href="VERIFY.txt">VERIFY.txt</a></p></main></body></html>
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'">
+  <title>Seal / Siegel · {{.Name}}</title>
+  <style>{{css}}</style>
+  <body>
+    <main>
+      <h1>Seal / Siegel</h1>
+      <p>{{.Name}} · <code>{{.M.CaptureID}}</code></p>
+      <p>Manifest SHA-256</p>
+      <p class="hash" data-sha256="{{.Hash}}"><code>{{groupHash .Hash}}</code></p>
+      <div class="columns">
+        <section lang="en">
+          <h2>Timestamp check</h2>
+          <p>Trust was checked when this page was made. Run <code>sealjar
+            verify</code> to check again using current roots.</p>
+          {{range .Tokens}}
+          <h3>{{authority . "en"}}</h3>
+          <p>{{if .Trusted}}Trusted{{else}}Untrusted{{end}} · {{tokenReason . "en"}}</p>
+          {{if .Demo}}
+          <p class="warning">{{provenance . "en"}}</p>
+          {{end}}
+          <p>{{tokenTime .Time $.M.TimeZone "en"}}</p>
+          <p>Serial:
+            <code>{{serial .Serial "en"}}</code><br>Accuracy:
+            {{accuracy .Accuracy "en"}}<br>Token: {{.Path}}</p>
+          <p><strong>Certificate details</strong>: {{.Authority}}</p>
+          {{if not .Trusted}}
+          <p><strong>Technical reason</strong>: {{.Reason}}</p>
+          {{end}}{{else}}
+          <p class="warning">Not timestamped. Add a timestamp later: <code>sealjar stamp
+            &lt;package&gt;</code></p>
+          {{end}}
+          <p>This page is made from the manifest and timestamp tokens. It is outside
+            the manifest; <code>sealjar verify</code> checks tokens
+            directly.</p>
+          <p>{{timeLimit "en"}} It does not independently confirm the capture time.
+            Offline checks cannot see later certificate revocation. Sealjar does not assess
+            eIDAS qualification.</p>
+        </section>
+        <section lang="de">
+          <h2>Zeitstempel prüfen</h2>
+          <p>Das Vertrauen wurde beim Erstellen dieser Seite geprüft.
+            <code>sealjar verify</code> prüft erneut mit den aktuellen
+            Vertrauensankern.</p>
+          {{range .Tokens}}
+          <h3>{{authority . "de"}}</h3>
+          <p>{{if .Trusted}}Vertrauenswürdig{{else}}Nicht vertrauenswürdig{{end}} · {{tokenReason . "de"}}</p>
+          {{if .Demo}}
+          <p class="warning">{{provenance . "de"}}</p>
+          {{end}}
+          <p>{{tokenTime .Time $.M.TimeZone "de"}}</p>
+          <p>Seriennummer:
+            <code>{{serial .Serial "de"}}</code><br>Genauigkeit:
+            {{accuracy .Accuracy "de"}}<br>Token: {{.Path}}</p>
+          <p><strong>Zertifikatsdetails</strong>: {{.Authority}}</p>
+          {{if not .Trusted}}
+          <p><strong>Technische Angabe</strong>: {{.Reason}}</p>
+          {{end}}{{else}}
+          <p class="warning">Kein Zeitstempel vorhanden. Später hinzufügen: <code>sealjar
+            stamp &lt;package&gt;</code></p>
+          {{end}}
+          <p>Diese Seite entsteht aus dem Manifest und den Zeitstempeln. Sie selbst
+            ist nicht im Manifest enthalten. <code>sealjar verify</code> prüft
+            die Tokens direkt.</p>
+          <p>{{timeLimit "de"}} Er bestätigt nicht unabhängig den Erfassungszeitpunkt.
+            Eine Offline-Prüfung erkennt spätere Zertifikatswiderrufe nicht. Sealjar bewertet
+            keine eIDAS-Qualifikation.</p>
+        </section>
+      </div>
+      <p><a href="VERIFY.txt">VERIFY.txt</a></p>
+    </main>
+  </body>
+</html>

@@ -208,7 +208,7 @@ func TestReportExplainsConditionalTimeEvidence(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		text := string(raw)
+		text := strings.Join(strings.Fields(string(raw)), " ")
 		sections := strings.Split(text, "<section>")
 		for _, section := range []string{sections[1], sections[5]} {
 			needs := map[string][]string{

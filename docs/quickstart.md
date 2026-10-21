@@ -96,14 +96,13 @@ repository. A relative `--out` is resolved from your current working directory.
 
 ```sh
 OUT=$(cd .. && pwd -P)
-printf 'Output directory: %s\n' "$OUT"
 sealjar capture https://staging.example.com . --out "$OUT" --dry-run
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 sealjar verify package.sealjar.zip
 ```
 
 Replace `package.sealjar.zip` with the printed ZIP path. Inspect the full plan
-before capturing; the CLI plan does not print the output directory. For a
+before capturing, including its absolute output directory. For a
 specific output directory, supply its absolute path in both capture commands.
 The dry run starts no browser, makes no network requests and writes nothing.
 For authentication, additional pages and exclusions, see [capture](capture.md).

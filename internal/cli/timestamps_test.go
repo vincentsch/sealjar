@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/digitorus/timestamp"
 	"math/big"
 	"net/http"
@@ -428,7 +429,7 @@ func TestPlainTimestampFailuresKeepJSONDiagnostics(t *testing.T) {
 			if !strings.Contains(all, "503") || !strings.Contains(all, "exit_code") || !strings.Contains(all, "error") {
 				t.Fatal(all)
 			}
-		} else if !strings.Contains(all, "No timestamp could be obtained") || strings.Contains(all, "503") {
+		} else if !strings.Contains(all, "No timestamp could be obtained") || !strings.Contains(all, "503") || !strings.Contains(all, bad.URL) {
 			t.Fatal(all)
 		}
 	}
@@ -455,8 +456,8 @@ func TestPlainTimestampFailuresKeepJSONDiagnostics(t *testing.T) {
 	}
 	var b bytes.Buffer
 	token := tsa.Result{Reason: "SHA-256 manifest imprint mismatch", Invalid: true}
-	renderAttempts(&b, []tsa.Attempt{{Token: &token, Error: "raw diagnostic"}})
-	if !strings.Contains(b.String(), "different manifest") || strings.Contains(b.String(), "raw diagnostic") {
+	renderAttempts(&b, []tsa.Attempt{{URL: "https://tsa.example", Token: &token, Error: "raw diagnostic"}})
+	if !strings.Contains(b.String(), "https://tsa.example") || !strings.Contains(b.String(), "No timestamp could be obtained") || !strings.Contains(b.String(), "different manifest") || strings.Contains(b.String(), "raw diagnostic") {
 		t.Fatal(b.String())
 	}
 }
@@ -492,5 +493,68 @@ func TestStampVerificationDescribesOutput(t *testing.T) {
 	after, err := os.ReadFile(unsigned)
 	if err != nil || !bytes.Equal(before, after) {
 		t.Fatal("stamp changed input ZIP")
+	}
+}
+
+func TestTimestampAcquisitionCauses(t *testing.T) {
+	withoutReportBrowser(t)
+	repo := fixture(t)
+	unsigned := captured(t, repo, t.TempDir())
+	good, root := localTSA(t, testtsa.Options{})
+	binding, _ := localTSA(t, testtsa.Options{WrongBinding: true})
+	unavailable := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(503)
+		fmt.Fprint(w, "private-response-body")
+	}))
+	defer unavailable.Close()
+	closed := httptest.NewServer(http.NotFoundHandler())
+	endpoint := closed.URL
+	closed.Close()
+	for _, tc := range []struct{ url, cause string }{
+		{unavailable.URL + "?token=private-query", "HTTP status 503"},
+		{endpoint, "connection failed"},
+		{binding, "certificate"},
+	} {
+		for _, command := range []string{"capture", "stamp"} {
+			for _, partial := range []bool{false, true} {
+				for _, jsonMode := range []bool{false, true} {
+					args := []string{command, unsigned}
+					code := 2
+					if command == "capture" {
+						args = []string{command, repo, "--out", t.TempDir(), "--confirm", "--strict"}
+						code = 10
+					}
+					args = append(args, "--tsa", tc.url, "--tsa-root", root)
+					if partial {
+						args = append(args, "--tsa", good)
+						code = 0
+					}
+					if jsonMode {
+						args = append(args, "--json")
+					}
+					out, stderr := invoke(t, code, args...)
+					all := string(out) + string(stderr)
+					if !strings.Contains(all, tc.cause) || strings.Contains(all, "private-query") || strings.Contains(all, "private-response-body") {
+						t.Fatalf("%s partial=%t json=%t: %s", command, partial, jsonMode, all)
+					}
+					if !jsonMode && (!strings.Contains(all, strings.Split(tc.url, "?")[0]) || !strings.Contains(all, "No timestamp could be obtained") || !strings.Contains(all, "--json")) {
+						t.Fatal(all)
+					}
+					if jsonMode && command == "capture" {
+						var result captureResult
+						oneJSON(t, out, &result)
+						if result.Attempts[0].Error == "" {
+							t.Fatal("lost diagnostic")
+						}
+						if bytes.Contains(entries(t, result.Package)["manifest.json"], []byte("private-query")) {
+							t.Fatal("authority metadata leaked query token")
+						}
+						if tc.url == binding && result.Attempts[0].Token == nil {
+							t.Fatal("missing rejected token")
+						}
+					}
+				}
+			}
+		}
 	}
 }

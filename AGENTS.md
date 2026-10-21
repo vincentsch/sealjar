@@ -63,12 +63,11 @@ write HTML without Chrome, but cannot make report PDFs.
 Resolve the output destination from the actual working directory. Check that
 it is outside the captured repository, including after resolving links. Running
 from the repository root, `--out ..` is one option. Use a destination the user
-supplied when available. Show its resolved absolute path alongside the complete
-plan; the CLI does not currently print the output directory in its plan.
+supplied when available. Inspect the complete plan, including the resolved
+absolute output directory.
 
 ```sh
 OUT=$(cd .. && pwd -P)
-printf 'Output directory: %s\n' "$OUT"
 "$SEALJAR" capture https://staging.example.com . --out "$OUT" --dry-run
 "$SEALJAR" capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```

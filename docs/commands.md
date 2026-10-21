@@ -16,8 +16,7 @@ This keeps generated packages out of later snapshots, including captures with
 `--include-untracked`.
 
 Use `--confirm --no-prompt` for an authorised unattended capture, after inspecting
-the full dry run. Show the resolved output directory separately; it is not in
-the CLI plan.
+the full dry run, including its resolved absolute output directory.
 
 | Command | Daily use |
 | --- | --- |

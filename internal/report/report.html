@@ -1,13 +1,238 @@
-<!doctype html><html lang="{{.Lang}}"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' file:; style-src 'unsafe-inline'; base-uri 'none'"><title>{{index .Sections 0}} · {{.Name}}</title><style>{{css}}</style><body><main>
-<header><p class="muted">SEALJAR · {{.M.ToolVersion}}</p><h1>{{index .Sections 0}}</h1><dl><dt>{{if eq .Lang "de"}}Paket{{else}}Package{{end}}</dt><dd>{{.Name}}</dd><dt>{{if eq .Lang "de"}}Erfassungs-ID{{else}}Capture id{{end}}</dt><dd><code>{{.M.CaptureID}}</code></dd><dt>{{if eq .Lang "de"}}Beginn{{else}}Started{{end}}</dt><dd>{{timefmt .M.Started .M.TimeZone}}</dd><dt>{{if eq .Lang "de"}}Ende{{else}}Finished{{end}}</dt><dd>{{timefmt .M.Ended .M.TimeZone}}</dd>{{if .M.Labels}}<dt>{{if eq .Lang "de"}}Angaben{{else}}Labels{{end}}</dt><dd>{{range $k,$v:=.M.Labels}}<p>{{$k}}: {{$v}}</p>{{end}}</dd>{{end}}</dl></header>
-<section><h2><small>§ 1</small> {{index .Sections 1}}</h2>
-{{range .M.Targets}}<p>{{if eq .Kind "web"}}{{.URL}}{{else}}{{.Name}} · <code>{{.Commit}}</code> · {{.Changes}} {{if eq $.Lang "de"}}{{if eq .Changes 1}}Änderung ohne Commit{{else}}Änderungen ohne Commit{{end}}{{else}}uncommitted {{if eq .Changes 1}}change{{else}}changes{{end}}{{end}}{{end}} · {{status .State $.Lang}}</p>{{range .Notes}}<p class="warning">{{localText . $.Lang}}</p>{{end}}{{end}}
-{{if eq .Lang "de"}}<p>Die Zeitstempel stehen in <a href="../SEAL.html">SEAL.html</a> und im Ergebnis von <code>sealjar verify</code>. Ein Paket kann ohne Zeitstempel vorliegen. Nur ein Zeitstempel einer unabhängigen, vertrauenswürdigen Zeitstempelstelle liefert einen unabhängigen Zeitnachweis: Die Dateien lagen spätestens zu dieser Zeit vor. Der Erfassungszeitpunkt wird dadurch nicht unabhängig bestätigt. Zeitstempel mit dem öffentlichen Demo-Schlüssel liefern keinen unabhängigen Zeitnachweis, auch bei ausdrücklich gewährtem Vertrauen.</p>{{else}}<p>Timestamp results are in <a href="../SEAL.html">SEAL.html</a> and <code>sealjar verify</code>; a package may have no timestamp. Only a timestamp from an independent trusted authority provides independent time evidence. Its time is an upper bound for when the files existed, not an independently checked capture time. Tokens signed with the public demo key provide no independent time evidence, even when explicitly trusted.</p>{{end}}</section>
-<section><h2><small>§ 2</small> {{index .Sections 2}}</h2>{{range .M.Targets}}{{if eq .Kind "web"}}<article><div class="page-heading"><h3>{{.Title}}</h3><p>{{.URL}} → {{.FinalURL}} · {{status .State $.Lang}}</p><div class="viewports">{{range .Viewports}}<p>{{.Name}} · {{.Width}} × {{.Height}} · {{.Scale}} · HTTP {{.DocumentStatus}} · {{status .State $.Lang}}</p>{{range .Notes}}<p class="warning">{{localText . $.Lang}}</p>{{end}}{{end}}</div></div><div class="images">{{range index $.Images .Payload}}<figure><a href="../{{.Path}}"><img src="../{{thumb .Path}}" alt="{{.Caption}}" loading="eager"></a><figcaption>fig. {{.Number}} · {{.Caption}}</figcaption></figure>{{end}}</div>{{range index $.Details .Payload}}<h4>{{.Title}}</h4><pre>{{pretty .Facts}}</pre>{{end}}</article>{{end}}{{end}}</section>
-<section><h2><small>§ 3</small> {{index .Sections 3}}</h2>{{range .M.Hosts}}<h3>{{.Origin}}</h3>{{range index $.Details .OriginID}}<h4>{{.Title}}</h4><table>{{range $k,$v:=.Facts}}<tr><th>{{factLabel $k $.Lang}}</th><td>{{factValue $v $.Lang}}</td></tr>{{end}}</table>{{end}}{{end}}</section>
-<section><h2><small>§ 4</small> {{index .Sections 4}}</h2>{{range .Repositories}}<h3>{{.Target.Name}}</h3><p>{{.Facts.Branch}} · <code>{{.Facts.Commit}}</code><br>{{.Facts.Subject}}</p><p>{{len .Files}} {{if eq $.Lang "de"}}Dateien{{else}}files{{end}}, {{.Size}} Bytes · {{.Target.Changes}} {{if eq $.Lang "de"}}{{if eq .Target.Changes 1}}Änderung ohne Commit{{else}}Änderungen ohne Commit{{end}}{{else}}uncommitted {{if eq .Target.Changes 1}}change{{else}}changes{{end}}{{end}}</p><h4>{{if eq $.Lang "de"}}Ausgeschlossene Dateien{{else}}Excluded files{{end}}</h4><table>{{range .Facts.Excluded}}<tr><td>{{.Path}}</td><td>{{localText .Reason $.Lang}}</td></tr>{{end}}</table><h4>{{if eq $.Lang "de"}}Gelöschte Dateien{{else}}Deleted files{{end}}</h4>{{range .Facts.DeletedPaths}}<p>{{.Path}}</p>{{end}}<h4>Submodule</h4>{{range .Facts.Submodules}}<p>{{.Path}} · {{.Commit}}</p>{{end}}<p>{{if eq $.Lang "de"}}Historie enthalten{{else}}History included{{end}}: {{if .Facts.History}}{{if eq $.Lang "de"}}ja{{else}}yes{{end}}{{else}}{{if eq $.Lang "de"}}nein{{else}}no{{end}}{{end}}</p><h4>{{if eq $.Lang "de"}}Dateien und Verknüpfungen{{else}}Files and symbolic links{{end}}</h4><table><tr><th>{{if eq $.Lang "de"}}Pfad{{else}}Path{{end}}</th><th>Bytes</th><th>{{if eq $.Lang "de"}}Verknüpfungsziel / LFS-Zeiger{{else}}Link target / LFS pointer{{end}}</th></tr>{{range .Files}}<tr><td>{{.Path}}</td><td>{{.Size}}</td><td>{{.LinkTarget}}{{if .PointerOnly}} · Git LFS pointer{{end}}</td></tr>{{end}}</table>{{end}}{{if .M.Settings.History}}<p class="warning">{{if eq .Lang "de"}}Die Git-Historie kann frühere Geheimnisse und andere Arbeiten enthalten.{{else}}Git history can contain old secrets and unrelated work.{{end}}</p>{{end}}</section>
-<section><h2><small>§ 5</small> {{index .Sections 5}}</h2><p>{{.M.Environment.OS}} / {{.M.Environment.Arch}} · Sealjar {{.M.ToolVersion}} · Git {{.M.Environment.GitVersion}} · {{.M.Environment.ChromeVersion}}</p><p>{{.M.Environment.UserAgent}} · {{.M.Environment.Locale}} · {{.M.TimeZone}}</p><p>{{if eq .Lang "de"}}Breiten{{else}}Widths{{end}}: {{.M.Settings.Widths}} · {{if eq .Lang "de"}}Zusätzliche Wartezeit{{else}}Extra wait{{end}}: {{.M.Settings.Wait}}</p>
-{{if eq .Lang "de"}}<p>Die Erfassung wartet höchstens 30 Sekunden auf das Laden und eine Sekunde Netzwerkruhe, scrollt für nachgeladene Bilder und kehrt nach oben zurück. Nach dem Scrollen wartet sie höchstens zehn Sekunden auf Netzwerkruhe. Sie klickt keine Elemente an. Pro Bildschirmfoto werden höchstens 20.000 CSS-Pixel Höhe erfasst. Zeitlimits und Kürzungen stehen bei der jeweiligen Seite.</p><p>HTTP-Basisauthentifizierung: {{if .M.Settings.BasicAuth}}verwendet{{else}}nicht verwendet{{end}}. Manuelle Anmeldung: {{if .M.Settings.ManualLogin}}verwendet{{else}}nicht verwendet{{end}}. Zugangsdaten werden nicht in den Bericht übernommen.</p><p>Passende Prüfsummen zeigen, dass die Dateien mit dem Manifest übereinstimmen. Das allein authentifiziert das Manifest nicht. Ein unabhängiger Zeitnachweis erfordert einen Zeitstempel einer unabhängigen, vertrauenswürdigen Zeitstempelstelle. Zeitstempel mit dem öffentlichen Demo-Schlüssel liefern keinen unabhängigen Zeitnachweis, auch bei ausdrücklich gewährtem Vertrauen. Die Vertrauensprüfung erfolgt über <a href="../SEAL.html">SEAL.html</a> und <code>sealjar verify</code>. Sie belegen weder wahre oder vollständige Inhalte noch deren Herkunft vom Server: HTTPS liefert keine Serversignatur über diese Dateien. Sie belegen keine ehrliche Bedienung, Abnahme oder Lieferung. Ob der Code die Website erzeugt hat, bleibt offen.</p><p>Bei wichtigen Streitfällen empfiehlt sich eine neutrale Begleitung, etwa durch einen Sachverständigen oder Notar. Eine Offline-Prüfung erkennt spätere Zertifikatswiderrufe nicht. Sealjar bewertet keine eIDAS-Qualifikation.</p>{{else}}<p>Capture waits up to 30 seconds for loading and one second of network idle, scrolls to load images, then returns to the top. After scrolling it waits up to ten seconds for network idle. It does not click elements. Screenshots stop at 20,000 CSS pixels in height. Each page lists timeouts and truncation.</p><p>HTTP basic auth: {{if .M.Settings.BasicAuth}}used{{else}}not used{{end}}. Manual login: {{if .M.Settings.ManualLogin}}used{{else}}not used{{end}}. Credentials are omitted.</p><p>Matching hashes show agreement with the manifest. They alone do not authenticate the manifest. Independent time evidence requires a timestamp from an independent trusted authority. Tokens signed with the public demo key provide no independent time evidence, even when explicitly trusted. Check timestamp trust in <a href="../SEAL.html">SEAL.html</a> and <code>sealjar verify</code>. They do not show that content is true or complete, that the server sent these bytes (HTTPS has no server signature), that the operator was honest, that work was accepted or delivered, or that captured code produced the website.</p><p>For important disputes, consider having a neutral expert or notary present during capture. Offline checks cannot see later certificate revocation. Sealjar does not assess eIDAS qualification.</p>{{end}}</section>
-<section><h2><small>§ 6</small> {{index .Sections 6}}</h2><p><a href="../VERIFY.txt">VERIFY.txt</a> · <code>sealjar verify &lt;package&gt;</code></p><pre>{{.Instructions}}</pre></section>
-<section><h2><small>§ 7</small> {{index .Sections 7}}</h2><table><thead><tr><th>{{if eq .Lang "de"}}Datei{{else}}File{{end}}</th><th>Bytes</th><th>SHA-256</th></tr></thead><tbody>{{range .M.Files}}<tr><td>{{.Path}}</td><td>{{.Size}}</td><td><code>{{.SHA256}}</code></td></tr>{{end}}</tbody></table></section>
-</main></body></html>
+<!doctype html>
+<html lang="{{.Lang}}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' file:; style-src 'unsafe-inline'; base-uri 'none'">
+  <title>{{index .Sections 0}} · {{.Name}}</title>
+  <style>{{css}}</style>
+  <body>
+    <main>
+      <header>
+        <p class="muted">SEALJAR · {{.M.ToolVersion}}</p>
+        <h1>{{index .Sections 0}}</h1>
+        <dl>
+          <dt>{{if eq .Lang "de"}}Paket{{else}}Package{{end}}</dt>
+          <dd>{{.Name}}</dd>
+          <dt>{{if eq .Lang "de"}}Erfassungs-ID{{else}}Capture id{{end}}</dt>
+          <dd><code>{{.M.CaptureID}}</code></dd>
+          <dt>{{if eq .Lang "de"}}Beginn{{else}}Started{{end}}</dt>
+          <dd>{{timefmt .M.Started .M.TimeZone}}</dd>
+          <dt>{{if eq .Lang "de"}}Ende{{else}}Finished{{end}}</dt>
+          <dd>{{timefmt .M.Ended .M.TimeZone}}</dd>
+          {{if .M.Labels}}
+          <dt>{{if eq .Lang "de"}}Angaben{{else}}Labels{{end}}</dt>
+          <dd>{{range $k,$v:=.M.Labels}}
+          <p>{{$k}}: {{$v}}</p>
+          {{end}}</dd>
+          {{end}}
+        </dl>
+      </header>
+      <section>
+        <h2><small>§ 1</small> {{index .Sections 1}}</h2>
+        {{range .M.Targets}}
+        <p>{{if eq .Kind "web"}}{{.URL}}{{else}}{{.Name}} ·
+          <code>{{.Commit}}</code> · {{.Changes}}
+          {{if eq $.Lang "de"}}{{if eq .Changes 1}}Änderung ohne Commit{{else}}Änderungen ohne
+          Commit{{end}}{{else}}uncommitted
+          {{if eq .Changes 1}}change{{else}}changes{{end}}{{end}}{{end}}
+          · {{status .State $.Lang}}</p>
+        {{range .Notes}}
+        <p class="warning">{{localText . $.Lang}}</p>
+        {{end}}{{end}}
+        {{if eq .Lang "de"}}
+        <p>Die Zeitstempel stehen in <a href="../SEAL.html">SEAL.html</a> und im
+          Ergebnis von <code>sealjar verify</code>. Ein Paket kann ohne
+          Zeitstempel vorliegen. Nur ein Zeitstempel einer unabhängigen, vertrauenswürdigen
+          Zeitstempelstelle liefert einen unabhängigen Zeitnachweis: Die Dateien lagen
+          spätestens zu dieser Zeit vor. Der Erfassungszeitpunkt wird dadurch nicht unabhängig
+          bestätigt. Zeitstempel mit dem öffentlichen Demo-Schlüssel liefern keinen unabhängigen
+          Zeitnachweis, auch bei ausdrücklich gewährtem Vertrauen.</p>
+        {{else}}
+        <p>Timestamp results are in <a href="../SEAL.html">SEAL.html</a> and
+          <code>sealjar verify</code>; a package may have no timestamp. Only a
+          timestamp from an independent trusted authority provides independent time evidence.
+          Its time is an upper bound for when the files existed, not an independently checked
+          capture time. Tokens signed with the public demo key provide no independent time
+          evidence, even when explicitly trusted.</p>
+        {{end}}
+      </section>
+      <section>
+        <h2><small>§ 2</small> {{index .Sections 2}}</h2>
+        {{range .M.Targets}}{{if eq .Kind "web"}}
+        <article>
+          <div class="page-heading">
+            <h3>{{.Title}}</h3>
+            <p>{{.URL}} → {{.FinalURL}} · {{status .State $.Lang}}</p>
+            <div class="viewports">
+              {{range .Viewports}}
+              <p>{{.Name}} · {{.Width}} × {{.Height}} ·
+                {{.Scale}} · HTTP {{.DocumentStatus}} · {{status .State $.Lang}}</p>
+              {{range .Notes}}
+              <p class="warning">{{localText . $.Lang}}</p>
+              {{end}}{{end}}
+            </div>
+          </div>
+          <div class="images">
+            {{range index $.Images .Payload}}
+            <figure>
+              <a href="../{{.Path}}"><img src="../{{thumb .Path}}" alt="{{.Caption}}" loading="eager"></a>
+              <figcaption>fig. {{.Number}} · {{.Caption}}</figcaption>
+            </figure>
+            {{end}}
+          </div>
+          {{range index $.Details .Payload}}
+          <h4>{{.Title}}</h4>
+          <pre>{{pretty .Facts}}</pre>
+          {{end}}
+        </article>
+        {{end}}{{end}}
+      </section>
+      <section>
+        <h2><small>§ 3</small> {{index .Sections 3}}</h2>
+        {{range .M.Hosts}}
+        <h3>{{.Origin}}</h3>
+        {{range index $.Details .OriginID}}
+        <h4>{{.Title}}</h4>
+        <table>
+          {{range $k,$v:=.Facts}}
+          <tr>
+            <th>{{factLabel $k $.Lang}}</th>
+            <td>{{factValue $v $.Lang}}</td>
+          </tr>
+          {{end}}
+        </table>
+        {{end}}{{end}}
+      </section>
+      <section>
+        <h2><small>§ 4</small> {{index .Sections 4}}</h2>
+        {{range .Repositories}}
+        <h3>{{.Target.Name}}</h3>
+        <p>{{.Facts.Branch}} · <code>{{.Facts.Commit}}</code><br>{{.Facts.Subject}}</p>
+        <p>{{len .Files}}
+          {{if eq $.Lang "de"}}Dateien{{else}}files{{end}}, {{.Size}} Bytes ·
+          {{.Target.Changes}} {{if eq $.Lang "de"}}{{if eq .Target.Changes 1}}Änderung ohne
+          Commit{{else}}Änderungen ohne Commit{{end}}{{else}}uncommitted
+          {{if eq .Target.Changes 1}}change{{else}}changes{{end}}{{end}}</p>
+        <h4>{{if eq $.Lang "de"}}Ausgeschlossene Dateien{{else}}Excluded files{{end}}</h4>
+        <table>
+          {{range .Facts.Excluded}}
+          <tr>
+            <td>{{.Path}}</td>
+            <td>{{localText .Reason $.Lang}}</td>
+          </tr>
+          {{end}}
+        </table>
+        <h4>{{if eq $.Lang "de"}}Gelöschte Dateien{{else}}Deleted files{{end}}</h4>
+        {{range .Facts.DeletedPaths}}
+        <p>{{.Path}}</p>
+        {{end}}
+        <h4>Submodule</h4>
+        {{range .Facts.Submodules}}
+        <p>{{.Path}} · {{.Commit}}</p>
+        {{end}}
+        <p>{{if eq $.Lang "de"}}Historie enthalten{{else}}History
+          included{{end}}:
+          {{if .Facts.History}}{{if eq $.Lang "de"}}ja{{else}}yes{{end}}{{else}}{{if eq $.Lang "de"}}nein{{else}}no{{end}}{{end}}</p>
+        <h4>{{if eq $.Lang "de"}}Dateien und Verknüpfungen{{else}}Files and symbolic links{{end}}</h4>
+        <table>
+          <tr>
+            <th>{{if eq $.Lang "de"}}Pfad{{else}}Path{{end}}</th>
+            <th>Bytes</th>
+            <th>{{if eq $.Lang "de"}}Verknüpfungsziel / LFS-Zeiger{{else}}Link target / LFS pointer{{end}}</th>
+          </tr>
+          {{range .Files}}
+          <tr>
+            <td>{{.Path}}</td>
+            <td>{{.Size}}</td>
+            <td>{{.LinkTarget}}{{if .PointerOnly}} · Git LFS pointer{{end}}</td>
+          </tr>
+          {{end}}
+        </table>
+        {{end}}{{if .M.Settings.History}}
+        <p class="warning">{{if eq .Lang "de"}}Die Git-Historie kann frühere Geheimnisse und andere
+          Arbeiten enthalten.{{else}}Git history can contain old secrets and unrelated
+          work.{{end}}</p>
+        {{end}}
+      </section>
+      <section>
+        <h2><small>§ 5</small> {{index .Sections 5}}</h2>
+        <p>{{.M.Environment.OS}} / {{.M.Environment.Arch}} · Sealjar {{.M.ToolVersion}} · Git
+          {{.M.Environment.GitVersion}} · {{.M.Environment.ChromeVersion}}</p>
+        <p>{{.M.Environment.UserAgent}} · {{.M.Environment.Locale}} · {{.M.TimeZone}}</p>
+        <p>{{if eq .Lang "de"}}Breiten{{else}}Widths{{end}}:
+          {{.M.Settings.Widths}} · {{if eq .Lang "de"}}Zusätzliche Wartezeit{{else}}Extra
+          wait{{end}}: {{.M.Settings.Wait}}</p>
+        {{if eq .Lang "de"}}
+        <p>Die Erfassung wartet höchstens 30 Sekunden auf das Laden und eine Sekunde
+          Netzwerkruhe, scrollt für nachgeladene Bilder und kehrt nach oben zurück. Nach dem
+          Scrollen wartet sie höchstens zehn Sekunden auf Netzwerkruhe. Sie klickt keine
+          Elemente an. Pro Bildschirmfoto werden höchstens 20.000 CSS-Pixel Höhe erfasst.
+          Zeitlimits und Kürzungen stehen bei der jeweiligen Seite.</p>
+        <p>HTTP-Basisauthentifizierung: {{if .M.Settings.BasicAuth}}verwendet{{else}}nicht
+          verwendet{{end}}. Manuelle Anmeldung:
+          {{if .M.Settings.ManualLogin}}verwendet{{else}}nicht verwendet{{end}}. Zugangsdaten
+          werden nicht in den Bericht übernommen.</p>
+        <p>Passende Prüfsummen zeigen, dass die Dateien mit dem Manifest
+          übereinstimmen. Das allein authentifiziert das Manifest nicht. Ein unabhängiger
+          Zeitnachweis erfordert einen Zeitstempel einer unabhängigen, vertrauenswürdigen
+          Zeitstempelstelle. Zeitstempel mit dem öffentlichen Demo-Schlüssel liefern keinen
+          unabhängigen Zeitnachweis, auch bei ausdrücklich gewährtem Vertrauen. Die
+          Vertrauensprüfung erfolgt über <a href="../SEAL.html">SEAL.html</a> und
+          <code>sealjar verify</code>. Sie belegen weder wahre oder
+          vollständige Inhalte noch deren Herkunft vom Server: HTTPS liefert keine
+          Serversignatur über diese Dateien. Sie belegen keine ehrliche Bedienung, Abnahme oder
+          Lieferung. Ob der Code die Website erzeugt hat, bleibt offen.</p>
+        <p>Bei wichtigen Streitfällen empfiehlt sich eine neutrale Begleitung, etwa
+          durch einen Sachverständigen oder Notar. Eine Offline-Prüfung erkennt spätere
+          Zertifikatswiderrufe nicht. Sealjar bewertet keine eIDAS-Qualifikation.</p>
+        {{else}}
+        <p>Capture waits up to 30 seconds for loading and one second of network
+          idle, scrolls to load images, then returns to the top. After scrolling it waits up to
+          ten seconds for network idle. It does not click elements. Screenshots stop at 20,000
+          CSS pixels in height. Each page lists timeouts and truncation.</p>
+        <p>HTTP basic auth: {{if .M.Settings.BasicAuth}}used{{else}}not
+          used{{end}}. Manual login: {{if .M.Settings.ManualLogin}}used{{else}}not
+          used{{end}}. Credentials are omitted.</p>
+        <p>Matching hashes show agreement with the manifest. They alone do not
+          authenticate the manifest. Independent time evidence requires a timestamp from an
+          independent trusted authority. Tokens signed with the public demo key provide no
+          independent time evidence, even when explicitly trusted. Check timestamp trust in
+          <a href="../SEAL.html">SEAL.html</a> and <code>sealjar
+          verify</code>. They do not show that content is true or complete, that the
+          server sent these bytes (HTTPS has no server signature), that the operator was honest,
+          that work was accepted or delivered, or that captured code produced the
+          website.</p>
+        <p>For important disputes, consider having a neutral expert or notary
+          present during capture. Offline checks cannot see later certificate revocation.
+          Sealjar does not assess eIDAS qualification.</p>
+        {{end}}
+      </section>
+      <section>
+        <h2><small>§ 6</small> {{index .Sections 6}}</h2>
+        <p><a href="../VERIFY.txt">VERIFY.txt</a> · <code>sealjar verify &lt;package&gt;</code></p>
+        <pre>{{.Instructions}}</pre>
+      </section>
+      <section>
+        <h2><small>§ 7</small> {{index .Sections 7}}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>{{if eq .Lang "de"}}Datei{{else}}File{{end}}</th>
+              <th>Bytes</th>
+              <th>SHA-256</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .M.Files}}
+            <tr>
+              <td>{{.Path}}</td>
+              <td>{{.Size}}</td>
+              <td><code>{{.SHA256}}</code></td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>

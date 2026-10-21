@@ -9,15 +9,14 @@ alongside the complete plan:
 
 ```sh
 OUT=$(cd .. && pwd -P)
-printf 'Output directory: %s\n' "$OUT"
 sealjar capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --dry-run
 sealjar capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --confirm --no-prompt
 ```
 
 Check that `OUT` is outside the repository after resolving links. Relative paths
 start at the actual working directory. This keeps packages and reader folders
-out of ordinary commits and later captures. The CLI does not print `OUT` in its
-plan. `--dry-run` makes no network request, starts no Chrome and writes nothing.
+out of ordinary commits and later captures. The plan shows the absolute
+destination. `--dry-run` makes no network request, starts no Chrome and writes nothing.
 Without `--confirm`, an interactive terminal asks permission; unattended capture
 refuses. Reuse permission and scope already given to an agent.
 

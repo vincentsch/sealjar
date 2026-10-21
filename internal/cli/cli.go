@@ -119,20 +119,21 @@ type captureOptions struct {
 	wait                                       time.Duration
 }
 type captureResult struct {
-	PDFNote      string              `json:"pdf_note,omitempty"`
-	Targets      []packagefmt.Target `json:"targets,omitempty"`
-	Pages        []string            `json:"pages,omitempty"`
-	Widths       []int               `json:"widths,omitempty"`
-	ReaderFolder string              `json:"reader_folder,omitempty"`
-	Authorities  []string            `json:"timestamp_authorities"`
-	NextStep     string              `json:"next_step,omitempty"`
-	Package      string              `json:"package,omitempty"`
-	Size         int64               `json:"size,omitempty"`
-	DryRun       bool                `json:"dry_run"`
-	Plan         *repo.Plan          `json:"plan"`
-	Timestamp    string              `json:"timestamp"`
-	Attempts     []tsa.Attempt       `json:"timestamp_attempts"`
-	Limitations  []string            `json:"limitations"`
+	OutputDirectory string              `json:"output_directory"`
+	PDFNote         string              `json:"pdf_note,omitempty"`
+	Targets         []packagefmt.Target `json:"targets,omitempty"`
+	Pages           []string            `json:"pages,omitempty"`
+	Widths          []int               `json:"widths,omitempty"`
+	ReaderFolder    string              `json:"reader_folder,omitempty"`
+	Authorities     []string            `json:"timestamp_authorities"`
+	NextStep        string              `json:"next_step,omitempty"`
+	Package         string              `json:"package,omitempty"`
+	Size            int64               `json:"size,omitempty"`
+	DryRun          bool                `json:"dry_run"`
+	Plan            *repo.Plan          `json:"plan"`
+	Timestamp       string              `json:"timestamp"`
+	Attempts        []tsa.Attempt       `json:"timestamp_attempts"`
+	Limitations     []string            `json:"limitations"`
 }
 
 func renderPlan(w io.Writer, p *repo.Plan) {
@@ -286,8 +287,12 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			}
 		}
 
+		opt.out, err = filepath.Abs(opt.out)
+		if err != nil {
+			return failure(2, err)
+		}
 		chromePath, chromeErr := findChrome(opt.chrome)
-		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Sealjar does not assess eIDAS qualification."}}
+		result := captureResult{OutputDirectory: opt.out, DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Sealjar does not assess eIDAS qualification."}}
 		if chromeErr != nil && len(urls) == 0 {
 			result.PDFNote = "Chrome is unavailable. Reports will be HTML only; no report PDFs will be stored."
 		}
@@ -303,6 +308,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		}
 		renderCapturePlan := func(w io.Writer) {
 			renderPlan(w, p)
+			fmt.Fprintf(w, "Output directory: %s\n", result.OutputDirectory)
 			if result.PDFNote != "" {
 				fmt.Fprintln(w, result.PDFNote)
 			}
@@ -311,7 +317,9 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			}
 		}
 		if !opt.noTimestamp {
-			result.Authorities = authorities
+			for _, authority := range authorities {
+				result.Authorities = append(result.Authorities, web.MaskURL(authority))
+			}
 		}
 		if opt.history {
 			result.Limitations = append(result.Limitations, "History can contain old secrets and unrelated work.")
@@ -321,7 +329,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 				fmt.Fprintln(w, "DRY RUN: would capture these targets; no files were written.")
 				renderCapturePlan(w)
 				if !opt.noTimestamp {
-					fmt.Fprintf(w, "Timestamp authorities: %s\n", strings.Join(authorities, ", "))
+					fmt.Fprintf(w, "Timestamp authorities: %s\n", strings.Join(result.Authorities, ", "))
 				} else {
 					fmt.Fprintln(w, "Timestamp: deliberately skipped")
 				}
@@ -330,7 +338,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		if !f.Flags.JSON && !f.Flags.Quiet {
 			renderCapturePlan(f.Stdout)
 			if !opt.noTimestamp {
-				fmt.Fprintf(f.Stdout, "Timestamp authorities: %s\n", strings.Join(authorities, ", "))
+				fmt.Fprintf(f.Stdout, "Timestamp authorities: %s\n", strings.Join(result.Authorities, ", "))
 			} else {
 				fmt.Fprintln(f.Stdout, "Timestamp: deliberately skipped")
 			}
@@ -442,9 +450,9 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		m := packagefmt.Manifest{Type: packagefmt.ManifestType, ToolVersion: version.Version, CaptureID: ulid.Make().String(), Started: started, Ended: time.Now().UTC(), TimeZone: zone, Labels: labels, Settings: packagefmt.Settings{IncludeUntracked: opt.untracked, History: opt.history, Exclude: append([]string{}, opt.exclude...), NoTimestamp: opt.noTimestamp, ManualLogin: opt.login, BasicAuth: opt.auth != "" && len(urls) > 0, Wait: opt.wait.String(), Widths: result.Widths}, Targets: targets, Environment: env, Hosts: webResult.Hosts, TimestampAuthorities: []string{}}
 
 		if !opt.noTimestamp {
-			m.TimestampAuthorities = authorities
+			m.TimestampAuthorities = result.Authorities
 			if opt.fallback != "" {
-				m.TimestampAuthorities = append(append([]string{}, authorities...), opt.fallback)
+				m.TimestampAuthorities = append(append([]string{}, result.Authorities...), web.MaskURL(opt.fallback))
 			}
 		}
 		if err = report.Thumbnails(work); err != nil {
@@ -490,6 +498,9 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 				return failure(2, e)
 			}
 			result.Attempts = tsa.Acquire(ctx, manifest, opt.authorities, roots)
+			for i := range result.Attempts {
+				result.Attempts[i].URL = web.MaskURL(result.Attempts[i].URL)
+			}
 			if opt.fallback != "" {
 				usable := false
 				for _, a := range result.Attempts {
@@ -591,7 +602,11 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			if !trusted {
 				fmt.Fprintln(w, "Hashes alone do not establish the authenticity of an untimestamped manifest.")
 			}
-			fmt.Fprintf(w, "Check timestamps with sealjar verify %s\n", result.Package)
+			label := "Check timestamps with"
+			if runtime.GOOS == "windows" {
+				label += " PowerShell:"
+			}
+			fmt.Fprintf(w, "%s %s\n", label, verifyCommandLine(result.Package, opt.root, runtime.GOOS))
 		})
 	}
 	return c
@@ -721,6 +736,9 @@ func restoreCommand() *rungrad.Command {
 			result.CloneCommand = "git clone " + shellQuote(result.History) + " " + shellQuote(resultPath(to+"-history"))
 		}
 		if !f.DryRun() {
+			if e := requireDestinationParent(destination); e != nil {
+				return failure(2, e)
+			}
 			stage, e := os.MkdirTemp(filepath.Dir(destination), ".sealjar-restore-")
 			if e != nil {
 				return failure(2, e)
@@ -799,4 +817,25 @@ func humanSize(n int64) string {
 		return fmt.Sprintf("%.1f kB", float64(n)/1000)
 	}
 	return fmt.Sprintf("%.1f MB", float64(n)/1000000)
+}
+
+func verifyCommandLine(zip, root, platform string) string {
+	quote := shellQuote
+	if platform == "windows" {
+		quote = func(s string) string { return "'" + strings.ReplaceAll(s, "'", "''") + "'" }
+	}
+	command := "sealjar verify " + quote(zip)
+	if root != "" {
+		command += " --tsa-root " + quote(root)
+	}
+	return command
+}
+
+func requireDestinationParent(destination string) error {
+	parent := filepath.Dir(destination)
+	if _, err := os.Stat(parent); os.IsNotExist(err) {
+		return fmt.Errorf("Destination parent %s does not exist. Create it before retrying.", parent)
+	} else {
+		return err
+	}
 }

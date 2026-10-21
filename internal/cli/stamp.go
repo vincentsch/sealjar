@@ -13,20 +13,25 @@ import (
 	"github.com/vincentsch/sealjar/internal/report"
 	"github.com/vincentsch/sealjar/internal/tsa"
 	"github.com/vincentsch/sealjar/internal/verify"
+	"github.com/vincentsch/sealjar/internal/web"
 )
 
 func renderAttempts(w io.Writer, attempts []tsa.Attempt) {
 	hasToken := false
 	for _, a := range attempts {
-		if a.Token != nil {
-			hasToken = true
-			t := *a.Token
-			fmt.Fprintf(w, "        Timestamp: %s, %s. %s\n", t.DisplayAuthority(), t.DisplayTime(), tsa.Explanation(t, "en"))
-			if t.Demo {
-				fmt.Fprintln(w, "        "+tsa.DemoProvenance(t, "en"))
+		if a.Error != "" || a.Token == nil {
+			cause := a.Error
+			if a.Token != nil {
+				cause = tsa.Explanation(*a.Token, "en")
 			}
-		} else {
-			fmt.Fprintf(w, "  Timestamp authority %s: No timestamp could be obtained from this authority.\n", a.URL)
+			fmt.Fprintf(w, "  Timestamp authority %s: No timestamp could be obtained. %s. See --json for diagnostic detail.\n", web.MaskURL(a.URL), strings.TrimSuffix(cause, "."))
+			continue
+		}
+		hasToken = true
+		t := *a.Token
+		fmt.Fprintf(w, "        Timestamp: %s, %s. %s\n", t.DisplayAuthority(), t.DisplayTime(), tsa.Explanation(t, "en"))
+		if t.Demo {
+			fmt.Fprintln(w, "        "+tsa.DemoProvenance(t, "en"))
 		}
 	}
 	if hasToken {
@@ -119,6 +124,9 @@ func stampCommand() *rungrad.Command {
 			})
 		}
 		result.Attempts = tsa.Acquire(cmd.Context(), r.ManifestBytes, authorities, roots)
+		for i := range result.Attempts {
+			result.Attempts[i].URL = web.MaskURL(result.Attempts[i].URL)
+		}
 		usable := false
 		for _, a := range result.Attempts {
 			usable = usable || len(a.DER) > 0
@@ -127,7 +135,7 @@ func stampCommand() *rungrad.Command {
 			var b strings.Builder
 			if f.Flags.JSON {
 				for _, a := range result.Attempts {
-					fmt.Fprintf(&b, "  Timestamp authority %s: %s\n", a.URL, a.Error)
+					fmt.Fprintf(&b, "  Timestamp authority %s: %s\n", web.MaskURL(a.URL), a.Error)
 				}
 			} else {
 				renderAttempts(&b, result.Attempts)

@@ -135,6 +135,9 @@ func readerDestination(out string) error {
 	return nil
 }
 func extractReader(r *packagefmt.Reader, out string, names []string, seal []byte) error {
+	if e := requireDestinationParent(out); e != nil {
+		return e
+	}
 	stage, e := os.MkdirTemp(filepath.Dir(out), ".sealjar-reader-")
 	if e != nil {
 		return e

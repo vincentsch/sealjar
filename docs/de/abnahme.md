@@ -25,13 +25,12 @@ Die Beispiel-URL wird durch die freigegebene Adresse ersetzt:
 
 ```sh
 OUT=$(cd .. && pwd -P)
-printf 'Ausgabeordner: %s\n' "$OUT"
 sealjar capture https://staging.example.com . --out "$OUT" --dry-run
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
-Die vollständige Vorschau zeigt Seiten, Code und Ausschlüsse. Der Ausgabeordner
-steht derzeit nicht im CLI-Plan und wird deshalb separat angezeigt. Relative
+Die vollständige Vorschau zeigt Seiten, Code, Ausschlüsse und den absoluten
+Ausgabeordner. Relative
 Pfade beziehen sich auf den aktuellen Arbeitsordner. Der Trockenlauf startet
 keinen Browser, greift nicht aufs Netz zu und schreibt keine Dateien.
 Bei Formularanmeldung ist `--login` nur mit einer anwesenden Person möglich.

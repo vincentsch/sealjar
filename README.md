@@ -6,6 +6,7 @@
 </p>
 <p align="center"><b>Timestamped captures of your website and code.</b></p>
 <p align="center">
+  <a href="https://www.sealjar.com">Website</a> ·
   <a href="docs/quickstart.md">Get started</a> ·
   <a href="docs/for-recipients.md">Received a package?</a> ·
   <a href="docs/commands.md">Commands</a> ·
@@ -76,7 +77,8 @@ root grants it trust.
 <p><img src="docs/media/demo-report.png" alt="Bakery demo report opening with labelled capture details and page screenshots" width="820"></p>
 <p><img src="docs/media/demo-seal.png" alt="Bilingual bakery demo seal showing a trusted DigiCert timestamp and verification limits" width="820"></p>
 
-These images show actual demo output with a trusted DigiCert timestamp.
+These images show earlier demo output with placeholder artwork and a trusted
+DigiCert timestamp.
 The report points to the seal and verify for timestamp results.
 
 ## Capture by hand
@@ -86,7 +88,6 @@ check it is the destination you want. List each authorised URL explicitly.
 
 ```sh
 OUT=$(cd .. && pwd -P)
-printf 'Output directory: %s\n' "$OUT"
 sealjar capture https://staging.example.com . --out "$OUT" --dry-run
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
