@@ -40,6 +40,9 @@
         <p class="warning">{{localText . $.Lang}}</p>
         {{end}}{{end}}
         {{if eq .Lang "de"}}
+        <p>Das Manifest listet die Dateien und ihre Prüfsummen auf.
+          Passende Prüfsummen zeigen, dass die Dateien mit dem Manifest übereinstimmen.
+          Das allein authentifiziert das Manifest nicht.</p>
         <p>Die Zeitstempel stehen in <a href="../SEAL.html">SEAL.html</a> und im
           Ergebnis von <code>sealjar verify</code>. Ein Paket kann ohne
           Zeitstempel vorliegen. Nur ein Zeitstempel einer unabhängigen, vertrauenswürdigen
@@ -48,6 +51,9 @@
           bestätigt. Zeitstempel mit dem öffentlichen Demo-Schlüssel liefern keinen unabhängigen
           Zeitnachweis, auch bei ausdrücklich gewährtem Vertrauen.</p>
         {{else}}
+        <p>The manifest lists the files and their hashes.
+          Matching hashes show agreement with the manifest;
+          they alone do not authenticate it.</p>
         <p>Timestamp results are in <a href="../SEAL.html">SEAL.html</a> and
           <code>sealjar verify</code>; a package may have no timestamp. Only a
           timestamp from an independent trusted authority provides independent time evidence.

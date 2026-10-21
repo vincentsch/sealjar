@@ -212,13 +212,21 @@ func TestReportExplainsConditionalTimeEvidence(t *testing.T) {
 		sections := strings.Split(text, "<section>")
 		for _, section := range []string{sections[1], sections[5]} {
 			needs := map[string][]string{
-				"en": {"independent trusted authority", "public demo key", "even when explicitly trusted", "SEAL.html", "sealjar verify"},
-				"de": {"unabhängigen, vertrauenswürdigen Zeitstempelstelle", "öffentlichen Demo-Schlüssel", "auch bei ausdrücklich gewährtem Vertrauen", "SEAL.html", "sealjar verify"},
+				"en": {"independent trusted authority", "public demo key", "even when explicitly trusted", "SEAL.html", "sealjar verify", "Matching hashes show agreement with the manifest", "alone do not authenticate"},
+				"de": {"unabhängigen, vertrauenswürdigen Zeitstempelstelle", "öffentlichen Demo-Schlüssel", "auch bei ausdrücklich gewährtem Vertrauen", "SEAL.html", "sealjar verify", "Passende Prüfsummen zeigen", "allein authentifiziert"},
 			}[lang]
 			for _, need := range needs {
 				if !strings.Contains(section, need) {
 					t.Errorf("%s section lacks %q", lang, need)
 				}
+			}
+		}
+		for _, need := range map[string][]string{
+			"en": {"lists the files and their hashes"},
+			"de": {"listet die Dateien und ihre Prüfsummen auf"},
+		}[lang] {
+			if !strings.Contains(sections[1], need) {
+				t.Errorf("%s summary lacks manifest explanation %q", lang, need)
 			}
 		}
 		for _, old := range []string{"files match the authenticated manifest", "Dateien mit dem authentifizierten Manifest", "A timestamp's time is an upper bound", "Die Zeit eines Zeitstempels ist eine Obergrenze"} {
