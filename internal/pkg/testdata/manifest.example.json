@@ -1,5 +1,5 @@
 {
-  "type": "signetleaf.manifest/v1",
+  "type": "sealjar.manifest/v1",
   "tool_version": "0.1.0",
   "capture_id": "01K81FJ90012S9JQ5WGM63CXA7",
   "started": "2026-10-20T12:00:00.123456789Z",

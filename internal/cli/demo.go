@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
-	"github.com/vincentsch/signetleaf/internal/demo"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	"github.com/vincentsch/sealjar/internal/demo"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 type demoResult struct {
@@ -27,12 +27,12 @@ type demoResult struct {
 }
 
 func demoCommand() *rungrad.Command {
-	out := "signetleaf-demo"
+	out := "sealjar-demo"
 	c := command("demo", "Capture the bundled bakery and try detecting a changed screenshot")
 	c.Mutates = true
 	c.Args = cobra.NoArgs
-	c.Examples = []string{"signetleaf demo", "signetleaf demo --out ./bakery-demo --json", "signetleaf demo --dry-run"}
-	c.Related = []string{"signetleaf capture", "signetleaf verify", "signetleaf report"}
+	c.Examples = []string{"sealjar demo", "sealjar demo --out ./bakery-demo --json", "sealjar demo --dry-run"}
+	c.Related = []string{"sealjar capture", "sealjar verify", "sealjar report"}
 	c.Configure = func(cmd *cobra.Command) {
 		cmd.Flags().StringVar(&out, "out", out, "Write demo packages and reader folders here")
 	}
@@ -95,7 +95,7 @@ func demoCommand() *rungrad.Command {
 			}
 			result.TamperedPackage = resultPath(tampered)
 			result.ChangedScreenshot = screenshot
-			result.VerifyCommand = "signetleaf verify " + shellQuote(result.TamperedPackage)
+			result.VerifyCommand = "sealjar verify " + shellQuote(result.TamperedPackage)
 			return nil
 		}
 		capture := captureWithOptions(&verdict, opt)

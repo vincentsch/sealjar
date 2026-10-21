@@ -1,12 +1,12 @@
 # Eine Website zur Abnahme dokumentieren
 
-Signetleaf hält ausgewählte Webseiten und den aktuellen Code in einem ZIP fest.
+Sealjar hält ausgewählte Webseiten und den aktuellen Code in einem ZIP fest.
 Dazu gehören Bildschirmfotos für Desktop und Smartphone, der gerenderte HTML-Inhalt
 und ein Erfassungsbericht. Ein unabhängiger Zeitstempel setzt eine zeitliche
 Obergrenze dafür, wann die versiegelten Dateien bereits vorlagen.
 
 Vor der Erfassung sollten Umfang, Zugriffsberechtigung und Ausgabeordner feststehen.
-Jede URL wird einzeln angegeben; Signetleaf folgt keinen Links zur Suche nach
+Jede URL wird einzeln angegeben; Sealjar folgt keinen Links zur Suche nach
 weiteren Seiten. Ein Paket kann mehrere Hosts und ein Git-Repository enthalten.
 Die Erfassung ersetzt weder das Abnahmeprotokoll noch einen Liefernachweis.
 
@@ -26,8 +26,8 @@ Die Beispiel-URL wird durch die freigegebene Adresse ersetzt:
 ```sh
 OUT=$(cd .. && pwd -P)
 printf 'Ausgabeordner: %s\n' "$OUT"
-signetleaf capture https://staging.example.com . --out "$OUT" --dry-run
-signetleaf capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
+sealjar capture https://staging.example.com . --out "$OUT" --dry-run
+sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
 Die vollständige Vorschau zeigt Seiten, Code und Ausschlüsse. Der Ausgabeordner
@@ -35,7 +35,7 @@ steht derzeit nicht im CLI-Plan und wird deshalb separat angezeigt. Relative
 Pfade beziehen sich auf den aktuellen Arbeitsordner. Der Trockenlauf startet
 keinen Browser, greift nicht aufs Netz zu und schreibt keine Dateien.
 Bei Formularanmeldung ist `--login` nur mit einer anwesenden Person möglich.
-HTTP-Basic-Auth kann über `SIGNETLEAF_AUTH` übergeben werden. Zugangsdaten gehören
+HTTP-Basic-Auth kann über `SEALJAR_AUTH` übergeben werden. Zugangsdaten gehören
 weder in URLs noch in Protokolle. Weitere Optionen stehen unter [Capture](../capture.md).
 
 ## Ergebnis lesen und prüfen
@@ -48,7 +48,7 @@ Die Siegelseite selbst gehört nicht zur Dateiliste im Manifest. Beim Export
 wird sie aus geprüften Daten neu erstellt.
 
 ```sh
-signetleaf verify paket.signetleaf.zip
+sealjar verify paket.sealjar.zip
 ```
 
 Der tatsächliche ZIP-Pfad ersetzt den Beispielnamen. Drei Ergebnisse bleiben
@@ -76,7 +76,7 @@ Sachverständigen oder Notar.
 Vertrauen entsteht durch System-Wurzelzertifikate, das eingebettete FreeTSA-Root
 oder unabhängig bezogene, ausdrücklich angegebene Wurzeln. Zertifikate allein
 aus dem Paket begründen kein Vertrauen. Offline-Prüfungen erkennen spätere
-Zertifikatswiderrufe nicht. Signetleaf v0.1 bewertet keine eIDAS-Qualifikation
+Zertifikatswiderrufe nicht. Sealjar v0.1 bewertet keine eIDAS-Qualifikation
 und bezeichnet Zeitstempel nicht als qualifiziert. DigiCert ist der Standard,
 FreeTSA der Ausweichdienst. Eigene Dienste lassen sich mit `--tsa` wählen;
 `stamp` ergänzt später Zeitstempel, ohne Manifest oder erfasste Dateien zu ändern.

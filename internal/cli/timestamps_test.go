@@ -17,10 +17,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/tsa"
-	"github.com/vincentsch/signetleaf/internal/tsa/testtsa"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/tsa/testtsa"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 func localTSA(t *testing.T, opt testtsa.Options) (string, string) {
@@ -84,12 +84,12 @@ func TestTimestampCaptureAndStamp(t *testing.T) {
 	assertVerify(t, 0, result.Package, "--tsa-root", root)
 	assertVerify(t, 11, result.Package)
 	before := entries(t, result.Package)
-	orphan := strings.TrimSuffix(result.Package, ".signetleaf.zip") + "-stamped.signetleaf"
+	orphan := strings.TrimSuffix(result.Package, ".sealjar.zip") + "-stamped.sealjar"
 	if e := os.Mkdir(orphan, 0700); e != nil {
 		t.Fatal(e)
 	}
 	stamped := stamp(t, result.Package, "--tsa", url, "--tsa-root", root)
-	if !strings.HasSuffix(stamped, "-stamped-2.signetleaf.zip") {
+	if !strings.HasSuffix(stamped, "-stamped-2.sealjar.zip") {
 		t.Fatalf("reader collision ignored: %s", stamped)
 	}
 	after := entries(t, stamped)
@@ -121,14 +121,14 @@ func TestTimestampCaptureAndStamp(t *testing.T) {
 	json.Unmarshal(altered["manifest.json"], &m)
 	m["tool_version"] = "changed"
 	altered["manifest.json"], _ = json.Marshal(m)
-	changed := filepath.Join(t.TempDir(), "changed.signetleaf.zip")
+	changed := filepath.Join(t.TempDir(), "changed.sealjar.zip")
 	zipEntries(t, changed, altered)
 	verdict := assertVerify(t, 10, changed, "--tsa-root", root)
 	if !strings.Contains(verdict.Tokens[0].Reason, "imprint mismatch") {
 		t.Fatal(verdict)
 	}
 	dir := t.TempDir()
-	bad := filepath.Join(dir, "corrupt.signetleaf.zip")
+	bad := filepath.Join(dir, "corrupt.sealjar.zip")
 	write(t, bad, []byte("not a ZIP"))
 	invoke(t, 10, "stamp", bad, "--tsa", url, "--json")
 	zipEntries(t, bad, altered)
@@ -224,7 +224,7 @@ func TestTimestampDryRunsAndVerdictPrecedence(t *testing.T) {
 			t.Fatal(e)
 		}
 		files["manifest.json.additional.tsr"] = der
-		path := filepath.Join(t.TempDir(), "mixed.signetleaf.zip")
+		path := filepath.Join(t.TempDir(), "mixed.sealjar.zip")
 		zipEntries(t, path, files)
 		r := assertVerify(t, tc.code, path, "--tsa-root", root)
 		if len(r.Tokens) != 2 {
@@ -245,7 +245,7 @@ func TestTimestampDryRunsAndVerdictPrecedence(t *testing.T) {
 		assertVerify(t, expected, path, "--tsa-root", root)
 	}
 	files["manifest.json.additional.tsr"] = []byte("malformed")
-	path := filepath.Join(t.TempDir(), "malformed.signetleaf.zip")
+	path := filepath.Join(t.TempDir(), "malformed.sealjar.zip")
 	zipEntries(t, path, files)
 	assertVerify(t, 10, path, "--tsa-root", root)
 }
@@ -314,7 +314,7 @@ func TestTrustFlagsOnDiagnosticsAndStoredReports(t *testing.T) {
 	sort.Slice(manifest.Files, func(i, j int) bool { return manifest.Files[i].Path < manifest.Files[j].Path })
 	m["files"], _ = json.Marshal(manifest.Files)
 	files["manifest.json"], _ = json.Marshal(m)
-	stored := filepath.Join(t.TempDir(), "stored.signetleaf.zip")
+	stored := filepath.Join(t.TempDir(), "stored.sealjar.zip")
 	zipEntries(t, stored, files)
 	signed := stamp(t, stored, "--tsa", url, "--tsa-root", root)
 	// A stored seal is unauthenticated and must never reach the reader folder.
@@ -383,7 +383,7 @@ func TestTimestampMetadataOutput(t *testing.T) {
 	}
 	files := entries(t, capture.Package)
 	files["manifest.json.bad.tsr"] = []byte("malformed")
-	broken := filepath.Join(t.TempDir(), "broken.signetleaf.zip")
+	broken := filepath.Join(t.TempDir(), "broken.sealjar.zip")
 	zipEntries(t, broken, files)
 	result = assertVerify(t, 10, broken, "--tsa-root", root)
 	for _, token := range result.Tokens {
@@ -422,7 +422,7 @@ func TestPlainTimestampFailuresKeepJSONDiagnostics(t *testing.T) {
 	}
 	files := entries(t, unsigned)
 	files["manifest.json.bad.tsr"] = []byte("broken")
-	broken := filepath.Join(t.TempDir(), "broken.signetleaf.zip")
+	broken := filepath.Join(t.TempDir(), "broken.sealjar.zip")
 	zipEntries(t, broken, files)
 	for _, command := range []string{"stamp", "report"} {
 		for _, jsonMode := range []bool{false, true} {

@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
 )
 
 // CheckSnapshot also runs without a destination, before restore creates staging files.

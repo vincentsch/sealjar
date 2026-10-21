@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vincentsch/signetleaf/internal/tsa/testtsa"
+	"github.com/vincentsch/sealjar/internal/tsa/testtsa"
 )
 
 func main() {

@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/report"
-	"github.com/vincentsch/signetleaf/internal/tsa"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/report"
+	"github.com/vincentsch/sealjar/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 // Report copies existing reader artifacts; report generation happens at capture.
@@ -23,8 +23,8 @@ func reportCommand() *rungrad.Command {
 	c := command("report <package>", "Copy stored reports after checking package integrity and timestamp trust")
 	c.Mutates = true
 	c.Args = cobra.ExactArgs(1)
-	c.Examples = []string{"signetleaf report capture.signetleaf.zip --out reader", "signetleaf report capture.signetleaf.zip --lang de --pdf --out reader-de --dry-run"}
-	c.Related = []string{"signetleaf verify", "signetleaf restore"}
+	c.Examples = []string{"sealjar report capture.sealjar.zip --out reader", "sealjar report capture.sealjar.zip --lang de --pdf --out reader-de --dry-run"}
+	c.Related = []string{"sealjar verify", "sealjar restore"}
 	c.Configure = func(cmd *cobra.Command) {
 		f := cmd.Flags()
 		f.StringVar(&root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
@@ -135,7 +135,7 @@ func readerDestination(out string) error {
 	return nil
 }
 func extractReader(r *packagefmt.Reader, out string, names []string, seal []byte) error {
-	stage, e := os.MkdirTemp(filepath.Dir(out), ".signetleaf-reader-")
+	stage, e := os.MkdirTemp(filepath.Dir(out), ".sealjar-reader-")
 	if e != nil {
 		return e
 	}

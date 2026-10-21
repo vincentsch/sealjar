@@ -1,19 +1,19 @@
-# signetleaf demo
+# sealjar demo
 
 Capture the bundled bakery and try detecting a changed screenshot
 
 ## Usage
 
 ```
-signetleaf demo
+sealjar demo
 ```
 
 ## Examples
 
 ```
-signetleaf demo
-signetleaf demo --out ./bakery-demo --json
-signetleaf demo --dry-run
+sealjar demo
+sealjar demo --out ./bakery-demo --json
+sealjar demo --dry-run
 ```
 
 ## Flags
@@ -30,6 +30,6 @@ This command changes state and honors `--dry-run`.
 
 ## Related commands
 
-- signetleaf capture
-- signetleaf verify
-- signetleaf report
+- sealjar capture
+- sealjar verify
+- sealjar report

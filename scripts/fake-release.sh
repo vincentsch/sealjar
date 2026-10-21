@@ -14,11 +14,11 @@ trap 'exit 143' TERM
 export TMPDIR="$scratch"
 mkdir -p "$scratch/download/v0.0.1" "$scratch/download/v0.1.0" "$scratch/latest/download"
 GOOS=linux GOARCH=amd64 make build VERSION=v0.0.1
-cp bin/signetleaf "$scratch/download/v0.0.1/signetleaf-linux-amd64"
-(cd "$scratch/download/v0.0.1" && if command -v sha256sum >/dev/null 2>&1; then sha256sum signetleaf-linux-amd64; else shasum -a 256 signetleaf-linux-amd64; fi > checksums.txt)
+cp bin/sealjar "$scratch/download/v0.0.1/sealjar-linux-amd64"
+(cd "$scratch/download/v0.0.1" && if command -v sha256sum >/dev/null 2>&1; then sha256sum sealjar-linux-amd64; else shasum -a 256 sealjar-linux-amd64; fi > checksums.txt)
 make build-all VERSION=v0.1.0
-cp dist/signetleaf-* dist/checksums.txt "$scratch/download/v0.1.0/"
-cp dist/signetleaf-* dist/checksums.txt "$scratch/latest/download/"
+cp dist/sealjar-* dist/checksums.txt "$scratch/download/v0.1.0/"
+cp dist/sealjar-* dist/checksums.txt "$scratch/latest/download/"
 python3 - "$scratch" <<'PY' &
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -42,10 +42,10 @@ for _ in range(100):
     time.sleep(0.05)
 else: raise SystemExit('Local release server did not start')
 PY
-export SIGNETLEAF_DOWNLOAD_BASE="$(cat "$scratch/endpoint")"
-export SIGNETLEAF_FIXTURE_DIR="$scratch"
-printf 'Local releases: %s\n' "$SIGNETLEAF_DOWNLOAD_BASE"
+export SEALJAR_DOWNLOAD_BASE="$(cat "$scratch/endpoint")"
+export SEALJAR_FIXTURE_DIR="$scratch"
+printf 'Local releases: %s\n' "$SEALJAR_DOWNLOAD_BASE"
 if [[ $# -gt 0 ]]; then "$@"; else
-  printf 'Use SIGNETLEAF_DOWNLOAD_BASE=%q bash install.sh in another terminal. Press Ctrl-C to stop.\n' "$SIGNETLEAF_DOWNLOAD_BASE"
+  printf 'Use SEALJAR_DOWNLOAD_BASE=%q bash install.sh in another terminal. Press Ctrl-C to stop.\n' "$SEALJAR_DOWNLOAD_BASE"
   wait "$server_pid"
 fi

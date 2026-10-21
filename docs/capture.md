@@ -1,6 +1,6 @@
 # Capture pages and code
 
-[Install Signetleaf](quickstart.md#install) first. A capture accepts listed
+[Install Sealjar](quickstart.md#install) first. A capture accepts listed
 HTTP(S) URLs and paths in one Git repository. It does not crawl or prove that
 the captured code produced the captured website. The repository needs a commit.
 
@@ -10,8 +10,8 @@ alongside the complete plan:
 ```sh
 OUT=$(cd .. && pwd -P)
 printf 'Output directory: %s\n' "$OUT"
-signetleaf capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --dry-run
-signetleaf capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --confirm --no-prompt
+sealjar capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --dry-run
+sealjar capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --confirm --no-prompt
 ```
 
 Check that `OUT` is outside the repository after resolving links. Relative paths
@@ -49,10 +49,10 @@ your normal secret input method, without saving or printing it. With that
 variable already set:
 
 ```sh
-signetleaf capture https://staging.example.com/private/ --out .. --confirm --no-prompt
+sealjar capture https://staging.example.com/private/ --out .. --confirm --no-prompt
 ```
 
-`SIGNETLEAF_AUTH` and `--auth user:password` are sent only to listed target
+`SEALJAR_AUTH` and `--auth user:password` are sent only to listed target
 origins, never another origin after a redirect or a third-party resource.
 Do not put credentials inside URLs. The [local fixture](quickstart.md#try-the-instructions-without-an-external-site)
 uses `--auth client:handover` for testing.
@@ -60,7 +60,7 @@ uses `--auth client:handover` for testing.
 A form login requires a person and an interactive terminal:
 
 ```sh
-signetleaf capture https://staging.example.com/account/ --login --out .. --confirm
+sealjar capture https://staging.example.com/account/ --login --out .. --confirm
 ```
 
 Sign in in the isolated Chrome window, then press Enter in the terminal.
@@ -74,7 +74,7 @@ Deleted tracked files are recorded as deleted. To include untracked files that
 Git does not ignore, optional history and exclusions:
 
 ```sh
-signetleaf capture . --include-untracked --history --exclude 'build/' --exclude '*.key' --name handover --label client=Example --out .. --no-timestamp --confirm --no-prompt
+sealjar capture . --include-untracked --history --exclude 'build/' --exclude '*.key' --name handover --label client=Example --out .. --no-timestamp --confirm --no-prompt
 ```
 
 History includes all refs in a separate Git bundle. It may contain old secrets
@@ -103,4 +103,4 @@ Network metadata masks Cookie, Set-Cookie, Authorization and Proxy-Authorization
 values and known secret query values. No response bodies are stored as network
 records. Masking and exclusions cannot remove private content from screenshots,
 DOM, source or history. Captured files are preserved as captured. Inspect the
-package before sharing it; Signetleaf does not upload it for you.
+package before sharing it; Sealjar does not upload it for you.

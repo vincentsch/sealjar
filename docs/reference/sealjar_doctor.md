@@ -1,18 +1,18 @@
-# signetleaf doctor
+# sealjar doctor
 
 Check Chrome, Git, output access and timestamp authority connections
 
 ## Usage
 
 ```
-signetleaf doctor
+sealjar doctor
 ```
 
 ## Examples
 
 ```
-signetleaf doctor
-signetleaf doctor --tsa https://freetsa.org/tsr
+sealjar doctor
+sealjar doctor --tsa https://freetsa.org/tsr
 ```
 
 ## Flags
@@ -27,5 +27,5 @@ human, json
 
 ## Related commands
 
-- signetleaf capture
-- signetleaf stamp
+- sealjar capture
+- sealjar stamp

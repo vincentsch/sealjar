@@ -7,9 +7,9 @@ import (
 	"io"
 	"strings"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/repo"
-	"github.com/vincentsch/signetleaf/internal/tsa"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/repo"
+	"github.com/vincentsch/sealjar/internal/tsa"
 )
 
 type Answer struct {
@@ -106,7 +106,7 @@ func Check(r *packagefmt.Reader, additions ...*x509.CertPool) (Result, int, erro
 			result.Timestamp.Detail += " " + tsa.DemoProvenance(token, "en")
 		}
 	}
-	result.Limitations = append(result.Limitations, "Signetleaf does not assess eIDAS qualification.")
+	result.Limitations = append(result.Limitations, "Sealjar does not assess eIDAS qualification.")
 	if len(differences) > 0 {
 		result.Files.State = "Changed"
 		result.Files.Detail = "Package files differ from the manifest."

@@ -1,18 +1,18 @@
-# signetleaf verify
+# sealjar verify
 
 Check capture results, file hashes and timestamp status
 
 ## Usage
 
 ```
-signetleaf verify <package>
+sealjar verify <package>
 ```
 
 ## Examples
 
 ```
-signetleaf verify capture.signetleaf.zip
-signetleaf verify capture.signetleaf.zip --json
+sealjar verify capture.sealjar.zip
+sealjar verify capture.sealjar.zip --json
 ```
 
 ## Flags
@@ -25,5 +25,5 @@ human, json
 
 ## Related commands
 
-- signetleaf capture
-- signetleaf restore
+- sealjar capture
+- sealjar restore

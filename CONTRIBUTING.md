@@ -16,7 +16,7 @@ make conformance
 
 `make build-all` builds Linux, macOS and Windows binaries for amd64 and arm64,
 with SHA-256 checksums in `dist/`. `make clean` removes `bin/` and `dist/`.
-Set `SIGNETLEAF_REQUIRE_CHROME=1` to fail browser tests when Chrome is missing.
+Set `SEALJAR_REQUIRE_CHROME=1` to fail browser tests when Chrome is missing.
 Otherwise those tests print `skipped: no Chrome` when they cannot run.
 
 Update help and examples alongside command changes, then run `make docs`.

@@ -7,7 +7,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/vincentsch/signetleaf/internal/version"
+	"github.com/vincentsch/sealjar/internal/version"
 	"io"
 	"io/fs"
 	"os"
@@ -20,9 +20,9 @@ import (
 	"testing"
 	"time"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/repo"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/repo"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 func write(t *testing.T, name string, b []byte) {
@@ -432,7 +432,7 @@ func TestPayloadTamperingVerdicts(t *testing.T) {
 	files := entries(t, original)
 	var m packagefmt.Manifest
 	json.Unmarshal(files["manifest.json"], &m)
-	m.Type = "signetleaf.manifest/v2"
+	m.Type = "sealjar.manifest/v2"
 	files["manifest.json"], _ = packagefmt.JSON(m)
 	unsupported := filepath.Join(t.TempDir(), "future.zip")
 	zipEntries(t, unsupported, files)
@@ -572,11 +572,11 @@ func TestCaptureNameCollisionsPreserveReaderFolders(t *testing.T) {
 		t.Fatal(e)
 	}
 	second := captured(t, root, out, "--name", "handover")
-	if !strings.HasSuffix(second, "-2.signetleaf.zip") {
+	if !strings.HasSuffix(second, "-2.sealjar.zip") {
 		t.Fatalf("orphan reader folder reused: %s", second)
 	}
 	third := captured(t, root, out, "--name", "handover")
-	if !strings.HasSuffix(third, "-3.signetleaf.zip") {
+	if !strings.HasSuffix(third, "-3.sealjar.zip") {
 		t.Fatalf("ZIP collision: %s", third)
 	}
 	b, e := os.ReadFile(filepath.Join(reader, "keep.txt"))

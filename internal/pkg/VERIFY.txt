@@ -2,14 +2,14 @@ CHECKING THIS PACKAGE / PAKET PRÜFEN
 
 English
 
-Run `signetleaf verify package.signetleaf.zip`. It gives three separate answers:
+Run `sealjar verify package.sealjar.zip`. It gives three separate answers:
 capture results, file integrity, and timestamp trust. Exit 10 means malformed
 or changed content. Exit 11 means no trusted timestamp. Exit 0 means the files
 match and at least one timestamp is trusted. Add independent trusted roots with
-`--tsa-root roots.pem` when needed. `signetleaf stamp package.signetleaf.zip`
+`--tsa-root roots.pem` when needed. `sealjar stamp package.sealjar.zip`
 can add a timestamp later without changing the manifest or captured files.
 
-Manual file check without Signetleaf
+Manual file check without Sealjar
 
 Unzip into a new empty folder using an archive tool that rejects unsafe paths
 and links. Keep the original ZIP. From that extracted folder, run the Python 3
@@ -52,7 +52,7 @@ today's time and can reject older valid timestamps whose certificates have
 since expired. `ts -reply -text` only reads a token; it does not verify it.
 
 Use trusted root certificates obtained independently: the operating system's
-roots, the embedded FreeTSA root from Signetleaf's source, or roots obtained
+roots, the embedded FreeTSA root from Sealjar's source, or roots obtained
 from the authority through a separately trusted source. Certificates supplied
 only inside a package are not trusted roots. A different authority can require
 its own root and intermediate certificates. Consult its verification guidance.
@@ -61,7 +61,7 @@ A successful signature, imprint and trusted chain check authenticates the exact
 manifest bytes. Together with matching file hashes, it shows those files
 existed no later than the timestamp's time. That time is an upper bound, not an
 independently checked capture time. Offline checks cannot see later certificate
-revocation. Signetleaf does not assess eIDAS qualification.
+revocation. Sealjar does not assess eIDAS qualification.
 
 These checks do not establish that content is true or complete, that a server
 sent these bytes, that the operator was honest, that work was delivered or
@@ -71,16 +71,16 @@ Exclusions cannot guarantee that captured files contain no secrets.
 
 Deutsch
 
-`signetleaf verify paket.signetleaf.zip` prüft drei Dinge getrennt: das Ergebnis
+`sealjar verify paket.sealjar.zip` prüft drei Dinge getrennt: das Ergebnis
 der Erfassung, die Dateien und das Vertrauen in den Zeitstempel. Rückgabecode
 10 steht für ein beschädigtes oder verändertes Paket. Code 11 bedeutet, dass
 kein vertrauenswürdiger Zeitstempel vorliegt. Bei Code 0 stimmen die Dateien
 überein und mindestens ein Zeitstempel ist vertrauenswürdig. Mit
 `--tsa-root roots.pem` lassen sich unabhängig bezogene Vertrauensanker ergänzen.
-`signetleaf stamp paket.signetleaf.zip` fügt später einen Zeitstempel hinzu,
+`sealjar stamp paket.sealjar.zip` fügt später einen Zeitstempel hinzu,
 ohne das Manifest oder die erfassten Dateien zu ändern.
 
-Dateien ohne Signetleaf prüfen
+Dateien ohne Sealjar prüfen
 
 Das ZIP mit einem Archivprogramm in einen neuen, leeren Ordner entpacken. Das
 Programm muss unsichere Pfade und Verknüpfungen ablehnen. Das Original bleibt
@@ -109,7 +109,7 @@ Zertifikate inzwischen abgelaufen sind. Die Textanzeige allein ist keine
 Signaturprüfung.
 
 Vertrauensanker müssen aus unabhängigen Quellen stammen: aus dem Betriebssystem,
-dem eingebetteten FreeTSA-Wurzelzertifikat im Signetleaf-Quellcode oder einer
+dem eingebetteten FreeTSA-Wurzelzertifikat im Sealjar-Quellcode oder einer
 anderweitig vertrauenswürdigen Quelle des Zeitstempeldienstes. Zertifikate aus
 dem Paket allein begründen kein Vertrauen. Je nach Dienst sind weitere
 Zwischenzertifikate nötig.
@@ -119,7 +119,7 @@ Zertifikatskette authentifiziert die unveränderten Manifest-Bytes. Stimmen auch
 die Dateiprüfsummen, lagen diese Dateien spätestens zum Zeitpunkt des
 Zeitstempels vor. Das ist eine zeitliche Obergrenze, keine unabhängig geprüfte
 Erfassungszeit. Eine Offline-Prüfung erkennt spätere Zertifikatswiderrufe nicht.
-Signetleaf bewertet keine eIDAS-Qualifikation.
+Sealjar bewertet keine eIDAS-Qualifikation.
 
 Die Prüfung belegt weder die Wahrheit oder Vollständigkeit der Inhalte noch
 deren Herkunft vom Server. Sie belegt auch keine ehrliche Bedienung, Abnahme

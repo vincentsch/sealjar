@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/repo"
-	"github.com/vincentsch/signetleaf/internal/tsa"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/repo"
+	"github.com/vincentsch/sealjar/internal/tsa"
 )
 
 func TestBilingualReportsAndThumbnails(t *testing.T) {
@@ -176,7 +176,7 @@ func TestSealTokenPresentation(t *testing.T) {
 					}
 				}
 			}
-			for _, want := range []string{"Signetleaf Demo TSA", "0xF1", "Certificate details", "Zertifikatsdetails", "nicht verfügbar", "CN=raw-subject"} {
+			for _, want := range []string{"Sealjar Demo TSA", "0xF1", "Certificate details", "Zertifikatsdetails", "nicht verfügbar", "CN=raw-subject"} {
 				if !strings.Contains(text, want) {
 					t.Fatal(want)
 				}

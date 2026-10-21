@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/repo"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/repo"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 func TestEmbeddedFixturesMatchTrackedSources(t *testing.T) {
@@ -130,7 +130,7 @@ func TestTamperReadableAndNeverOverwrites(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if filepath.Base(name) != "demo-tampered"+suffix+".signetleaf.zip" {
+		if filepath.Base(name) != "demo-tampered"+suffix+".sealjar.zip" {
 			t.Fatal(name)
 		}
 		raw, err := zip.OpenReader(name)

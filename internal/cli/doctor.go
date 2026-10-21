@@ -15,8 +15,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
-	"github.com/vincentsch/signetleaf/internal/browser"
-	"github.com/vincentsch/signetleaf/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/browser"
+	"github.com/vincentsch/sealjar/internal/tsa"
 )
 
 // This diagnostic checks connections only; it does not request a timestamp.
@@ -25,8 +25,8 @@ func doctorCommand() *rungrad.Command {
 	var chrome, out string
 	c := command("doctor", "Check Chrome, Git, output access and timestamp authority connections")
 	c.Args = cobra.NoArgs
-	c.Examples = []string{"signetleaf doctor", "signetleaf doctor --tsa https://freetsa.org/tsr"}
-	c.Related = []string{"signetleaf capture", "signetleaf stamp"}
+	c.Examples = []string{"sealjar doctor", "sealjar doctor --tsa https://freetsa.org/tsr"}
+	c.Related = []string{"sealjar capture", "sealjar stamp"}
 	c.Configure = func(cmd *cobra.Command) {
 		cmd.Flags().StringVar(&chrome, "chrome", "", "Check this Chrome or Chromium executable")
 		cmd.Flags().StringVar(&out, "out", ".", "Check this output folder for write access")
@@ -93,7 +93,7 @@ func doctorCommand() *rungrad.Command {
 		}
 		var probe *os.File
 		if err == nil {
-			probe, err = os.CreateTemp(folder, ".signetleaf-doctor-")
+			probe, err = os.CreateTemp(folder, ".sealjar-doctor-")
 			if err == nil {
 				name := probe.Name()
 				err = probe.Close()

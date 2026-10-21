@@ -12,8 +12,8 @@ import (
 )
 
 func TestSiteProcess(t *testing.T) {
-	if os.Getenv("SIGNETLEAF_TEST_SITE_PROCESS") == "1" {
-		if err := run(os.Getenv("SIGNETLEAF_TEST_SITE_OUT")); err != nil {
+	if os.Getenv("SEALJAR_TEST_SITE_PROCESS") == "1" {
+		if err := run(os.Getenv("SEALJAR_TEST_SITE_OUT")); err != nil {
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -23,7 +23,7 @@ func TestSiteProcess(t *testing.T) {
 	}
 	out := t.TempDir()
 	cmd := exec.Command(os.Args[0], "-test.run=^TestSiteProcess$")
-	cmd.Env = append(os.Environ(), "SIGNETLEAF_TEST_SITE_PROCESS=1", "SIGNETLEAF_TEST_SITE_OUT="+out)
+	cmd.Env = append(os.Environ(), "SEALJAR_TEST_SITE_PROCESS=1", "SEALJAR_TEST_SITE_OUT="+out)
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}

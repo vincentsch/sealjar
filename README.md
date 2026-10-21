@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/media/wordmark-dark.svg">
-    <img src="docs/media/wordmark-light.svg" alt="Signetleaf" width="380">
+    <img src="docs/media/wordmark-light.svg" alt="Sealjar" width="380">
   </picture>
 </p>
 <p align="center"><b>Timestamped captures of your website and code.</b></p>
@@ -13,7 +13,7 @@
   <a href="docs/de/abnahme.md">Deutsch</a>
 </p>
 
-Signetleaf saves web pages and current code in one ZIP file. It takes desktop
+Sealjar saves web pages and current code in one ZIP file. It takes desktop
 and mobile screenshots, records the rendered page and repository files, and
 adds a report in English and German. An independent timestamp gives an upper
 bound for when these files existed.
@@ -24,13 +24,13 @@ Copy this prompt and replace the URL with your own. Supply an output directory
 outside your repository, too.
 
 ```text
-Use Signetleaf to capture this repository and https://staging.example.com
-for handover. Use https://github.com/vincentsch/signetleaf: read its AGENTS.md
+Use Sealjar to capture this repository and https://staging.example.com
+for handover. Use https://github.com/vincentsch/sealjar: read its AGENTS.md
 and follow the steps. Verify the package and show me the report and any
 capture problems. Write the output to the parent directory of this repository.
 ```
 
-The agent installs Signetleaf, checks prerequisites, shows the plan, captures
+The agent installs Sealjar, checks prerequisites, shows the plan, captures
 and verifies. It uses the scope and permission you supplied. For basic auth or
 an interactive login, see [capture](docs/capture.md).
 
@@ -41,13 +41,13 @@ The Bash installer supports Linux, macOS and Git Bash on Windows.
 WSL uses Linux assets. It verifies SHA-256 checksums before installing.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vincentsch/signetleaf/main/install.sh -o /tmp/signetleaf-install.sh
-bash /tmp/signetleaf-install.sh
-rm /tmp/signetleaf-install.sh
+curl -fsSL https://raw.githubusercontent.com/vincentsch/sealjar/main/install.sh -o /tmp/sealjar-install.sh
+bash /tmp/sealjar-install.sh
+rm /tmp/sealjar-install.sh
 ```
 
 Use the absolute path printed after `Installed:` if it is not on PATH.
-The examples below call that executable `signetleaf`.
+The examples below call that executable `sealjar`.
 [Native Windows downloads and the optional Go install](docs/quickstart.md#install)
 are described separately. Native Windows needs no Go installation.
 
@@ -62,8 +62,8 @@ PDFs; it cannot generate missing ones.
 After [installation](#install-it-yourself), run:
 
 ```sh
-signetleaf doctor
-signetleaf demo --out ../bakery-demo
+sealjar doctor
+sealjar demo --out ../bakery-demo
 ```
 
 The demo serves a bakery website on your computer and captures an example
@@ -87,12 +87,12 @@ check it is the destination you want. List each authorised URL explicitly.
 ```sh
 OUT=$(cd .. && pwd -P)
 printf 'Output directory: %s\n' "$OUT"
-signetleaf capture https://staging.example.com . --out "$OUT" --dry-run
-signetleaf capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
+sealjar capture https://staging.example.com . --out "$OUT" --dry-run
+sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
 Read the complete plan, including exclusions. Add pages or hosts as more URL
-arguments; Signetleaf does not crawl. The package can combine those pages with
+arguments; Sealjar does not crawl. The package can combine those pages with
 one Git repository. Tracked files include current uncommitted edits.
 `--include-untracked` adds files Git does not ignore. `--history` adds a Git
 bundle, which can contain old secrets and unrelated work. Submodules are listed
@@ -109,7 +109,7 @@ sharing source or screenshots.
 Use the path printed by capture:
 
 ```sh
-signetleaf verify package.signetleaf.zip
+sealjar verify package.sealjar.zip
 ```
 
 Read three answers separately: Capture, Files and Timestamp. A capture can have
@@ -118,8 +118,8 @@ exit 11 means no trusted timestamp. [Verification](docs/verify.md) explains both
 
 A recipient can open `report/report.en.html` in the paired reader folder and
 follow its relative image links. Keep the folder together. The report PDF is a
-standalone reading copy. Neither requires installing Signetleaf to read.
-[Manual verification](docs/verify.md#without-installing-signetleaf) uses Python 3
+standalone reading copy. Neither requires installing Sealjar to read.
+[Manual verification](docs/verify.md#without-installing-sealjar) uses Python 3
 for manifest-file hashes and OpenSSL for the timestamp, with independent roots
 and the token's time. `VERIFY.txt` inside the ZIP contains the same steps.
 
@@ -139,14 +139,14 @@ manifest or captured files. See [timestamps](docs/timestamps.md).
 
 Trust comes from system roots, the embedded FreeTSA root, or independently
 supplied explicit roots, never certificates merely carried in the package.
-Offline checks cannot see later revocation. Signetleaf v0.1 does not assess
+Offline checks cannot see later revocation. Sealjar v0.1 does not assess
 eIDAS qualification or label timestamps qualified.
 
 Capture contacts target pages and their resources, DNS and timestamp authorities.
 A TSA receives a hash and normal network metadata. Timestamp requests use standard
 proxy settings; doctor's connection probes do not honour proxies. Metadata masking
 and exclusions cannot remove private content from screenshots, DOM, source or
-history. Inspect the package before sharing it. There are no Signetleaf accounts
+history. Inspect the package before sharing it. There are no Sealjar accounts
 or automatic package uploads.
 
 ## Read more
@@ -157,5 +157,5 @@ or automatic package uploads.
 German guides cover [Abnahme](docs/de/abnahme.md) and
 [empfangene Pakete](docs/de/fuer-empfaenger.md).
 
-Signetleaf is [MIT licensed](LICENSE). For source changes, read
+Sealjar is [MIT licensed](LICENSE). For source changes, read
 [CONTRIBUTING.md](CONTRIBUTING.md).

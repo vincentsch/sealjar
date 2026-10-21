@@ -1,9 +1,9 @@
-# Received a Signetleaf package?
+# Received a Sealjar package?
 
 The ZIP holds captured pages, code and checking information. A folder beside it
 contains reports for reading. Open `report/report.en.html` in that folder, keeping
 its images and other files together. The report PDF can be read on its own.
-No Signetleaf installation is needed to read either copy.
+No Sealjar installation is needed to read either copy.
 
 Start with the summary. Check the listed URLs, repository commit and exclusions.
 Read each capture problem: a failed page or missing resource can leave gaps.
@@ -20,7 +20,7 @@ report extraction regenerates the seal from checked data.
 After [installing](quickstart.md#install), check the original ZIP:
 
 ```sh
-signetleaf verify package.signetleaf.zip
+sealjar verify package.sealjar.zip
 ```
 
 Capture describes completeness and problems recorded by the operator's tool.
@@ -37,17 +37,17 @@ files existed, rather than an independently checked capture time.
 
 Trust comes from system roots, the embedded FreeTSA root or independently
 supplied explicit roots. Certificates merely carried in the package do not
-establish trust. Offline checks cannot see later revocation. Signetleaf v0.1
+establish trust. Offline checks cannot see later revocation. Sealjar v0.1
 does not assess eIDAS qualification or label a timestamp qualified.
 
 The demo fallback uses a public signing key. It gives no independent time
 evidence, even if an explicitly supplied root grants the token trust.
 
-## Check without installing Signetleaf
+## Check without installing Sealjar
 
-`VERIFY.txt` in the ZIP and the [verification guide](verify.md#without-installing-signetleaf)
+`VERIFY.txt` in the ZIP and the [verification guide](verify.md#without-installing-sealjar)
 provide a Python 3 manifest-file hash check and an OpenSSL timestamp check.
-Those steps need Python/OpenSSL even though they do not need Signetleaf.
+Those steps need Python/OpenSSL even though they do not need Sealjar.
 The timestamp check uses independently obtained roots and `-attime` with the
 token's genTime. Reading a token's text alone does not verify its signature.
 

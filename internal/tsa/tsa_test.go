@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/digitorus/timestamp"
-	"github.com/vincentsch/signetleaf/internal/tsa/testtsa"
+	"github.com/vincentsch/sealjar/internal/tsa/testtsa"
 )
 
 func authority(t *testing.T, opt testtsa.Options) *testtsa.Authority {

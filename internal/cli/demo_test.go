@@ -2,19 +2,19 @@ package cli
 
 import (
 	"bytes"
-	"github.com/vincentsch/signetleaf/internal/testutil"
-	"github.com/vincentsch/signetleaf/internal/tsa/testtsa"
+	"github.com/vincentsch/sealjar/internal/testutil"
+	"github.com/vincentsch/sealjar/internal/tsa/testtsa"
 	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/vincentsch/signetleaf/internal/browser"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/tsa"
-	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	"github.com/vincentsch/sealjar/internal/browser"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/tsa/demotsa"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 func TestDemoDryRunNeedsNoPrerequisitesOrFiles(t *testing.T) {
@@ -120,7 +120,7 @@ func TestDemoFallbackJSONAndRepeatArtifacts(t *testing.T) {
 				t.Fatal(text.String())
 			}
 			first = result
-		} else if result.Package == first.Package || result.ReaderFolder == first.ReaderFolder || result.TamperedPackage == first.TamperedPackage || !strings.HasSuffix(result.TamperedPackage, "-2.signetleaf.zip") {
+		} else if result.Package == first.Package || result.ReaderFolder == first.ReaderFolder || result.TamperedPackage == first.TamperedPackage || !strings.HasSuffix(result.TamperedPackage, "-2.sealjar.zip") {
 			t.Fatalf("artifacts overwritten: %+v", result)
 		}
 		leftovers, err := os.ReadDir(tmp)

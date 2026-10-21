@@ -18,7 +18,7 @@ import (
 	"sort"
 	"strings"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
 )
 
 type Deleted struct {

@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vincentsch/signetleaf/internal/tsa/testtsa"
+	"github.com/vincentsch/sealjar/internal/tsa/testtsa"
 )
 
 const Label = "Demo timestamp, not trusted"
@@ -59,7 +59,7 @@ func New() (*Authority, error) {
 	if err != nil {
 		return nil, err
 	}
-	cert := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "Signetleaf Demo TSA, not trusted"}, NotBefore: now.Add(-time.Hour), NotAfter: now.AddDate(1, 0, 0), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageTimeStamping}, BasicConstraintsValid: true}
+	cert := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "Sealjar Demo TSA, not trusted"}, NotBefore: now.Add(-time.Hour), NotAfter: now.AddDate(1, 0, 0), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageTimeStamping}, BasicConstraintsValid: true}
 	// Timestamp signers require a critical, exclusive extended key usage.
 	cert.ExtraExtensions = []pkix.Extension{{Id: []int{2, 5, 29, 37}, Critical: true, Value: []byte{0x30, 0x0a, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x08}}}
 	root := Root()

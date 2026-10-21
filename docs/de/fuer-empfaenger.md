@@ -2,7 +2,7 @@
 
 Das ZIP enthält die vollständige Erfassung. Der zugehörige Leseordner enthält
 Berichte und Bilder. `report/report.de.html` lässt sich im Browser öffnen,
-das Bericht-PDF in einem PDF-Programm. Dafür ist keine Signetleaf-Installation
+das Bericht-PDF in einem PDF-Programm. Dafür ist keine Sealjar-Installation
 nötig. Beim HTML-Bericht muss der Ordner zusammenbleiben, weil Bildverweise
 relativ sind. Das PDF ist eine eigenständige Lesekopie.
 
@@ -24,7 +24,7 @@ Nach der [Installation](../quickstart.md#install) prüft dieser Befehl das ZIP.
 Der Beispielname wird durch den tatsächlichen Pfad ersetzt:
 
 ```sh
-signetleaf verify paket.signetleaf.zip
+sealjar verify paket.sealjar.zip
 ```
 
 Die Erfassung beschreibt Vollständigkeit und festgehaltene Probleme. Das
@@ -38,7 +38,7 @@ Zeitstempel oder mit dem ausdrücklich nicht vertrauenswürdigen Demo-Zeitstempe
 Das Original bleibt erhalten. Erfasste Dateien werden nicht zur Reparatur
 eines Prüfergebnisses verändert.
 
-Ohne Signetleaf stehen in `VERIFY.txt` und der [Prüfanleitung](../verify.md#without-installing-signetleaf)
+Ohne Sealjar stehen in `VERIFY.txt` und der [Prüfanleitung](../verify.md#without-installing-sealjar)
 ein Python-3-Skript für die Dateiprüfung und OpenSSL-Befehle für den Zeitstempel.
 Diese Schritte benötigen Python und OpenSSL. Vertrauensanker müssen unabhängig
 bezogen werden. Mit `-attime` erfolgt die Zertifikatsprüfung zum Zeitpunkt
@@ -62,7 +62,7 @@ Erfassungszeit.
 Als Vertrauensanker dienen System-Wurzelzertifikate, das eingebettete
 FreeTSA-Root oder unabhängig bezogene, ausdrücklich angegebene Wurzeln.
 Zertifikate, die lediglich im Paket mitgeliefert werden, begründen kein Vertrauen.
-Offline-Prüfungen erkennen spätere Zertifikatswiderrufe nicht. Signetleaf v0.1
+Offline-Prüfungen erkennen spätere Zertifikatswiderrufe nicht. Sealjar v0.1
 bewertet keine eIDAS-Qualifikation und bezeichnet Zeitstempel nicht als qualifiziert.
 
 Das Paket belegt weder Wahrheit noch Vollständigkeit der Inhalte noch ehrliche

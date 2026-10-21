@@ -27,7 +27,7 @@ func IsMalformed(err error) bool { var e *MalformedError; return errors.As(err, 
 type UnsupportedError struct{ Type string }
 
 func (e *UnsupportedError) Error() string {
-	return fmt.Sprintf("unsupported manifest format %q; use a compatible Signetleaf version", e.Type)
+	return fmt.Sprintf("unsupported manifest format %q; use a compatible Sealjar version", e.Type)
 }
 
 type Reader struct {
@@ -232,7 +232,7 @@ func WriteStem(dir, out, stem string) (result string, err error) {
 		if n > 1 {
 			suffix = fmt.Sprintf("-%d", n)
 		}
-		result = filepath.Join(out, stem+suffix+".signetleaf.zip")
+		result = filepath.Join(out, stem+suffix+".sealjar.zip")
 		used, e := exists(strings.TrimSuffix(result, ".zip"))
 		if e != nil {
 			return "", e

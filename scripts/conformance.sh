@@ -11,7 +11,7 @@ trap cleanup EXIT
 export TMPDIR="$scratch"
 export GIT_CONFIG_NOSYSTEM=1
 export GIT_CONFIG_GLOBAL=/dev/null
-CGO_ENABLED=0 go build -o "$scratch/signetleaf" ./cmd/signetleaf
+CGO_ENABLED=0 go build -o "$scratch/sealjar" ./cmd/sealjar
 CGO_ENABLED=0 go build -o "$scratch/testtsa" ./internal/tsa/testtsa/cmd/testtsa
 "$scratch/testtsa" --out "$scratch" &
 tsa_pid=$!
@@ -31,10 +31,10 @@ git -C "$scratch/example-repo" init -q
 git -C "$scratch/example-repo" add .
 git -C "$scratch/example-repo" -c user.name='Snapshot Fixture' -c user.email=snapshot@example.invalid -c commit.gpgsign=false commit -qm 'Add example project'
 mkdir "$scratch/output"
-"$scratch/signetleaf" capture "$scratch/example-repo" --confirm --tsa "$tsa_url" --tsa-root "$scratch/root.pem" --out "$scratch/output" --json > "$scratch/capture.json"
+"$scratch/sealjar" capture "$scratch/example-repo" --confirm --tsa "$tsa_url" --tsa-root "$scratch/root.pem" --out "$scratch/output" --json > "$scratch/capture.json"
 package=$(python3 -c 'import json,sys,os; print(os.path.abspath(json.load(open(sys.argv[1]))["package"]))' "$scratch/capture.json")
-go run github.com/vincentsch/rungrad/cmd/rungrad@v0.3.2 score "$scratch/signetleaf" \
+go run github.com/vincentsch/rungrad/cmd/rungrad@v0.3.2 score "$scratch/sealjar" \
   --manifest auto --strict \
   --read "verify $package --tsa-root $scratch/root.pem" \
   --mutate "capture $scratch/example-repo --confirm --no-timestamp --out $scratch/output" \
-  --not-found "verify $scratch/missing.signetleaf.zip"
+  --not-found "verify $scratch/missing.sealjar.zip"

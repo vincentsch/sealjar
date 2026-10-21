@@ -1,6 +1,6 @@
 # Questions about captures
 
-## Does Signetleaf crawl the website?
+## Does Sealjar crawl the website?
 
 No. List the URLs you want. Each gets desktop and mobile screenshots;
 `--tablet` adds a third view. Capture can span several hosts alongside one
@@ -40,7 +40,7 @@ checked data. The [package format](package-format.md) explains sealing order.
 
 No. Trust needs system roots, the embedded FreeTSA root or independently supplied
 explicit roots, never certificates merely carried in the package. Offline checks
-cannot see later revocation. Signetleaf v0.1 does not assess eIDAS qualification
+cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification
 or label timestamps qualified. The demo fallback is explicitly untrusted.
 
 The demo fallback uses a public signing key. It gives no independent time
@@ -66,4 +66,4 @@ separate bundle and may contain old secrets and unrelated work.
 HTML image links are relative. Moving the report alone breaks those links.
 Use the PDF for a standalone reading copy. The ZIP remains the complete package
 for independent verification. [Recipients](for-recipients.md) can check it with
-Signetleaf or with Python 3 and OpenSSL.
+Sealjar or with Python 3 and OpenSSL.

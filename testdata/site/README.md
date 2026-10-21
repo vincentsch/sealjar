@@ -1,6 +1,6 @@
 # Example site
 
-A small static website used by Signetleaf's tests and demo. Serve it with the
+A small static website used by Sealjar's tests and demo. Serve it with the
 test server in `internal/testsite`, which adds the behaviours a real site has:
 
 - `/old-page` redirects (301) to `/`.

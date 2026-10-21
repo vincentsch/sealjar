@@ -33,19 +33,19 @@ func DemoProvenance(t Result, lang string) string {
 	}
 	if t.Trusted {
 		if lang == "de" {
-			return "Dieser Zeitstempel verwendet den öffentlichen Testschlüssel von Signetleaf. Damit kann jeder solche Zeitstempel erstellen. Das Vertrauen beruht allein auf dem angegebenen Stammzertifikat. Dieser Zeitstempel liefert keinen unabhängigen Nachweis des Zeitpunkts."
+			return "Dieser Zeitstempel verwendet den öffentlichen Testschlüssel von Sealjar. Damit kann jeder solche Zeitstempel erstellen. Das Vertrauen beruht allein auf dem angegebenen Stammzertifikat. Dieser Zeitstempel liefert keinen unabhängigen Nachweis des Zeitpunkts."
 		}
-		return "This token uses Signetleaf's public test key. Anyone can create such tokens. Trust comes only from the supplied root; this token provides no independent evidence of time."
+		return "This token uses Sealjar's public test key. Anyone can create such tokens. Trust comes only from the supplied root; this token provides no independent evidence of time."
 	}
 	if lang == "de" {
-		return "Demo-Zeitstempel, nicht vertrauenswürdig. Er stammt von Signetleafs eingebauter Teststelle und zeigt, wie ein Zeitstempel aussieht."
+		return "Demo-Zeitstempel, nicht vertrauenswürdig. Er stammt von Sealjars eingebauter Teststelle und zeigt, wie ein Zeitstempel aussieht."
 	}
-	return "Demo timestamp, not trusted. It comes from Signetleaf's built-in test authority and shows how a timestamp looks."
+	return "Demo timestamp, not trusted. It comes from Sealjar's built-in test authority and shows how a timestamp looks."
 }
 
 func TimeLimitation(lang string) string {
 	if lang == "de" {
-		return "Ein Zeitstempel einer unabhängigen, vertrauenswürdigen Stelle belegt, dass die Dateien spätestens zu diesem Zeitpunkt vorlagen. Das gilt nicht für Zeitstempel mit dem öffentlichen Testschlüssel von Signetleaf."
+		return "Ein Zeitstempel einer unabhängigen, vertrauenswürdigen Stelle belegt, dass die Dateien spätestens zu diesem Zeitpunkt vorlagen. Das gilt nicht für Zeitstempel mit dem öffentlichen Testschlüssel von Sealjar."
 	}
-	return "A timestamp from an independent trusted authority gives an upper bound for when the files existed. This does not apply to tokens made with Signetleaf's public demo key."
+	return "A timestamp from an independent trusted authority gives an upper bound for when the files existed. This does not apply to tokens made with Sealjar's public demo key."
 }

@@ -1,18 +1,18 @@
-# signetleaf restore
+# sealjar restore
 
 Restore checked repository files into an empty folder
 
 ## Usage
 
 ```
-signetleaf restore <package>
+sealjar restore <package>
 ```
 
 ## Examples
 
 ```
-signetleaf restore capture.signetleaf.zip --to recovered
-signetleaf restore capture.signetleaf.zip --to recovered --dry-run
+sealjar restore capture.sealjar.zip --to recovered
+sealjar restore capture.sealjar.zip --to recovered --dry-run
 ```
 
 ## Flags
@@ -30,5 +30,5 @@ This command changes state and honors `--dry-run`.
 
 ## Related commands
 
-- signetleaf capture
-- signetleaf verify
+- sealjar capture
+- sealjar verify

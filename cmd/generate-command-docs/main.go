@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/vincentsch/rungrad/docsgen"
-	"github.com/vincentsch/signetleaf/internal/cli"
+	"github.com/vincentsch/sealjar/internal/cli"
 )
 
 func generate(check bool, dir string) error {

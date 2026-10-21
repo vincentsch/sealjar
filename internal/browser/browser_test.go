@@ -2,7 +2,7 @@ package browser
 
 import (
 	"context"
-	"github.com/vincentsch/signetleaf/internal/testutil"
+	"github.com/vincentsch/sealjar/internal/testutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -133,7 +133,7 @@ func failedStart(t *testing.T, path string, visible bool) error {
 
 func assertNoProfiles(t *testing.T, dir string) {
 	t.Helper()
-	profiles, err := filepath.Glob(filepath.Join(dir, "signetleaf-chrome-*"))
+	profiles, err := filepath.Glob(filepath.Join(dir, "sealjar-chrome-*"))
 	if err != nil || len(profiles) != 0 {
 		t.Fatalf("temporary profiles survived failed startup: %v (%v)", profiles, err)
 	}

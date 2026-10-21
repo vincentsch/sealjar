@@ -1,23 +1,23 @@
-# signetleaf capture
+# sealjar capture
 
 Capture web pages and current files from one Git repository
 
 ## Usage
 
 ```
-signetleaf capture <target>...
+sealjar capture <target>...
 ```
 
 ## Examples
 
 ```
-signetleaf capture . --confirm --no-timestamp --out ../signetleaf-captures
-signetleaf capture . --dry-run --no-timestamp --include-untracked --out ../signetleaf-captures
+sealjar capture . --confirm --no-timestamp --out ../sealjar-captures
+sealjar capture . --dry-run --no-timestamp --include-untracked --out ../sealjar-captures
 ```
 
 ## Flags
 
-- `--auth` Send basic auth user:password only to listed target origins (or SIGNETLEAF_AUTH)
+- `--auth` Send basic auth user:password only to listed target origins (or SEALJAR_AUTH)
 - `--chrome` Use this Chrome or Chromium executable
 - `--confirm` Capture without asking to continue
 - `--exclude` Exclude a path.Match pattern; ** is not supported (repeatable)
@@ -45,5 +45,5 @@ This command changes state and honors `--dry-run`.
 
 ## Related commands
 
-- signetleaf verify
-- signetleaf restore
+- sealjar verify
+- sealjar restore

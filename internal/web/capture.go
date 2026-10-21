@@ -20,8 +20,8 @@ import (
 	"github.com/chromedp/cdproto/page"
 	js "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"github.com/vincentsch/signetleaf/internal/browser"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/browser"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
 )
 
 type Options struct {
@@ -481,7 +481,7 @@ func Capture(ctx context.Context, work string, urls []string, positions []int, o
 		for name, value := range map[string]any{"network.json": struct {
 			Type     string     `json:"type"`
 			Requests []*request `json:"requests"`
-		}{"signetleaf.network/v1", networkRecords}, "headers.json": headers, "redirects.json": redirects, "console.json": console} {
+		}{"sealjar.network/v1", networkRecords}, "headers.json": headers, "redirects.json": redirects, "console.json": console} {
 			if e = writeJSON(filepath.Join(dir, name), value); e != nil {
 				return result, e
 			}

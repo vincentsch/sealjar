@@ -3,9 +3,9 @@
 After [installation](quickstart.md#install), use the ZIP path you received:
 
 ```sh
-signetleaf verify package.signetleaf.zip
-signetleaf verify package.signetleaf.zip --json
-signetleaf verify package.signetleaf.zip --tsa-root roots.pem
+sealjar verify package.sealjar.zip
+sealjar verify package.sealjar.zip --json
+sealjar verify package.sealjar.zip --tsa-root roots.pem
 ```
 
 Obtain extra roots independently, never from package certificates alone.
@@ -30,10 +30,10 @@ make them pass. Request another capture or investigate the difference separately
 The demo fallback uses a public signing key. It gives no independent time
 evidence, even if an explicitly supplied root grants the token trust.
 
-## Without installing Signetleaf
+## Without installing Sealjar
 
 Reading HTML or PDF needs no tools beyond a browser or PDF reader. Independent
-checks without Signetleaf need Python 3 for hashes and OpenSSL for tokens.
+checks without Sealjar need Python 3 for hashes and OpenSSL for tokens.
 Extract a copy of the ZIP into a new empty directory with an archive tool that
 rejects unsafe paths and links. Keep the original ZIP. Work from the extracted
 package root. The following is the Python file check from `VERIFY.txt`:
@@ -95,7 +95,7 @@ PYTIME
 ```
 
 Obtain `roots.pem` independently from a trusted OS export, the FreeTSA root in
-Signetleaf source, or the authority's separately trusted certificate source.
+Sealjar source, or the authority's separately trusted certificate source.
 Use the number above in place of `GEN_TIME_UNIX_SECONDS`:
 
 ```sh
@@ -114,7 +114,7 @@ file hashes, it gives an upper bound for when the sealed files existed. The
 operator's recorded start and end times are not independently checked capture times.
 Trust uses system roots, the embedded FreeTSA root or independently supplied
 explicit roots, never certificates merely carried in the package. Offline checks
-cannot see later revocation. Signetleaf v0.1 does not assess eIDAS qualification
+cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification
 or label a timestamp qualified.
 
 A package cannot establish truthful or complete content, honest operation, that

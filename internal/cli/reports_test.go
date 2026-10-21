@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/tsa/testtsa"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/tsa/testtsa"
 )
 
 func readerFiles(t *testing.T, dir string) []string {
@@ -141,18 +141,18 @@ func TestPairedOutputCollisions(t *testing.T) {
 		t.Fatal(e)
 	}
 	second := captured(t, root, out)
-	if !strings.HasSuffix(second, "-2.signetleaf.zip") {
+	if !strings.HasSuffix(second, "-2.sealjar.zip") {
 		t.Fatal(second)
 	}
 	url, pem := localTSA(t, testtsa.Options{})
-	input := filepath.Join(t.TempDir(), "capture.signetleaf.zip")
+	input := filepath.Join(t.TempDir(), "capture.sealjar.zip")
 	zipEntries(t, input, files)
-	orphan := filepath.Join(filepath.Dir(input), "capture-stamped.signetleaf")
+	orphan := filepath.Join(filepath.Dir(input), "capture-stamped.sealjar")
 	if e := os.Mkdir(orphan, 0700); e != nil {
 		t.Fatal(e)
 	}
 	stamped := stamp(t, input, "--tsa", url, "--tsa-root", pem)
-	if !strings.HasSuffix(stamped, "-stamped-2.signetleaf.zip") {
+	if !strings.HasSuffix(stamped, "-stamped-2.sealjar.zip") {
 		t.Fatal(stamped)
 	}
 	r, e := packagefmt.Open(stamped)

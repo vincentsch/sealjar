@@ -1,13 +1,13 @@
-# Signetleaf for coding agents
+# Sealjar for coding agents
 
-If you are changing Signetleaf's source, read [CONTRIBUTING.md](CONTRIBUTING.md).
+If you are changing Sealjar's source, read [CONTRIBUTING.md](CONTRIBUTING.md).
 The instructions below are for capturing another project.
 
-Signetleaf saves listed web pages and current Git files in a timestamped ZIP,
+Sealjar saves listed web pages and current Git files in a timestamped ZIP,
 with a reader folder beside it. Use the URLs, repository and capture permission
 already supplied. Ask only for missing scope, needed authentication, an unspecified
 output destination, or a surprising dry-run result. Never guess private URLs.
-Do not clone Signetleaf into the repository being captured. If source is needed,
+Do not clone Sealjar into the repository being captured. If source is needed,
 use a separate temporary checkout and remove it afterwards.
 
 ## Install for the current shell
@@ -15,9 +15,9 @@ use a separate temporary checkout and remove it afterwards.
 On Linux, macOS or Git Bash on Windows, download and run the public installer:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vincentsch/signetleaf/main/install.sh -o /tmp/signetleaf-install.sh
-bash /tmp/signetleaf-install.sh
-rm /tmp/signetleaf-install.sh
+curl -fsSL https://raw.githubusercontent.com/vincentsch/sealjar/main/install.sh -o /tmp/sealjar-install.sh
+bash /tmp/sealjar-install.sh
+rm /tmp/sealjar-install.sh
 ```
 
 In Git Bash, use `mktemp` for the script if `/tmp` is unavailable. WSL uses Linux
@@ -32,17 +32,17 @@ Use the absolute path printed by that step and PowerShell's `&` call operator.
 If Go is available, an optional source fallback is:
 
 ```sh
-go install github.com/vincentsch/signetleaf/cmd/signetleaf@latest
+go install github.com/vincentsch/sealjar/cmd/sealjar@latest
 go env GOBIN GOPATH
 ```
 
 Resolve the executable explicitly: use GOBIN if nonempty, otherwise the first
-GOPATH entry's `bin` directory. On Windows its name is `signetleaf.exe`.
-For the remaining shell examples set `SIGNETLEAF` to that absolute path:
+GOPATH entry's `bin` directory. On Windows its name is `sealjar.exe`.
+For the remaining shell examples set `SEALJAR` to that absolute path:
 
 ```sh
-SIGNETLEAF=/absolute/path/to/signetleaf
-"$SIGNETLEAF" doctor
+SEALJAR=/absolute/path/to/sealjar
+"$SEALJAR" doctor
 ```
 
 Explain unmet prerequisites before capturing. Chrome/Chromium is needed for web
@@ -69,17 +69,17 @@ plan; the CLI does not currently print the output directory in its plan.
 ```sh
 OUT=$(cd .. && pwd -P)
 printf 'Output directory: %s\n' "$OUT"
-"$SIGNETLEAF" capture https://staging.example.com . --out "$OUT" --dry-run
-"$SIGNETLEAF" capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
+"$SEALJAR" capture https://staging.example.com . --out "$OUT" --dry-run
+"$SEALJAR" capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
 Replace the example URL with the supplied URLs, and preserve supplied exclusions,
 authorities and roots in both commands. Inspect targets, file counts, exclusions
 and timestamp settings. Continue within the existing capture permission unless
 something surprising needs clarification. Never silently broaden the scope.
-URLs are listed individually; Signetleaf does not crawl links.
+URLs are listed individually; Sealjar does not crawl links.
 
-Use `SIGNETLEAF_AUTH` for basic auth when needed; never print or save real
+Use `SEALJAR_AUTH` for basic auth when needed; never print or save real
 credentials. Manual `--login` requires an interactive user to log in and press
 Enter. It cannot be completed unattended. Do not change the user's browser
 profile; capture uses an isolated temporary Chrome profile.
@@ -87,7 +87,7 @@ profile; capture uses an isolated temporary Chrome profile.
 ## Check and show the result
 
 ```sh
-"$SIGNETLEAF" verify /absolute/path/to/package.signetleaf.zip
+"$SEALJAR" verify /absolute/path/to/package.sealjar.zip
 ```
 
 Preserve any supplied `--tsa-root` here too. Interpret all three answers:
@@ -117,7 +117,7 @@ or notary during capture. Do not promise legal effect or admissibility.
 
 Trust comes from system roots, the embedded FreeTSA root or independently supplied
 explicit roots, never certificates merely carried in the package. Offline checks
-cannot see later revocation. Signetleaf v0.1 does not assess eIDAS qualification
+cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification
 or label timestamps qualified.
 
 Capture contacts target pages and resources, DNS and timestamp authorities.

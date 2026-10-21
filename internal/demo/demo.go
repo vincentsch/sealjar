@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/vincentsch/signetleaf/internal/testsite"
-	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
+	"github.com/vincentsch/sealjar/internal/testsite"
+	"github.com/vincentsch/sealjar/internal/tsa/demotsa"
 )
 
 //go:generate go run ./generate
@@ -51,7 +51,7 @@ func Start(ctx context.Context) (_ *Inputs, err error) {
 			in.Close()
 		}
 	}()
-	temp, err := os.MkdirTemp("", "signetleaf-demo-")
+	temp, err := os.MkdirTemp("", "sealjar-demo-")
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func Start(ctx context.Context) (_ *Inputs, err error) {
 		return nil, err
 	}
 	git := func(args ...string) error {
-		prefix := []string{"-C", in.Repository, "-c", "user.name=Signetleaf Demo", "-c", "user.email=demo@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=" + filepath.Join(temp, "no-hooks")}
+		prefix := []string{"-C", in.Repository, "-c", "user.name=Sealjar Demo", "-c", "user.email=demo@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=" + filepath.Join(temp, "no-hooks")}
 		cmd := exec.CommandContext(ctx, "git", append(prefix, args...)...)
 		// Suppress inherited identity overrides, without changing any Git config.
 		for _, v := range os.Environ() {
@@ -144,7 +144,7 @@ func Tamper(source, out string) (output, screenshot string, err error) {
 		if n > 1 {
 			suffix = fmt.Sprintf("-%d", n)
 		}
-		output = filepath.Join(out, "demo-tampered"+suffix+".signetleaf.zip")
+		output = filepath.Join(out, "demo-tampered"+suffix+".sealjar.zip")
 		dest, err = os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 		if os.IsExist(err) {
 			continue

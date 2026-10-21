@@ -23,10 +23,10 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	"github.com/vincentsch/signetleaf/internal/browser"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/repo"
-	"github.com/vincentsch/signetleaf/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/browser"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/repo"
+	"github.com/vincentsch/sealjar/internal/tsa"
 	"golang.org/x/image/draw"
 )
 

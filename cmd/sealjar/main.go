@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vincentsch/signetleaf/internal/cli"
+	"github.com/vincentsch/sealjar/internal/cli"
 	"os"
 )
 

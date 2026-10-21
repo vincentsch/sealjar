@@ -74,7 +74,7 @@ type Browser struct {
 }
 
 func Start(ctx context.Context, path string, visible bool, testOptions ...chromedp.ExecAllocatorOption) (*Browser, error) {
-	profile, e := os.MkdirTemp("", "signetleaf-chrome-")
+	profile, e := os.MkdirTemp("", "sealjar-chrome-")
 	if e != nil {
 		return nil, e
 	}

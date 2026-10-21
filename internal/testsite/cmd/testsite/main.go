@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vincentsch/signetleaf/internal/testsite"
+	"github.com/vincentsch/sealjar/internal/testsite"
 )
 
 func main() {

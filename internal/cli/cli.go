@@ -1,4 +1,4 @@
-// Package cli provides the Signetleaf terminal commands.
+// Package cli provides the Sealjar terminal commands.
 package cli
 
 import (
@@ -20,15 +20,15 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
-	"github.com/vincentsch/signetleaf/internal/browser"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/repo"
-	"github.com/vincentsch/signetleaf/internal/report"
-	"github.com/vincentsch/signetleaf/internal/tsa"
-	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
-	"github.com/vincentsch/signetleaf/internal/verify"
-	"github.com/vincentsch/signetleaf/internal/version"
-	"github.com/vincentsch/signetleaf/internal/web"
+	"github.com/vincentsch/sealjar/internal/browser"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/repo"
+	"github.com/vincentsch/sealjar/internal/report"
+	"github.com/vincentsch/sealjar/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/tsa/demotsa"
+	"github.com/vincentsch/sealjar/internal/verify"
+	"github.com/vincentsch/sealjar/internal/version"
+	"github.com/vincentsch/sealjar/internal/web"
 )
 
 var findChrome = browser.Find
@@ -90,7 +90,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 
 // NewApp builds the command tree shared by execution and reference generation.
 func NewApp(verdict *int) *rungrad.App {
-	app := rungrad.New(rungrad.AppConfig{Name: "signetleaf", Short: "Capture websites and repository snapshots", Long: "Keep web pages and current Git files in a portable package. Check its hashes and timestamps offline.", Version: version.Version + " (" + version.Commit + ")"})
+	app := rungrad.New(rungrad.AppConfig{Name: "sealjar", Short: "Capture websites and repository snapshots", Long: "Keep web pages and current Git files in a portable package. Check its hashes and timestamps offline.", Version: version.Version + " (" + version.Commit + ")"})
 	app.AddCommand(captureCommand(verdict))
 	app.AddCommand(verifyCommand(verdict))
 	app.AddCommand(restoreCommand())
@@ -145,7 +145,7 @@ func renderPlan(w io.Writer, p *repo.Plan) {
 	if changes == 1 {
 		word = "change"
 	}
-	fmt.Fprintf(w, "Signetleaf will capture:\n\n  Code      %s (git, branch %s, %s, %d uncommitted %s)\n            %d files, %d bytes\n", f.Name, f.Branch, f.Commit, changes, word, len(p.Paths), p.TotalSize)
+	fmt.Fprintf(w, "Sealjar will capture:\n\n  Code      %s (git, branch %s, %s, %d uncommitted %s)\n            %d files, %d bytes\n", f.Name, f.Branch, f.Commit, changes, word, len(p.Paths), p.TotalSize)
 	for _, e := range f.Excluded {
 		fmt.Fprintf(w, "  Left out  %s (%s)\n", e.Path, e.Reason)
 	}
@@ -180,8 +180,8 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 	c := command("capture <target>...", "Capture web pages and current files from one Git repository")
 	c.Mutates = true
 	c.Args = cobra.MinimumNArgs(1)
-	c.Examples = []string{"signetleaf capture . --confirm --no-timestamp --out ../signetleaf-captures", "signetleaf capture . --dry-run --no-timestamp --include-untracked --out ../signetleaf-captures"}
-	c.Related = []string{"signetleaf verify", "signetleaf restore"}
+	c.Examples = []string{"sealjar capture . --confirm --no-timestamp --out ../sealjar-captures", "sealjar capture . --dry-run --no-timestamp --include-untracked --out ../sealjar-captures"}
+	c.Related = []string{"sealjar verify", "sealjar restore"}
 	c.Configure = func(cmd *cobra.Command) {
 		f := cmd.Flags()
 		f.StringVar(&opt.lang, "lang", "both", "Report language: en, de or both")
@@ -196,7 +196,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		f.StringVar(&opt.root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
 		f.BoolVar(&opt.strict, "strict", false, "Exit 10 after writing if a target has problems or requested timestamping fails")
 		f.StringVar(&opt.chrome, "chrome", "", "Use this Chrome or Chromium executable")
-		f.StringVar(&opt.auth, "auth", "", "Send basic auth user:password only to listed target origins (or SIGNETLEAF_AUTH)")
+		f.StringVar(&opt.auth, "auth", "", "Send basic auth user:password only to listed target origins (or SEALJAR_AUTH)")
 		f.BoolVar(&opt.login, "login", false, "Open Chrome visibly for login, then press Enter in this terminal")
 		f.BoolVar(&opt.tablet, "tablet", false, "Also capture a 768×1024 tablet viewport at scale 2")
 		f.DurationVar(&opt.wait, "wait", 0, "Wait extra after load (maximum 30s)")
@@ -214,7 +214,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			return rungrad.NewError(1, "--login requires an interactive terminal. Run capture from a terminal and press Enter after login.")
 		}
 		if opt.auth == "" && opt.completed == nil {
-			opt.auth = os.Getenv("SIGNETLEAF_AUTH")
+			opt.auth = os.Getenv("SEALJAR_AUTH")
 		}
 		if opt.auth != "" {
 			if _, _, ok := strings.Cut(opt.auth, ":"); !ok {
@@ -254,7 +254,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 					return rungrad.NewError(1, "Invalid target URL. Check its host and port.")
 				}
 				if u.User != nil {
-					return rungrad.NewError(1, "Target URLs cannot contain user info. Use --auth or SIGNETLEAF_AUTH instead.")
+					return rungrad.NewError(1, "Target URLs cannot contain user info. Use --auth or SEALJAR_AUTH instead.")
 				}
 				if _, e = web.Origin(target); e != nil {
 					return failure(1, e)
@@ -287,7 +287,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		}
 
 		chromePath, chromeErr := findChrome(opt.chrome)
-		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Signetleaf does not assess eIDAS qualification."}}
+		result := captureResult{DryRun: f.DryRun(), Plan: p, Timestamp: "Not timestamped", Attempts: []tsa.Attempt{}, Authorities: []string{}, Limitations: []string{"Exclusions cannot guarantee that no secret is included.", "Hashes alone do not establish the authenticity of an untimestamped manifest.", "A timestamp establishes an upper bound for when the files existed, not an independently checked capture time.", "Offline checks cannot see later certificate revocation.", "Sealjar does not assess eIDAS qualification."}}
 		if chromeErr != nil && len(urls) == 0 {
 			result.PDFNote = "Chrome is unavailable. Reports will be HTML only; no report PDFs will be stored."
 		}
@@ -299,7 +299,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			for _, u := range urls {
 				result.Pages = append(result.Pages, web.MaskURL(u))
 			}
-			result.Limitations = append(result.Limitations, "Captured images, DOM and PDFs may contain private information. Signetleaf masks metadata but does not rewrite captured content.")
+			result.Limitations = append(result.Limitations, "Captured images, DOM and PDFs may contain private information. Sealjar masks metadata but does not rewrite captured content.")
 		}
 		renderCapturePlan := func(w io.Writer) {
 			renderPlan(w, p)
@@ -348,7 +348,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 		if err = os.MkdirAll(opt.out, 0755); err != nil {
 			return failure(2, err)
 		}
-		work, err := os.MkdirTemp(opt.out, ".signetleaf-capture-")
+		work, err := os.MkdirTemp(opt.out, ".sealjar-capture-")
 		if err != nil {
 			return failure(2, err)
 		}
@@ -517,7 +517,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 					}
 				}
 			} else {
-				result.NextStep = "Add a timestamp later with signetleaf stamp <package>."
+				result.NextStep = "Add a timestamp later with sealjar stamp <package>."
 				if opt.strict {
 					*verdict = 10
 				}
@@ -581,7 +581,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			}
 
 			if !opt.noTimestamp && result.Timestamp == "Not timestamped" {
-				fmt.Fprintln(w, "No authority returned a usable timestamp. Add one later with signetleaf stamp <package>.")
+				fmt.Fprintln(w, "No authority returned a usable timestamp. Add one later with sealjar stamp <package>.")
 			}
 
 			trusted := false
@@ -591,7 +591,7 @@ func captureWithOptions(verdict *int, opt captureOptions) *rungrad.Command {
 			if !trusted {
 				fmt.Fprintln(w, "Hashes alone do not establish the authenticity of an untimestamped manifest.")
 			}
-			fmt.Fprintf(w, "Check timestamps with signetleaf verify %s\n", result.Package)
+			fmt.Fprintf(w, "Check timestamps with sealjar verify %s\n", result.Package)
 		})
 	}
 	return c
@@ -600,8 +600,8 @@ func verifyCommand(verdict *int) *rungrad.Command {
 	var root string
 	c := command("verify <package>", "Check capture results, file hashes and timestamp status")
 	c.Args = cobra.ExactArgs(1)
-	c.Examples = []string{"signetleaf verify capture.signetleaf.zip", "signetleaf verify capture.signetleaf.zip --json"}
-	c.Related = []string{"signetleaf capture", "signetleaf restore"}
+	c.Examples = []string{"sealjar verify capture.sealjar.zip", "sealjar verify capture.sealjar.zip --json"}
+	c.Related = []string{"sealjar capture", "sealjar restore"}
 	c.Configure = func(cmd *cobra.Command) {
 		cmd.Flags().StringVar(&root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
 	}
@@ -644,8 +644,8 @@ func restoreCommand() *rungrad.Command {
 	c := command("restore <package>", "Restore checked repository files into an empty folder")
 	c.Mutates = true
 	c.Args = cobra.ExactArgs(1)
-	c.Examples = []string{"signetleaf restore capture.signetleaf.zip --to recovered", "signetleaf restore capture.signetleaf.zip --to recovered --dry-run"}
-	c.Related = []string{"signetleaf capture", "signetleaf verify"}
+	c.Examples = []string{"sealjar restore capture.sealjar.zip --to recovered", "sealjar restore capture.sealjar.zip --to recovered --dry-run"}
+	c.Related = []string{"sealjar capture", "sealjar verify"}
 	c.Configure = func(cmd *cobra.Command) {
 		cmd.Flags().StringVar(&root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
 		cmd.Flags().StringVar(&to, "to", "", "Restore into this new or empty folder")
@@ -721,7 +721,7 @@ func restoreCommand() *rungrad.Command {
 			result.CloneCommand = "git clone " + shellQuote(result.History) + " " + shellQuote(resultPath(to+"-history"))
 		}
 		if !f.DryRun() {
-			stage, e := os.MkdirTemp(filepath.Dir(destination), ".signetleaf-restore-")
+			stage, e := os.MkdirTemp(filepath.Dir(destination), ".sealjar-restore-")
 			if e != nil {
 				return failure(2, e)
 			}

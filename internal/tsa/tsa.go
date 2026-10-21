@@ -26,7 +26,7 @@ import (
 
 	"github.com/digitorus/pkcs7"
 	"github.com/digitorus/timestamp"
-	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
+	"github.com/vincentsch/sealjar/internal/tsa/demotsa"
 )
 
 //go:embed roots/freetsa-cacert.pem
@@ -454,7 +454,7 @@ func request(ctx context.Context, manifest []byte, endpoint string, roots *x509.
 
 func (r Result) DisplayAuthority() string {
 	if r.Demo {
-		return "Signetleaf Demo TSA"
+		return "Sealjar Demo TSA"
 	}
 	name := r.AuthorityName
 	if name == "" {

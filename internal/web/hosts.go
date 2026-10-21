@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
 )
 
 func Origin(raw string) (string, error) {

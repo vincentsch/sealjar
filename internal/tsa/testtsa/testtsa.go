@@ -69,15 +69,15 @@ func New(opt Options) (*Authority, error) {
 		parsed, e := x509.ParseCertificate(der)
 		return parsed, key, e
 	}
-	root, rk, e := makeCert("Signetleaf Test Root, not trusted", 1, true, nil, nil)
+	root, rk, e := makeCert("Sealjar Test Root, not trusted", 1, true, nil, nil)
 	if e != nil {
 		return nil, e
 	}
-	inter, ik, e := makeCert("Signetleaf Test Intermediate", 2, true, root, rk)
+	inter, ik, e := makeCert("Sealjar Test Intermediate", 2, true, root, rk)
 	if e != nil {
 		return nil, e
 	}
-	signer, key, e := makeCert("Signetleaf Test Timestamp Authority", 3, false, inter, ik)
+	signer, key, e := makeCert("Sealjar Test Timestamp Authority", 3, false, inter, ik)
 	if e != nil {
 		return nil, e
 	}

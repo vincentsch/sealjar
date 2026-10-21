@@ -1,18 +1,18 @@
-# signetleaf report
+# sealjar report
 
 Copy stored reports after checking package integrity and timestamp trust
 
 ## Usage
 
 ```
-signetleaf report <package>
+sealjar report <package>
 ```
 
 ## Examples
 
 ```
-signetleaf report capture.signetleaf.zip --out reader
-signetleaf report capture.signetleaf.zip --lang de --pdf --out reader-de --dry-run
+sealjar report capture.sealjar.zip --out reader
+sealjar report capture.sealjar.zip --lang de --pdf --out reader-de --dry-run
 ```
 
 ## Flags
@@ -32,5 +32,5 @@ This command changes state and honors `--dry-run`.
 
 ## Related commands
 
-- signetleaf verify
-- signetleaf restore
+- sealjar verify
+- sealjar restore

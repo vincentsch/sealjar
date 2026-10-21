@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/vincentsch/signetleaf/internal/testutil"
+	"github.com/vincentsch/sealjar/internal/testutil"
 	"io"
 	"log"
 	"net/http"
@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/signetleaf/internal/browser"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/testsite"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	"github.com/vincentsch/sealjar/internal/browser"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/testsite"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 func TestWebDryRunAndValidation(t *testing.T) {
@@ -228,7 +228,7 @@ func TestBasicAuthFlagAndEnvironment(t *testing.T) {
 		t.Run(fmt.Sprintf("environment_%t", environment), func(t *testing.T) {
 			args := []string{"capture", s.URL + "/private/", "--confirm", "--strict", "--no-timestamp", "--json", "--out", t.TempDir()}
 			if environment {
-				t.Setenv("SIGNETLEAF_AUTH", "client:handover")
+				t.Setenv("SEALJAR_AUTH", "client:handover")
 			} else {
 				args = append(args, "--auth", "client:handover")
 			}
@@ -272,7 +272,7 @@ func TestLoginEnterWaitCanBeCancelled(t *testing.T) {
 }
 
 func TestRepositoryCaptureDoesNotClaimBasicAuth(t *testing.T) {
-	t.Setenv("SIGNETLEAF_AUTH", "client:handover")
+	t.Setenv("SEALJAR_AUTH", "client:handover")
 	name := captured(t, fixture(t), t.TempDir())
 	reader, err := packagefmt.Open(name)
 	if err != nil {

@@ -1,16 +1,16 @@
-# signetleaf command reference
+# sealjar command reference
 
 Capture websites and repository snapshots
 
 ## Commands
 
-- [signetleaf capture](signetleaf_capture.md) - Capture web pages and current files from one Git repository
-- [signetleaf demo](signetleaf_demo.md) - Capture the bundled bakery and try detecting a changed screenshot
-- [signetleaf doctor](signetleaf_doctor.md) - Check Chrome, Git, output access and timestamp authority connections
-- [signetleaf report](signetleaf_report.md) - Copy stored reports after checking package integrity and timestamp trust
-- [signetleaf restore](signetleaf_restore.md) - Restore checked repository files into an empty folder
-- [signetleaf stamp](signetleaf_stamp.md) - Add timestamps without changing captured evidence
-- [signetleaf verify](signetleaf_verify.md) - Check capture results, file hashes and timestamp status
+- [sealjar capture](sealjar_capture.md) - Capture web pages and current files from one Git repository
+- [sealjar demo](sealjar_demo.md) - Capture the bundled bakery and try detecting a changed screenshot
+- [sealjar doctor](sealjar_doctor.md) - Check Chrome, Git, output access and timestamp authority connections
+- [sealjar report](sealjar_report.md) - Copy stored reports after checking package integrity and timestamp trust
+- [sealjar restore](sealjar_restore.md) - Restore checked repository files into an empty folder
+- [sealjar stamp](sealjar_stamp.md) - Add timestamps without changing captured evidence
+- [sealjar verify](sealjar_verify.md) - Check capture results, file hashes and timestamp status
 
 ## Global flags
 

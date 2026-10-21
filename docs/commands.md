@@ -1,15 +1,15 @@
 # Commands
 
-[Install Signetleaf](quickstart.md#install) before running these commands.
+[Install Sealjar](quickstart.md#install) before running these commands.
 
 The [command reference](reference/index.md) comes from the CLI's command tree.
-Run `signetleaf <command> --help` for the same flags and examples in your terminal.
+Run `sealjar <command> --help` for the same flags and examples in your terminal.
 
 When capturing a repository from its root, write packages outside it:
 
 ```sh
-signetleaf capture . --dry-run --out ../signetleaf-captures
-signetleaf capture . --confirm --no-prompt --out ../signetleaf-captures
+sealjar capture . --dry-run --out ../sealjar-captures
+sealjar capture . --confirm --no-prompt --out ../sealjar-captures
 ```
 
 This keeps generated packages out of later snapshots, including captures with

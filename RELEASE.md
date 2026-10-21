@@ -37,7 +37,7 @@ only after recording its host, command, result and date. Local fixture checks do
 not satisfy public-download or hosted checks.
 
 - [ ] Public installer download, latest and pinned, after publishing release assets.
-- [ ] Public `go install github.com/vincentsch/signetleaf/cmd/signetleaf@vX.Y.Z`,
+- [ ] Public `go install github.com/vincentsch/sealjar/cmd/sealjar@vX.Y.Z`,
   using an empty module cache after publishing a public module tag.
 - [ ] Agent prompt fetched from GitHub after publishing its source file.
 - [ ] First hosted Linux CI run, including Chrome-required tests and conformance.
@@ -49,7 +49,7 @@ not satisfy public-download or hosted checks.
   a failed CI blocks it, and all six correctly named binaries plus checksums.txt
   are uploaded. Requires a published tag and release run.
 - [ ] Hosted provenance verification of all six downloaded binaries with
-  `gh attestation verify <binary> --repo vincentsch/signetleaf` after release.
+  `gh attestation verify <binary> --repo vincentsch/sealjar` after release.
 - [ ] Native macOS timestamp trust checks for DigiCert and FreeTSA as described below.
 
 Public downloads, public module installation, prompt fetching and hosted
@@ -73,9 +73,9 @@ printf 'Timestamp trust check\n' > "$work/repo/example.txt"
 git -C "$work/repo" add example.txt
 git -C "$work/repo" -c user.name='Trust Check' \
   -c user.email=trust@example.invalid -c commit.gpgsign=false commit -m 'Add example'
-signetleaf capture "$work/repo" --confirm --tsa http://timestamp.digicert.com \
+sealjar capture "$work/repo" --confirm --tsa http://timestamp.digicert.com \
   --name digicert --out "$work/captures" --json > "$work/digicert.json"
-signetleaf capture "$work/repo" --confirm --tsa https://freetsa.org/tsr \
+sealjar capture "$work/repo" --confirm --tsa https://freetsa.org/tsr \
   --name freetsa --out "$work/captures" --json > "$work/freetsa.json"
 ```
 
@@ -84,9 +84,9 @@ Read each JSON result's `package` field for the package path. Run these commands
 for each package, replacing placeholders with that authority's paths:
 
 ```sh
-signetleaf verify <package> --json > <authority>-default.json
+sealjar verify <package> --json > <authority>-default.json
 printf 'default trust exit: %s\n' "$?"
-signetleaf verify <package> --tsa-root <independently-obtained-root.pem> \
+sealjar verify <package> --tsa-root <independently-obtained-root.pem> \
   --json > <authority>-explicit-root.json
 printf 'explicit root exit: %s\n' "$?"
 ```

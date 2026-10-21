@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/rungrad"
-	packagefmt "github.com/vincentsch/signetleaf/internal/pkg"
-	"github.com/vincentsch/signetleaf/internal/report"
-	"github.com/vincentsch/signetleaf/internal/tsa"
-	"github.com/vincentsch/signetleaf/internal/verify"
+	packagefmt "github.com/vincentsch/sealjar/internal/pkg"
+	"github.com/vincentsch/sealjar/internal/report"
+	"github.com/vincentsch/sealjar/internal/tsa"
+	"github.com/vincentsch/sealjar/internal/verify"
 )
 
 func renderAttempts(w io.Writer, attempts []tsa.Attempt) {
@@ -72,8 +72,8 @@ func stampCommand() *rungrad.Command {
 	c := command("stamp <package>", "Add timestamps without changing captured evidence")
 	c.Mutates = true
 	c.Args = cobra.ExactArgs(1)
-	c.Examples = []string{"signetleaf stamp capture.signetleaf.zip", "signetleaf stamp capture.signetleaf.zip --dry-run"}
-	c.Related = []string{"signetleaf verify", "signetleaf capture"}
+	c.Examples = []string{"sealjar stamp capture.sealjar.zip", "sealjar stamp capture.sealjar.zip --dry-run"}
+	c.Related = []string{"sealjar verify", "sealjar capture"}
 	c.Configure = func(cmd *cobra.Command) {
 		cmd.Flags().StringArrayVar(&authorities, "tsa", nil, "Request this timestamp authority instead of defaults (repeatable)")
 		cmd.Flags().StringVar(&root, "tsa-root", "", "Add trusted timestamp roots from a PEM file")
@@ -135,7 +135,7 @@ func stampCommand() *rungrad.Command {
 			return failure(2, fmt.Errorf("no usable timestamp; no package was written. %s", b.String()))
 		}
 		out := filepath.Dir(args[0])
-		work, e := os.MkdirTemp(out, ".signetleaf-stamp-")
+		work, e := os.MkdirTemp(out, ".sealjar-stamp-")
 		if e != nil {
 			return failure(2, e)
 		}
@@ -173,7 +173,7 @@ func stampCommand() *rungrad.Command {
 		if e = report.SealDirectory(work, filepath.Base(args[0]), roots); e != nil {
 			return failure(2, e)
 		}
-		stem := strings.TrimSuffix(filepath.Base(args[0]), ".signetleaf.zip") + "-stamped"
+		stem := strings.TrimSuffix(filepath.Base(args[0]), ".sealjar.zip") + "-stamped"
 		output, e := packagefmt.WriteStem(work, out, stem)
 		if e != nil {
 			return failure(2, e)

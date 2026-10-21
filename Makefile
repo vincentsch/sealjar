@@ -1,25 +1,25 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
-LDFLAGS := -s -w -X github.com/vincentsch/signetleaf/internal/version.Version=$(VERSION) -X github.com/vincentsch/signetleaf/internal/version.Commit=$(COMMIT)
+LDFLAGS := -s -w -X github.com/vincentsch/sealjar/internal/version.Version=$(VERSION) -X github.com/vincentsch/sealjar/internal/version.Commit=$(COMMIT)
 PLATFORMS := linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
 
 .PHONY: build build-all test race vet fmt lint check conformance docs docs-check clean
 
 build:
-	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/signetleaf ./cmd/signetleaf
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/sealjar ./cmd/sealjar
 
 build-all:
 	@mkdir -p dist
 	@set -e; \
-	rm -f dist/signetleaf-* dist/checksums.txt; \
+	rm -f dist/sealjar-* dist/checksums.txt; \
 	for platform in $(PLATFORMS); do \
 		os=$${platform%/*}; arch=$${platform#*/}; \
-		asset=signetleaf-$$os-$$arch; \
+		asset=sealjar-$$os-$$arch; \
 		if [ "$$os" = windows ]; then asset=$$asset.exe; fi; \
 		echo "Building $$asset"; \
-		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -trimpath -ldflags "$(LDFLAGS)" -o dist/$$asset ./cmd/signetleaf; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -trimpath -ldflags "$(LDFLAGS)" -o dist/$$asset ./cmd/sealjar; \
 	done
-	@cd dist && if command -v sha256sum >/dev/null 2>&1; then sha256sum signetleaf-*; else shasum -a 256 signetleaf-*; fi > checksums.txt
+	@cd dist && if command -v sha256sum >/dev/null 2>&1; then sha256sum sealjar-*; else shasum -a 256 sealjar-*; fi > checksums.txt
 
 test:
 	go test ./...

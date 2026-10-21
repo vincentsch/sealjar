@@ -1,6 +1,6 @@
 # Timestamps and trust
 
-A timestamp authority (TSA) signs a hash with its time. Signetleaf uses RFC 3161
+A timestamp authority (TSA) signs a hash with its time. Sealjar uses RFC 3161
 responses over the SHA-256 hash of the original manifest bytes. The authority
 receives a hash, a nonce and normal network metadata, rather than the package.
 
@@ -11,7 +11,7 @@ replace those defaults and request every supplied authority. After
 [installation](quickstart.md#install), for a custom authority:
 
 ```sh
-signetleaf capture . --out .. --tsa https://tsa.example/tsr --tsa-root roots.pem --confirm --no-prompt
+sealjar capture . --out .. --tsa https://tsa.example/tsr --tsa-root roots.pem --confirm --no-prompt
 ```
 
 Obtain the root independently from the authority. Capture still writes a package
@@ -23,12 +23,12 @@ An otherwise valid token with an unknown trust anchor may be retained as untrust
 ## Add another token later
 
 ```sh
-signetleaf stamp package.signetleaf.zip --dry-run
-signetleaf stamp package.signetleaf.zip
-signetleaf stamp package.signetleaf.zip --tsa https://tsa.example/tsr --tsa-root roots.pem
+sealjar stamp package.sealjar.zip --dry-run
+sealjar stamp package.sealjar.zip
+sealjar stamp package.sealjar.zip --tsa https://tsa.example/tsr --tsa-root roots.pem
 ```
 
-Stamp writes a new `-stamped.signetleaf.zip` beside the original, preserving the
+Stamp writes a new `-stamped.sealjar.zip` beside the original, preserving the
 manifest, payload and existing token bytes. The new token bounds existence by
 its own later time. It does not authenticate the operator's earlier capture time.
 Existing tokens remain separately checkable. Use `verify` on the printed new path.
@@ -41,9 +41,9 @@ embedded FreeTSA root and independently supplied `--tsa-root` files provide
 trust anchors. Certificates merely carried in the package cannot grant trust.
 Offline checks cannot see later certificate revocation.
 
-Signetleaf v0.1 does not assess eIDAS qualification or label a timestamp qualified.
+Sealjar v0.1 does not assess eIDAS qualification or label a timestamp qualified.
 Cryptographic trust and a service's qualification are separate questions.
-For a manual check, [verify](verify.md#without-installing-signetleaf) shows Python
+For a manual check, [verify](verify.md#without-installing-sealjar) shows Python
 hash checks and OpenSSL with independently obtained roots and `-attime`.
 
 A trusted timestamp gives an upper bound for when sealed files existed. It does

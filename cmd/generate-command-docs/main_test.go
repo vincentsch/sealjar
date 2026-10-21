@@ -25,12 +25,12 @@ func TestReferenceLifecycle(t *testing.T) {
 	if err := generate(false, dir); err != nil {
 		t.Fatal(err)
 	}
-	page := filepath.Join(dir, "signetleaf_capture.md")
+	page := filepath.Join(dir, "sealjar_capture.md")
 	first, err := os.ReadFile(page)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Count(string(first), "--out ../signetleaf-captures") != 2 {
+	if strings.Count(string(first), "--out ../sealjar-captures") != 2 {
 		t.Fatal("unsafe capture examples", string(first))
 	}
 	if err := generate(false, dir); err != nil {

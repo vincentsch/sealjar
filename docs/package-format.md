@@ -25,7 +25,7 @@ images, rather than all raw payloads. `report` can recreate it from the ZIP.
 
 ## Manifest fields
 
-`manifest.json` is UTF-8 JSON with `type: signetleaf.manifest/v1`. Its
+`manifest.json` is UTF-8 JSON with `type: sealjar.manifest/v1`. Its
 [committed example](../internal/pkg/testdata/manifest.example.json) fixes field
 names. Readers must preserve the original bytes when checking tokens.
 
@@ -68,9 +68,9 @@ Read [verification](verify.md) for trust, manual checks and limits.
 After [installation](quickstart.md#install), use a new or empty destination:
 
 ```sh
-signetleaf report package.signetleaf.zip --out ../reader
-signetleaf report package.signetleaf.zip --lang de --pdf --out ../reader-de
-signetleaf restore package.signetleaf.zip --to ../recovered
+sealjar report package.sealjar.zip --out ../reader
+sealjar report package.sealjar.zip --lang de --pdf --out ../reader-de
+sealjar restore package.sealjar.zip --to ../recovered
 ```
 
 `report --pdf` copies stored PDFs; it cannot generate missing ones. Report and

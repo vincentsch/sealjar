@@ -31,19 +31,19 @@ elif command -v shasum >/dev/null 2>&1; then
 else
   fail 'A SHA-256 tool was not found. Install sha256sum or shasum, then retry.'
 fi
-asset="signetleaf-$os-$arch"
-binary=signetleaf
+asset="sealjar-$os-$arch"
+binary=sealjar
 if [[ "$os" == windows ]]; then asset+=.exe; binary+=.exe; fi
-base=${SIGNETLEAF_DOWNLOAD_BASE:-https://github.com/vincentsch/signetleaf/releases}
+base=${SEALJAR_DOWNLOAD_BASE:-https://github.com/vincentsch/sealjar/releases}
 base=${base%/}
-if [[ -n "${SIGNETLEAF_VERSION:-}" ]]; then
-  base="$base/download/$SIGNETLEAF_VERSION"
+if [[ -n "${SEALJAR_VERSION:-}" ]]; then
+  base="$base/download/$SEALJAR_VERSION"
 else
   base="$base/latest/download"
 fi
 scratch=$(mktemp -d /tmp/sl-install.XXXXXX) || fail 'Could not create a temporary directory. Check free space and permissions in /tmp.'
 for name in "$asset" checksums.txt; do
-  curl --fail --silent --show-error --location "$base/$name" -o "$scratch/$name" || fail "Could not download $name. Check the release tag, network and SIGNETLEAF_DOWNLOAD_BASE, then retry."
+  curl --fail --silent --show-error --location "$base/$name" -o "$scratch/$name" || fail "Could not download $name. Check the release tag, network and SEALJAR_DOWNLOAD_BASE, then retry."
 done
 expected=$(awk -v name="$asset" '$2 == name {print $1}' "$scratch/checksums.txt")
 [[ "$expected" =~ ^[[:xdigit:]]{64}$ ]] || fail "A single SHA-256 checksum for $asset was not found. Check the release's checksums.txt before retrying."
@@ -53,9 +53,9 @@ INSTALL_DIR=${INSTALL_DIR:-"$HOME/.local/bin"}
 mkdir -p "$INSTALL_DIR" || fail 'Could not create INSTALL_DIR. Choose a writable directory and retry.'
 INSTALL_DIR=$(cd "$INSTALL_DIR" && pwd -P)
 # Stage beside the destination so replacement stays on the same filesystem.
-staged=$(mktemp "$INSTALL_DIR/.signetleaf.XXXXXX") || fail 'Could not write INSTALL_DIR. Choose a writable directory and retry.'
+staged=$(mktemp "$INSTALL_DIR/.sealjar.XXXXXX") || fail 'Could not write INSTALL_DIR. Choose a writable directory and retry.'
 cp "$scratch/$asset" "$staged" && chmod 755 "$staged" || fail 'Could not stage the binary. Check disk space and directory permissions.'
-mv -f "$staged" "$INSTALL_DIR/$binary" || fail 'Could not replace the binary. Close any running Signetleaf process and check directory permissions.'
+mv -f "$staged" "$INSTALL_DIR/$binary" || fail 'Could not replace the binary. Close any running Sealjar process and check directory permissions.'
 staged=
 result=$("$INSTALL_DIR/$binary" --version) || fail 'The installed binary could not run. Check that the release matches your operating system and architecture.'
 printf '%s\nInstalled: %s\n' "$result" "$INSTALL_DIR/$binary"
@@ -63,4 +63,4 @@ case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
   *) printf 'Add this directory to PATH in your shell profile:\n  export PATH=%q:"$PATH"\n' "$INSTALL_DIR" ;;
 esac
-printf '%s\n' 'Chrome or Chromium is required for website capture and the demo.' 'Git is required for repository capture and the demo.' 'Run signetleaf doctor to check prerequisites, or signetleaf --help to see commands.'
+printf '%s\n' 'Chrome or Chromium is required for website capture and the demo.' 'Git is required for repository capture and the demo.' 'Run sealjar doctor to check prerequisites, or sealjar --help to see commands.'

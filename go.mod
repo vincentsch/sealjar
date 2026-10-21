@@ -1,4 +1,4 @@
-module github.com/vincentsch/signetleaf
+module github.com/vincentsch/sealjar
 
 go 1.27.2
 

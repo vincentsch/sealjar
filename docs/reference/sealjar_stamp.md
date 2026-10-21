@@ -1,18 +1,18 @@
-# signetleaf stamp
+# sealjar stamp
 
 Add timestamps without changing captured evidence
 
 ## Usage
 
 ```
-signetleaf stamp <package>
+sealjar stamp <package>
 ```
 
 ## Examples
 
 ```
-signetleaf stamp capture.signetleaf.zip
-signetleaf stamp capture.signetleaf.zip --dry-run
+sealjar stamp capture.sealjar.zip
+sealjar stamp capture.sealjar.zip --dry-run
 ```
 
 ## Flags
@@ -30,5 +30,5 @@ This command changes state and honors `--dry-run`.
 
 ## Related commands
 
-- signetleaf verify
-- signetleaf capture
+- sealjar verify
+- sealjar capture

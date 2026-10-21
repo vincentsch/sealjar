@@ -1,4 +1,4 @@
-# Signetleaf images
+# Sealjar images
 
 The light and dark SVG wordmarks use path outlines from DejaVu Serif.
 Their font license is in [FONT-LICENSE.txt](FONT-LICENSE.txt). The simple mark

@@ -1,4 +1,4 @@
-// Package pkg reads and writes Signetleaf packages without extracting ZIP entries.
+// Package pkg reads and writes Sealjar packages without extracting ZIP entries.
 package pkg
 
 import (
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const ManifestType = "signetleaf.manifest/v1"
+const ManifestType = "sealjar.manifest/v1"
 
 type File struct {
 	Path   string `json:"path"`

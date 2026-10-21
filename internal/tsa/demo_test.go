@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/vincentsch/signetleaf/internal/tsa/demotsa"
+	"github.com/vincentsch/sealjar/internal/tsa/demotsa"
 )
 
 func TestDemoProvenanceDoesNotGrantTrust(t *testing.T) {
@@ -22,7 +22,7 @@ func TestDemoProvenanceDoesNotGrantTrust(t *testing.T) {
 		t.Fatalf("%+v", attempts)
 	}
 	token := Check(attempts[0].DER, manifest, x509.NewCertPool())
-	if !token.Demo || token.Trusted || token.Invalid || !token.Usable || token.DisplayAuthority() != "Signetleaf Demo TSA" {
+	if !token.Demo || token.Trusted || token.Invalid || !token.Usable || token.DisplayAuthority() != "Sealjar Demo TSA" {
 		t.Fatalf("%+v", token)
 	}
 	roots := x509.NewCertPool()

@@ -1,6 +1,6 @@
 # Make your first capture
 
-Signetleaf writes a ZIP and a folder for reading its reports. Keep both outside
+Sealjar writes a ZIP and a folder for reading its reports. Keep both outside
 the repository you capture. The [recipient guide](for-recipients.md) explains
 what the results mean.
 
@@ -9,23 +9,23 @@ what the results mean.
 On Linux, macOS or Git Bash on Windows:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vincentsch/signetleaf/main/install.sh -o /tmp/signetleaf-install.sh
-bash /tmp/signetleaf-install.sh
+curl -fsSL https://raw.githubusercontent.com/vincentsch/sealjar/main/install.sh -o /tmp/sealjar-install.sh
+bash /tmp/sealjar-install.sh
 ```
 
 WSL uses Linux assets. The installer checks `checksums.txt` and prints an absolute
-`Installed:` path. Use that path if `signetleaf` is not on PATH. `INSTALL_DIR`
+`Installed:` path. Use that path if `sealjar` is not on PATH. `INSTALL_DIR`
 selects a different directory. To select a published version:
 
 ```sh
-SIGNETLEAF_VERSION=v0.1.0 bash /tmp/signetleaf-install.sh
+SEALJAR_VERSION=v0.1.0 bash /tmp/sealjar-install.sh
 ```
 
-Remove `/tmp/signetleaf-install.sh` when finished with the installer. If Go is available,
+Remove `/tmp/sealjar-install.sh` when finished with the installer. If Go is available,
 this is an optional source fallback:
 
 ```sh
-go install github.com/vincentsch/signetleaf/cmd/signetleaf@latest
+go install github.com/vincentsch/sealjar/cmd/sealjar@latest
 go env GOBIN GOPATH
 ```
 
@@ -38,8 +38,8 @@ Windows on ARM. This example uses a new directory under your temporary folder.
 
 ```powershell
 $arch = 'amd64'
-$asset = "signetleaf-windows-$arch.exe"
-$base = 'https://github.com/vincentsch/signetleaf/releases/latest/download'
+$asset = "sealjar-windows-$arch.exe"
+$base = 'https://github.com/vincentsch/sealjar/releases/latest/download'
 $dir = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $dir | Out-Null
 $exe = Join-Path $dir $asset
@@ -61,10 +61,10 @@ checking the source of the download.
 
 ## Check prerequisites
 
-After installing, the examples use `signetleaf` for the executable:
+After installing, the examples use `sealjar` for the executable:
 
 ```sh
-signetleaf doctor
+sealjar doctor
 ```
 
 Web capture and demo need Chrome or Chromium. Code capture and demo need Git.
@@ -79,7 +79,7 @@ Chrome installation suggestions; system changes need the user's authority.
 Run from a directory whose parent may receive output:
 
 ```sh
-signetleaf demo --out ../bakery-demo
+sealjar demo --out ../bakery-demo
 ```
 
 Read the printed report path. Demo also writes a tampered ZIP; verify names the
@@ -97,12 +97,12 @@ repository. A relative `--out` is resolved from your current working directory.
 ```sh
 OUT=$(cd .. && pwd -P)
 printf 'Output directory: %s\n' "$OUT"
-signetleaf capture https://staging.example.com . --out "$OUT" --dry-run
-signetleaf capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
-signetleaf verify package.signetleaf.zip
+sealjar capture https://staging.example.com . --out "$OUT" --dry-run
+sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
+sealjar verify package.sealjar.zip
 ```
 
-Replace `package.signetleaf.zip` with the printed ZIP path. Inspect the full plan
+Replace `package.sealjar.zip` with the printed ZIP path. Inspect the full plan
 before capturing; the CLI plan does not print the output directory. For a
 specific output directory, supply its absolute path in both capture commands.
 The dry run starts no browser, makes no network requests and writes nothing.
@@ -111,11 +111,11 @@ For authentication, additional pages and exclusions, see [capture](capture.md).
 ## Try the instructions without an external site
 
 Source contributors can use the fixture site, including its basic-auth routes.
-From a separate Signetleaf source checkout, build both helpers:
+From a separate Sealjar source checkout, build both helpers:
 
 ```sh
-go build -o /tmp/signetleaf-testsite ./internal/testsite/cmd/testsite
-go build -o /tmp/signetleaf-testtsa ./internal/tsa/testtsa/cmd/testtsa
+go build -o /tmp/sealjar-testsite ./internal/testsite/cmd/testsite
+go build -o /tmp/sealjar-testtsa ./internal/tsa/testtsa/cmd/testtsa
 ```
 
 Create temporary directories and keep the servers in this shell:
@@ -123,9 +123,9 @@ Create temporary directories and keep the servers in this shell:
 ```sh
 SITE_DIR=$(mktemp -d)
 TSA_DIR=$(mktemp -d)
-/tmp/signetleaf-testsite --out "$SITE_DIR" &
+/tmp/sealjar-testsite --out "$SITE_DIR" &
 SITE_PID=$!
-/tmp/signetleaf-testtsa --out "$TSA_DIR" &
+/tmp/sealjar-testtsa --out "$TSA_DIR" &
 TSA_PID=$!
 ```
 
@@ -135,10 +135,10 @@ also writes its public `root.pem`; its private keys stay in memory.
 ```sh
 SITE=$(cat "$SITE_DIR/endpoint")
 TSA=$(cat "$TSA_DIR/endpoint")
-signetleaf capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --dry-run
-signetleaf capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
-signetleaf capture "$SITE/private/" --auth client:handover --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
-signetleaf verify package.signetleaf.zip --tsa-root "$TSA_DIR/root.pem"
+sealjar capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --dry-run
+sealjar capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
+sealjar capture "$SITE/private/" --auth client:handover --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
+sealjar verify package.sealjar.zip --tsa-root "$TSA_DIR/root.pem"
 ```
 
 Run these captures from the project being captured. `client:handover` is public
@@ -150,7 +150,7 @@ When finished, stop and remove your exact fixture processes and directories:
 kill "$SITE_PID" "$TSA_PID"
 wait "$SITE_PID" "$TSA_PID"
 rm -rf "$SITE_DIR" "$TSA_DIR"
-rm /tmp/signetleaf-testsite /tmp/signetleaf-testtsa
+rm /tmp/sealjar-testsite /tmp/sealjar-testtsa
 ```
 
 [Verification](verify.md) explains integrity and trust. Inspect source, screenshots

@@ -14,15 +14,15 @@ class InstallerTests(unittest.TestCase):
         self.work = tempfile.TemporaryDirectory(prefix="sl-check.", dir="/tmp")
         self.addCleanup(self.work.cleanup)
         self.root = Path(self.work.name)
-        self.fixture = Path(os.environ["SIGNETLEAF_FIXTURE_DIR"])
+        self.fixture = Path(os.environ["SEALJAR_FIXTURE_DIR"])
         self.env = dict(os.environ, INSTALL_DIR=str(self.root / "installed"))
-        self.env.pop("SIGNETLEAF_VERSION", None)
+        self.env.pop("SEALJAR_VERSION", None)
         self.shims = self.root / "shims"
         self.shims.mkdir()
         curl = shutil.which("curl")
         self.shim("curl", f'''#!/usr/bin/env bash
 for arg do
- case "$arg" in http*) [[ "$arg" == "$SIGNETLEAF_DOWNLOAD_BASE/"* ]] || exit 90;; esac
+ case "$arg" in http*) [[ "$arg" == "$SEALJAR_DOWNLOAD_BASE/"* ]] || exit 90;; esac
 done
 exec '{curl}' "$@"
 ''')
@@ -42,33 +42,33 @@ exec '{curl}' "$@"
     def test_latest_and_pinned(self):
         latest = self.install()
         self.assertIn("v0.1.0", latest)
-        self.assertIn(str(self.root / "installed/signetleaf"), latest)
+        self.assertIn(str(self.root / "installed/sealjar"), latest)
         self.assertIn("PATH", latest)
         self.assertIn("Chrome", latest)
         self.assertIn("Git", latest)
-        self.env["SIGNETLEAF_VERSION"] = "v0.0.1"
+        self.env["SEALJAR_VERSION"] = "v0.0.1"
         self.assertIn("v0.0.1", self.install())
         requests = (self.fixture / "requests.log").read_text()
         for prefix in ("/latest/download/", "/download/v0.0.1/"):
-            for asset in ("signetleaf-linux-amd64", "checksums.txt"):
+            for asset in ("sealjar-linux-amd64", "checksums.txt"):
                 self.assertIn(prefix + asset, requests)
 
     def test_default_install_directory(self):
         self.env.pop("INSTALL_DIR")
         self.env["HOME"] = str(self.root / "home directory")
         output = self.install()
-        installed = Path(self.env["HOME"]) / ".local/bin/signetleaf"
+        installed = Path(self.env["HOME"]) / ".local/bin/sealjar"
         self.assertTrue(installed.is_file())
         self.assertIn(str(installed), output)
 
     def test_checksum_failures_preserve_install(self):
         self.install()
-        installed = self.root / "installed/signetleaf"
+        installed = self.root / "installed/sealjar"
         before = hashlib.sha256(installed.read_bytes()).digest()
         checksums = self.fixture / "latest/download/checksums.txt"
         original = checksums.read_bytes()
         self.addCleanup(checksums.write_bytes, original)
-        for content, message in (("0" * 64 + "  signetleaf-linux-amd64\n", "Checksum verification failed"),
+        for content, message in (("0" * 64 + "  sealjar-linux-amd64\n", "Checksum verification failed"),
                                  ("", "was not found")):
             with self.subTest(content=bool(content)):
                 checksums.write_text(content)
@@ -77,7 +77,7 @@ exec '{curl}' "$@"
                 installed.unlink()
                 self.install(False)
                 self.assertFalse(installed.exists())
-                installed.write_bytes((self.fixture / "latest/download/signetleaf-linux-amd64").read_bytes())
+                installed.write_bytes((self.fixture / "latest/download/sealjar-linux-amd64").read_bytes())
                 installed.chmod(0o755)
 
     def test_unsupported_architecture(self):
@@ -93,15 +93,15 @@ exec '{curl}' "$@"
                                                  ("MSYS_NT", "arm64", "windows-arm64", ".exe")):
             with self.subTest(platform=platform):
                 self.shim("uname", f'#!/bin/sh\ncase "$1" in -s) echo {system};; -m) echo {machine};; esac\n')
-                asset = "signetleaf-" + platform + suffix
+                asset = "sealjar-" + platform + suffix
                 folder = self.fixture / "download/mapping"
                 folder.mkdir(exist_ok=True)
-                binary = b'#!/bin/sh\necho "signetleaf fixture"\n'
+                binary = b'#!/bin/sh\necho "sealjar fixture"\n'
                 (folder / asset).write_bytes(binary)
                 (folder / "checksums.txt").write_text(hashlib.sha256(binary).hexdigest() + "  " + asset + "\n")
-                self.env["SIGNETLEAF_VERSION"] = "mapping"
+                self.env["SEALJAR_VERSION"] = "mapping"
                 self.assertIn("fixture", self.install())
-                self.assertTrue((self.root / ("installed/signetleaf" + suffix)).exists())
+                self.assertTrue((self.root / ("installed/sealjar" + suffix)).exists())
 
 
 if __name__ == "__main__":

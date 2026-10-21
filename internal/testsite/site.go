@@ -2,7 +2,7 @@
 package testsite
 
 import (
-	site "github.com/vincentsch/signetleaf/testdata/site"
+	site "github.com/vincentsch/sealjar/testdata/site"
 	"io/fs"
 	"net/http"
 	"time"
