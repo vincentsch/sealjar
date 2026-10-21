@@ -75,7 +75,9 @@ func TestMissingDestinationParentGuidance(t *testing.T) {
 			}
 			out, stderr := invoke(t, 2, args...)
 			all := string(out) + string(stderr)
-			if !strings.Contains(all, parent) || !strings.Contains(all, "Create it before retrying") {
+			// Windows may report the 8.3 short form of the temp directory and
+			// JSON escapes its backslashes, so match the directory name itself.
+			if !strings.Contains(all, filepath.Base(parent)) || !strings.Contains(all, "Create it before retrying") {
 				t.Fatalf("missing guidance: %s", all)
 			}
 			if err := os.Mkdir(parent, 0700); err != nil {
