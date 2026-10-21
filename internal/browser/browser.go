@@ -3,6 +3,7 @@ package browser
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -92,19 +93,31 @@ func Start(ctx context.Context, path string, visible bool, testOptions ...chrome
 	}
 	opts = append(opts, testOptions...)
 	ac, ca := chromedp.NewExecAllocator(ctx, opts...)
-	tc, ct := chromedp.NewContext(ac)
+	startupContext, cancelStartup := context.WithCancel(ac)
+	tc, ct := chromedp.NewContext(startupContext)
 	close := func() {
 		closing, cancel := context.WithTimeout(tc, 5*time.Second)
 		defer cancel()
 		chromedp.Cancel(closing)
 		ct()
+		cancelStartup()
 		ca()
 		os.RemoveAll(profile)
 	}
-	startup := time.AfterFunc(15*time.Second, ct)
-	defer startup.Stop()
-	if e := chromedp.Do(tc); e != nil {
-		close()
+	// Cancel the parent without consuming chromedp's allocation semaphore.
+	startup := time.AfterFunc(15*time.Second, cancelStartup)
+	e = chromedp.Do(tc)
+	startup.Stop()
+	if e != nil {
+		// A failed allocation may leave a single value in the allocation channel.
+		// Only ct may consume it; calling chromedp.Cancel first would deadlock ct.
+		ct()
+		cancelStartup()
+		ca()
+		os.RemoveAll(profile)
+		if errors.Is(e, chromedp.ErrNoDisplay) {
+			return nil, fmt.Errorf("--login opens a visible Chrome window, but this session has no display. Run capture from a desktop session, or capture without --login.")
+		}
 		return nil, fmt.Errorf("Chrome could not start. Check --chrome and the installed browser.")
 	}
 	return &Browser{tc, profile, close}, nil

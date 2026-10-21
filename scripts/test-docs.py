@@ -13,7 +13,7 @@ class DocumentationTests(unittest.TestCase):
     def test_local_links_and_media_exist(self):
         pages = [ROOT / 'README.md', ROOT / 'AGENTS.md', ROOT / 'CONTRIBUTING.md', *ROOT.glob('docs/**/*.md')]
         for page in pages:
-            text = page.read_text()
+            text = page.read_text(encoding="utf-8")
             links = re.findall(r'!?\[[^\]]*\]\(([^)]+)\)', text)
             links += re.findall(r'(?:src|srcset|href)="([^"]+)"', text)
             for link in links:
@@ -34,7 +34,7 @@ class DocumentationTests(unittest.TestCase):
 
     def test_manual_hash_check_matches_packaged_instructions(self):
         def python_block(path):
-            return path.read_text().split('```python\n')[1].split('```')[0]
+            return path.read_text(encoding="utf-8").split('```python\n')[1].split('```')[0]
         self.assertEqual(python_block(ROOT / 'docs/verify.md'),
                          python_block(ROOT / 'internal/pkg/VERIFY.txt'))
 
@@ -42,7 +42,7 @@ class DocumentationTests(unittest.TestCase):
         forbidden = re.compile(r'court-proof|gerichtsfest|rechtssicher|beweissicher|legally binding', re.I)
         for page in [ROOT / 'AGENTS.md', ROOT / 'README.md', *ROOT.glob('docs/**/*.md')]:
             with self.subTest(page=page.relative_to(ROOT)):
-                self.assertIsNone(forbidden.search(page.read_text()))
+                self.assertIsNone(forbidden.search(page.read_text(encoding="utf-8")))
 
     def test_brand_assets_are_self_contained_paths(self):
         for kind in ('mark', 'wordmark'):

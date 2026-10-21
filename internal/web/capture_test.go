@@ -11,6 +11,8 @@ import (
 	"github.com/vincentsch/signetleaf/internal/testutil"
 	site "github.com/vincentsch/signetleaf/testdata/site"
 	"image/png"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -230,9 +232,13 @@ func TestAuthenticationAndOriginFacts(t *testing.T) {
 		}
 		fixture.ServeHTTP(w, r)
 	})
-	s := httptest.NewTLSServer(handler)
+	s := httptest.NewUnstartedServer(handler)
+	s.Config.ErrorLog = log.New(io.Discard, "", 0)
+	s.StartTLS()
 	defer s.Close()
-	second := httptest.NewTLSServer(handler)
+	second := httptest.NewUnstartedServer(handler)
+	second.Config.ErrorLog = log.New(io.Discard, "", 0)
+	second.StartTLS()
 	defer second.Close()
 	r, work := runCapture(t, []string{s.URL + "/private/", s.URL + "/away", second.URL + "/"}, Options{Auth: "client:handover", TestBrowserOptions: []chromedp.ExecAllocatorOption{chromedp.IgnoreCertErrors}})
 	if leaked.Load() {
@@ -299,8 +305,13 @@ func TestManualLoginKeepsSession(t *testing.T) {
 	if !r.Targets[0].Viewports[0].PasswordForm {
 		t.Fatal("login form not detected")
 	}
-	// CI exercises the same visible-login branch with a headless allocator override.
-	r, work = runCapture(t, []string{s.URL + "/account/"}, Options{Login: true, TestBrowserOptions: []chromedp.ExecAllocatorOption{chromedp.Headless}, LoginWait: func(ctx context.Context) error {
+	// Reuse a headless browser through the same supplied-browser path as the CLI.
+	b, err := browser.Start(context.Background(), chrome(t), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer b.Close()
+	r, work = runCapture(t, []string{s.URL + "/account/"}, Options{Browser: b, Login: true, LoginWait: func(ctx context.Context) error {
 		if e := chromedp.Do(ctx, chromedp.WaitVisible(chromedp.CSS(`input[name=user]`)), chromedp.SetValue(chromedp.CSS(`input[name=user]`), "client"), chromedp.SetValue(chromedp.CSS(`input[name=password]`), "handover"), chromedp.Click(chromedp.CSS(`button[type=submit]`)), chromedp.WaitVisible(chromedp.CSS(`#state`))); e != nil {
 			return e
 		}

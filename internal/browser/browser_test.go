@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestIsolatedProfileCleanup(t *testing.T) {
@@ -80,5 +81,60 @@ func TestVersionNeverLaunchesWithoutProfile(t *testing.T) {
 	}
 	if _, err = os.Stat(string(profile)); !os.IsNotExist(err) {
 		t.Fatal("version probe left its isolated profile behind")
+	}
+}
+
+func TestVisibleStartWithoutDisplay(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("chromedp checks for a display only on Linux")
+	}
+	t.Setenv("DISPLAY", "")
+	t.Setenv("WAYLAND_DISPLAY", "")
+	profiles := t.TempDir()
+	t.Setenv("TMPDIR", profiles)
+	err := failedStart(t, "chrome", true)
+	want := "--login opens a visible Chrome window, but this session has no display. Run capture from a desktop session, or capture without --login."
+	if err.Error() != want {
+		t.Fatalf("no-display explanation: %v", err)
+	}
+	assertNoProfiles(t, profiles)
+}
+
+func TestHeadlessStartMissingExecutable(t *testing.T) {
+	profiles := t.TempDir()
+	for _, name := range []string{"TMPDIR", "TMP", "TEMP"} {
+		t.Setenv(name, profiles)
+	}
+	failedStart(t, filepath.Join(t.TempDir(), "missing-chrome"), false)
+	assertNoProfiles(t, profiles)
+}
+
+func failedStart(t *testing.T, path string, visible bool) error {
+	t.Helper()
+	done := make(chan error, 1)
+	go func() {
+		b, err := Start(context.Background(), path, visible)
+		if b != nil {
+			b.Close()
+		}
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("unexpected successful browser startup")
+		}
+		return err
+	case <-time.After(10 * time.Second):
+		t.Fatal("failed browser startup did not return within 10 seconds")
+		return nil
+	}
+}
+
+func assertNoProfiles(t *testing.T, dir string) {
+	t.Helper()
+	profiles, err := filepath.Glob(filepath.Join(dir, "signetleaf-chrome-*"))
+	if err != nil || len(profiles) != 0 {
+		t.Fatalf("temporary profiles survived failed startup: %v (%v)", profiles, err)
 	}
 }

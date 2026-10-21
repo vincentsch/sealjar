@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/vincentsch/signetleaf/internal/testutil"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,7 +39,15 @@ func TestWebDryRunAndValidation(t *testing.T) {
 	invoke(t, 1, "capture", "https://user:secret@example.com/", "--dry-run")
 	invoke(t, 1, "capture", "https://example.com/", "--wait", "31s", "--dry-run")
 	invoke(t, 1, "capture", "https://example.com/", "--login", "--confirm")
-	invoke(t, 2, "capture", "https://example.com/", "--confirm", "--no-timestamp", "--out", out)
+	stdout, stderr := invoke(t, 2, "capture", "http://127.0.0.1:1/", "--chrome", "/missing", "--confirm", "--no-timestamp", "--out", out)
+	if !strings.Contains(string(stdout)+string(stderr), "--chrome") {
+		t.Fatal("missing Chrome error did not explain --chrome")
+	}
+	if files, err := os.ReadDir(out); err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	} else if len(files) != 0 {
+		t.Fatalf("missing Chrome validation wrote package or reader files: %v", files)
+	}
 }
 func TestStrictWebCaptureJSONAndMixedRestore(t *testing.T) {
 	if _, e := browser.Find(""); e != nil {
@@ -197,7 +206,9 @@ func TestDoctorPrerequisitesAndFixes(t *testing.T) {
 	}
 }
 func TestDoctorUsesTLSForHTTPS(t *testing.T) {
-	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "unexpected") }))
+	s := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "unexpected") }))
+	s.Config.ErrorLog = log.New(io.Discard, "", 0)
+	s.StartTLS()
 	defer s.Close()
 	b, _ := invoke(t, 0, "doctor", "--tsa", s.URL, "--json")
 	var result map[string]json.RawMessage
@@ -276,7 +287,9 @@ func TestFailedCertificateIsExplained(t *testing.T) {
 	if _, e := browser.Find(""); e != nil {
 		testutil.RequireChrome(t, e)
 	}
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Page") }))
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Page") }))
+	server.Config.ErrorLog = log.New(io.Discard, "", 0)
+	server.StartTLS()
 	defer server.Close()
 	for _, mode := range []string{"human", "json"} {
 		args := []string{"capture", server.URL + "/?token=never-store", "--confirm", "--no-timestamp", "--out", t.TempDir()}
