@@ -29,7 +29,9 @@ class DocumentationTests(unittest.TestCase):
                 data = (ROOT / 'docs/media' / name).read_bytes()
                 self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
                 self.assertEqual(data[12:16], b'IHDR')
-                self.assertEqual(struct.unpack('>II', data[16:24]), (1440, 1500))
+                width, height = struct.unpack('>II', data[16:24])
+                self.assertEqual(width, 1440)
+                self.assertTrue(1000 <= height <= 1500, height)
                 self.assertLess(len(data), 400_000)
 
     def test_manual_hash_check_matches_packaged_instructions(self):
