@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -283,7 +284,7 @@ func TestRepositoryCaptureDoesNotClaimBasicAuth(t *testing.T) {
 		t.Fatal("repository-only capture claimed basic auth was used")
 	}
 }
-func TestFailedCertificateIsExplained(t *testing.T) {
+func TestFailedCertificateIsRejectedAndExplained(t *testing.T) {
 	if _, e := browser.Find(""); e != nil {
 		testutil.RequireChrome(t, e)
 	}
@@ -292,14 +293,29 @@ func TestFailedCertificateIsExplained(t *testing.T) {
 	server.StartTLS()
 	defer server.Close()
 	for _, mode := range []string{"human", "json"} {
-		args := []string{"capture", server.URL + "/?token=never-store", "--confirm", "--no-timestamp", "--out", t.TempDir()}
+		out := t.TempDir()
+		args := []string{"capture", server.URL + "/?token=never-store", "--confirm", "--no-timestamp", "--out", out}
 		if mode == "json" {
 			args = append(args, "--json")
 		}
 		stdout, stderr := invoke(t, 2, args...)
 		output := string(stdout) + string(stderr)
-		if !strings.Contains(output, server.URL) || !strings.Contains(output, "ERR_CERT_AUTHORITY_INVALID") {
+		certificateReason := strings.Contains(output, "ERR_CERT_AUTHORITY_INVALID")
+		// On Windows Chrome can exhaust its bounded navigation budget before
+		// Page.navigate returns the certificate reason. That is still a rejected
+		// capture, with a specific timeout explanation, not a trusted document.
+		windowsBudget := runtime.GOOS == "windows" &&
+			strings.Contains(output, "No target document became available within the navigation budget") &&
+			strings.Contains(output, "No package was written.")
+		if !strings.Contains(output, server.URL) || (!certificateReason && !windowsBudget) {
 			t.Fatalf("certificate failure was not explained: %s", output)
+		}
+		if windowsBudget {
+			t.Log("Chrome did not return its certificate reason within the navigation budget; rejection verified")
+		}
+		files, err := os.ReadDir(out)
+		if (err != nil && !os.IsNotExist(err)) || len(files) != 0 {
+			t.Fatalf("failed certificate capture left output: %v (%v)", files, err)
 		}
 		if strings.Contains(output, "never-store") {
 			t.Fatal("certificate failure leaked URL query")
