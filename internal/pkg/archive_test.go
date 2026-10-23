@@ -1,4 +1,4 @@
-package packagefmt
+package pkg
 
 import (
 	"os"
