@@ -30,9 +30,9 @@ binaries and checksums, attests the binaries, and uploads those seven files.
 The release job alone has write and attestation permissions. Release notes come
 from the changelog section matching the tag and stop at the next version section.
 
-## Pending checks
+## Release verification checklist
 
-This is the shared pending list for release and onboarding work. Check off an item
+This is the shared verification list for release and onboarding work. Check off an item
 only after recording its host, command, result and date. Local fixture checks do
 not satisfy public-download or hosted checks.
 
@@ -109,14 +109,14 @@ Published [sealjar v0.1.0](https://github.com/vincentsch/sealjar/releases/tag/v0
 from `0711fe2fa4a548531d9da2624b9c9aa328be5b82`. The [release workflow](https://github.com/vincentsch/sealjar/actions/runs/39947650187)
 passed Linux, macOS and Windows CI before the publishing job started. The release
 contains six platform executables and `checksums.txt`. All six downloaded SHA-256
-hashes matched. All six GitHub build attestations verified with `gh attestation
-verify`, the release workflow identity, tag ref and source digest pinned, and
+hashes matched. All six GitHub build attestations verified with `gh attestation verify`, the release workflow identity, tag ref and source digest pinned, and
 `--deny-self-hosted-runners`.
 
 On Linux amd64, latest and pinned (`v0.1.0`) public installers succeeded in fresh
 temporary folders. The installed CLI's version and bundled demo were checked.
 `go install github.com/vincentsch/sealjar/cmd/sealjar@v0.1.0` succeeded with an
-initially empty module cache, the public Go proxy and checksum database. The
+initially empty module cache, the public Go proxy and checksum database. A separate
+empty-cache `go install` with `@latest` also resolved v0.1.0 successfully. The
 README agent prompt and `AGENTS.md` were fetched anonymously from GitHub and
 matched the published source. Fetching the prompt does not establish a trial
 with every supported coding agent.
