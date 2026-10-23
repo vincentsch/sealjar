@@ -8,8 +8,8 @@ sealjar verify package.sealjar.zip --json
 sealjar verify package.sealjar.zip --tsa-root roots.pem
 ```
 
-Obtain extra roots independently, never from package certificates alone.
-The three answers mean different things:
+Obtain extra roots independently, never from package certificates alone. The three
+answers mean different things:
 
 | Answer | What to read |
 | --- | --- |
@@ -17,26 +17,26 @@ The three answers mean different things:
 | Files | Unchanged means listed files match the manifest; changed, missing and unexpected paths are named. |
 | Timestamp | Trusted means a token's imprint, signature and certificate chain pass against trusted roots at its time. |
 
-Exit 0 means matching files and at least one trusted timestamp. It does not mean
-the capture was complete. Exit 10 means changed, malformed or invalid content,
-including an imprint mismatch or invalid signature. Otherwise exit 11 means no
-trusted timestamp, including no timestamp at all. Missing input is exit 5;
-unsupported formats and operational failures return 2. Usage errors return 1.
-All available answers are printed, including on exits 10 and 11.
+Exit 0 means matching files and at least one trusted timestamp. It does not mean the
+capture was complete. Exit 10 means changed, malformed or invalid content, including
+an imprint mismatch or invalid signature. Otherwise exit 11 means no trusted
+timestamp, including no timestamp at all. Missing input is exit 5; unsupported
+formats and operational failures return 2. Usage errors return 1. All available
+answers are printed, including on exits 10 and 11.
 
-Preserve the original ZIP and extracted files. Do not repair captured files to
-make them pass. Request another capture or investigate the difference separately.
+Preserve the original ZIP and extracted files. Do not repair captured files to make
+them pass. Request another capture or investigate the difference separately.
 
-The demo fallback uses a public signing key. It gives no independent time
-evidence, even if an explicitly supplied root grants the token trust.
+The demo fallback uses a public signing key. It gives no independent time evidence,
+even if an explicitly supplied root grants the token trust.
 
 ## Without installing Sealjar
 
 Reading HTML or PDF needs no tools beyond a browser or PDF reader. Independent
-checks without Sealjar need Python 3 for hashes and OpenSSL for tokens.
-Extract a copy of the ZIP into a new empty directory with an archive tool that
-rejects unsafe paths and links. Keep the original ZIP. Work from the extracted
-package root. The following is the Python file check from `VERIFY.txt`:
+checks without Sealjar need Python 3 for hashes and OpenSSL for tokens. Extract a
+copy of the ZIP into a new empty directory with an archive tool that rejects unsafe
+paths and links. Keep the original ZIP. Work from the extracted package root. The
+following is the Python file check from `VERIFY.txt`:
 
 ```python
 from pathlib import Path
@@ -70,9 +70,9 @@ sys.exit(1 if problems else 0)
 ```
 
 Exit 0 means consistency with the file list; exit 1 names differences.
-`manifest.json`, root-level timestamp tokens and `SEAL.html` are outside that
-list. Someone could replace both files and hashes in an untimestamped manifest.
-Matching hashes alone cannot authenticate it.
+`manifest.json`, root-level timestamp tokens and `SEAL.html` are outside that list.
+Someone could replace both files and hashes in an untimestamped manifest. Matching
+hashes alone cannot authenticate it.
 
 Choose an actual token path for `token.tsr`. Read its UTC genTime:
 
@@ -95,31 +95,32 @@ PYTIME
 ```
 
 Obtain `roots.pem` independently from a trusted OS export, the FreeTSA root in
-Sealjar source, or the authority's separately trusted certificate source.
-Use the number above in place of `GEN_TIME_UNIX_SECONDS`:
+Sealjar source, or the authority's separately trusted certificate source. Use the
+number above in place of `GEN_TIME_UNIX_SECONDS`:
 
 ```sh
 openssl ts -verify -data manifest.json -in token.tsr -CAfile roots.pem -attime GEN_TIME_UNIX_SECONDS
 ```
 
-Some authorities also require intermediate certificates; follow their guidance.
-The `-attime` check uses certificate validity at the token's genTime. Without it,
+Some authorities also require intermediate certificates; follow their guidance. The
+`-attime` check uses certificate validity at the token's genTime. Without it,
 OpenSSL uses today's date, which can reject an older valid timestamp. Reading a
 token with `-text` alone does not verify it.
 
 ## What a successful check establishes
 
 A trusted timestamp authenticates the exact manifest bytes. Together with matching
-file hashes, it gives an upper bound for when the sealed files existed. The
+file hashes, it shows that the sealed files existed by the time it records. The
 operator's recorded start and end times are not independently checked capture times.
 Trust uses system roots, the embedded FreeTSA root or independently supplied
 explicit roots, never certificates merely carried in the package. Offline checks
-cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification
-or label a timestamp qualified.
+cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification or
+label a timestamp qualified.
 
-A package cannot establish truthful or complete content, honest operation, that
-a server sent the bytes, delivery, acceptance, or that captured code produced
-the website. It carries no promise of legal effect or admissibility. For important
+A package cannot show whether its content is true or complete. It cannot establish
+that the operator was honest or that a server sent the saved bytes. It also cannot
+establish delivery or acceptance of a project, or link the captured code to the
+website. It carries no promise of legal effect or admissibility. For important
 disputes, consider a neutral expert or notary present during capture.
 
 See [timestamps](timestamps.md), [package format](package-format.md) and the

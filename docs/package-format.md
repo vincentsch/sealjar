@@ -1,9 +1,9 @@
 # What is in the package?
 
-The ZIP is the complete package. Capture also creates a paired reader folder
-beside it, named like the ZIP without `.zip`. Keep that folder together: HTML
-reports use relative image links. A report PDF is a standalone reading copy.
-The report directs readers to `SEAL.html` and `verify` for timestamp results.
+The ZIP is the complete package. Capture also creates a paired reader folder beside
+it, named like the ZIP without `.zip`. Keep that folder together: HTML reports use
+relative image links. A report PDF is a standalone reading copy. The report directs
+readers to `SEAL.html` and `verify` for timestamp results.
 
 ```text
 manifest.json
@@ -19,15 +19,15 @@ hosts/<origin-id>/tls.pem  tls.json  dns.json
 repo/<name>/git.json  files.json  snapshot.tar.gz  [history.bundle]
 ```
 
-PDFs are present only when generated during capture. HTTP hosts have no TLS PEM.
-The reader folder contains reports, the seal, checking instructions and linked
-images, rather than all raw payloads. `report` can recreate it from the ZIP.
+PDFs are present only when generated during capture. HTTP hosts have no TLS PEM. The
+reader folder contains reports, the seal, checking instructions and linked images,
+rather than all raw payloads. `report` can recreate it from the ZIP.
 
 ## Manifest fields
 
-`manifest.json` is UTF-8 JSON with `type: sealjar.manifest/v1`. Its
-[committed example](../internal/pkg/testdata/manifest.example.json) fixes field
-names. Readers must preserve the original bytes when checking tokens.
+`manifest.json` is UTF-8 JSON with `type: sealjar.manifest/v1`. Its [committed
+example](../internal/pkg/testdata/manifest.example.json) fixes field names. Readers
+must preserve the original bytes when checking tokens.
 
 | Field | Meaning |
 | --- | --- |
@@ -40,10 +40,11 @@ names. Readers must preserve the original bytes when checking tokens.
 | `timestamp_authorities` | Authorities requested, rather than a promise of acquired or trusted tokens. |
 | `files` | Relative payload paths, sizes and SHA-256 hashes. |
 
-Repository `git.json` holds Git facts and deleted paths; `files.json` lists
-selected source paths, modes, hashes and link targets. `snapshot.tar.gz` stores
-selected working-tree files. LFS pointers remain pointers. An optional history
-bundle is separate from the snapshot and may contain old secrets.
+Repository `git.json` records the commit and working-tree state, including deleted
+paths. `files.json` lists each selected source path with its file mode and hash. It
+also records link targets. `snapshot.tar.gz` stores selected working-tree files. LFS
+pointers remain pointers. An optional history bundle is separate from the snapshot
+and may contain old secrets.
 
 ## Sealing order
 
@@ -55,13 +56,13 @@ Report PDFs are covered when present; the seal itself is not.
 
 The seal is a reading aid whose trust text reflects the check when it was made.
 `verify` checks token bytes directly. Report extraction regenerates the seal from
-checked data and current roots, rather than trusting stored seal HTML.
-`stamp` adds tokens to a new ZIP without changing manifest or payload bytes.
+checked data and current roots, rather than trusting stored seal HTML. `stamp` adds
+tokens to a new ZIP without changing manifest or payload bytes.
 
-Matching hashes alone show agreement with a list. An untimestamped manifest can
-be replaced along with its files. A trusted timestamp gives an upper bound for
-when the sealed files existed, not an independently checked capture time.
-Read [verification](verify.md) for trust, manual checks and limits.
+Matching hashes alone show agreement with a list. An untimestamped manifest can be
+replaced along with its files. A trusted timestamp shows that the sealed files
+existed by the time it records. It does not independently check when capture
+happened. Read [verification](verify.md) for trust, manual checks and limits.
 
 ## Read or restore a copy
 
@@ -74,10 +75,10 @@ sealjar restore package.sealjar.zip --to ../recovered
 ```
 
 `report --pdf` copies stored PDFs; it cannot generate missing ones. Report and
-restore need neither Chrome nor Git. Restore checks the package before writing
-and refuses a nonempty destination. Safe snapshot links are created last.
-If history exists, restore writes `recovered.history.bundle` beside the folder.
-Git is needed only to check out that bundle, in a separate directory:
+restore need neither Chrome nor Git. Restore checks the package before writing and
+refuses a nonempty destination. Safe snapshot links are created last. If history
+exists, restore writes `recovered.history.bundle` beside the folder. Git is needed
+only to check out that bundle, in a separate directory:
 
 ```sh
 git clone ../recovered.history.bundle ../history-checkout

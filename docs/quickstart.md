@@ -1,8 +1,8 @@
 # Make your first capture
 
-Sealjar writes a ZIP and a folder for reading its reports. Keep both outside
-the repository you capture. The [recipient guide](for-recipients.md) explains
-what the results mean.
+Sealjar writes a ZIP and a folder for reading its reports. Keep both outside the
+repository you capture. The [recipient guide](for-recipients.md) explains what the
+results mean.
 
 ## Install
 
@@ -14,15 +14,15 @@ bash /tmp/sealjar-install.sh
 ```
 
 WSL uses Linux assets. The installer checks `checksums.txt` and prints an absolute
-`Installed:` path. Use that path if `sealjar` is not on PATH. `INSTALL_DIR`
-selects a different directory. To select a published version:
+`Installed:` path. Use that path if `sealjar` is not on PATH. `INSTALL_DIR` selects
+a different directory. To select a published version:
 
 ```sh
 SEALJAR_VERSION=v0.1.0 bash /tmp/sealjar-install.sh
 ```
 
-Remove `/tmp/sealjar-install.sh` when finished with the installer. If Go is available,
-this is an optional source fallback:
+Remove `/tmp/sealjar-install.sh` when finished with the installer. If Go is
+available, this is an optional source fallback:
 
 ```sh
 go install github.com/vincentsch/sealjar/cmd/sealjar@latest
@@ -55,9 +55,9 @@ Write-Output "Installed: $exe"
 & $exe doctor
 ```
 
-Keep `$exe` for later commands and use `& $exe capture ...`. The checksum file
-comes from the same release; it detects download corruption and does not replace
-checking the source of the download.
+Keep `$exe` for later commands and use `& $exe capture ...`. The checksum file comes
+from the same release; it detects download corruption and does not replace checking
+the source of the download.
 
 ## Check prerequisites
 
@@ -67,31 +67,32 @@ After installing, the examples use `sealjar` for the executable:
 sealjar doctor
 ```
 
-Web capture and demo need Chrome or Chromium. Code capture and demo need Git.
-Doctor explains missing programs and checks output access and TSA connections.
-Its connection probes send no timestamp requests and do not honour proxies.
-Verify, stored-report extraction and snapshot restore need neither Chrome nor
-Git. Checking out history needs Git. See [AGENTS.md](../AGENTS.md) for OS-specific
-Chrome installation suggestions; system changes need the user's authority.
+Web capture and demo need Chrome or Chromium. Code capture and demo need Git. Doctor
+reports missing programs. It also checks output access and connections to timestamp
+authorities. Its connection probes send no timestamp requests and do not honour
+proxies. Verify, stored-report extraction and snapshot restore need neither Chrome
+nor Git. Checking out history needs Git. If Chrome is installed in an unusual
+location, pass its executable path with `--chrome`.
 
 ## Try a bundled example
 
-Run from a directory whose parent may receive output:
+[Install Sealjar](#install) first. The demo needs Chrome or Chromium and Git. Run
+from a directory whose parent can receive the output:
 
 ```sh
 sealjar demo --out ../bakery-demo
 ```
 
 Read the printed report path. Demo also writes a tampered ZIP; verify names the
-changed screenshot. If online timestamping fails, the demo uses a local token labelled
-“Demo timestamp, not trusted”; verify exits 11. The signing key is public.
-Even if a supplied root grants this token trust, it gives no independent
-time evidence.
+changed screenshot. If online timestamping fails, the demo uses a local token
+labelled “Demo timestamp, not trusted”; verify exits 11. The signing key is public.
+Even if a supplied root grants this token trust, it gives no independent time
+evidence.
 
 ## Capture your project
 
-From the root of your committed Git repository, replace the URL with one you
-have permission to capture. Check that the resolved destination is outside the
+From the root of your committed Git repository, replace the URL with one you have
+permission to capture. Check that the resolved destination is outside the
 repository. A relative `--out` is resolved from your current working directory.
 
 ```sh
@@ -102,55 +103,16 @@ sealjar verify package.sealjar.zip
 ```
 
 Replace `package.sealjar.zip` with the printed ZIP path. Inspect the full plan
-before capturing, including its absolute output directory. For a
-specific output directory, supply its absolute path in both capture commands.
-The dry run starts no browser, makes no network requests and writes nothing.
-For authentication, additional pages and exclusions, see [capture](capture.md).
+before capturing, including its absolute output directory. For a specific output
+directory, supply its absolute path in both capture commands. The dry run starts no
+browser, makes no network requests and writes nothing. For authentication,
+additional pages and exclusions, see [capture](capture.md).
 
 ## Try the instructions without an external site
 
-Source contributors can use the fixture site, including its basic-auth routes.
-From a separate Sealjar source checkout, build both helpers:
+The [bundled demo](#try-a-bundled-example) runs locally. Source contributors can
+[test capture with local fixtures](contributor-testing.md), including basic-auth
+routes and a test timestamp authority.
 
-```sh
-go build -o /tmp/sealjar-testsite ./internal/testsite/cmd/testsite
-go build -o /tmp/sealjar-testtsa ./internal/tsa/testtsa/cmd/testtsa
-```
-
-Create temporary directories and keep the servers in this shell:
-
-```sh
-SITE_DIR=$(mktemp -d)
-TSA_DIR=$(mktemp -d)
-/tmp/sealjar-testsite --out "$SITE_DIR" &
-SITE_PID=$!
-/tmp/sealjar-testtsa --out "$TSA_DIR" &
-TSA_PID=$!
-```
-
-Wait until each directory contains `endpoint`, then read those files. The TSA
-also writes its public `root.pem`; its private keys stay in memory.
-
-```sh
-SITE=$(cat "$SITE_DIR/endpoint")
-TSA=$(cat "$TSA_DIR/endpoint")
-sealjar capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --dry-run
-sealjar capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
-sealjar capture "$SITE/private/" --auth client:handover --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
-sealjar verify package.sealjar.zip --tsa-root "$TSA_DIR/root.pem"
-```
-
-Run these captures from the project being captured. `client:handover` is public
-fixture data, never a suggestion for real credentials. The root is independently
-supplied by this running fixture, not extracted from the package.
-When finished, stop and remove your exact fixture processes and directories:
-
-```sh
-kill "$SITE_PID" "$TSA_PID"
-wait "$SITE_PID" "$TSA_PID"
-rm -rf "$SITE_DIR" "$TSA_DIR"
-rm /tmp/sealjar-testsite /tmp/sealjar-testtsa
-```
-
-[Verification](verify.md) explains integrity and trust. Inspect source, screenshots
-and history for private information before sharing output.
+[Verification](verify.md) explains file checks and timestamp trust. Inspect the
+captured files for private information before sharing output.
