@@ -56,6 +56,9 @@ out a history bundle needs Git. Repository-only capture without Chrome produces
 HTML reports without PDFs. `report --pdf` copies stored PDFs; it cannot generate
 missing ones.
 
+On macOS, DigiCert verification may need an explicit root bundle. See the
+[observed v0.1.0 trust results and workaround](docs/timestamps.md#macos-and-digicert).
+
 ## Try it
 
 After [installation](#install-it-yourself), run:
