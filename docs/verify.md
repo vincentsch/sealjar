@@ -111,11 +111,12 @@ token with `-text` alone does not verify it.
 
 A trusted timestamp authenticates the exact manifest bytes. Together with matching
 file hashes, it shows that the sealed files existed by the time it records. The
-operator's recorded start and end times are not independently checked capture times.
-Trust uses system roots, the embedded FreeTSA root or independently supplied
-explicit roots, never certificates merely carried in the package. Offline checks
-cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification or
-label a timestamp qualified.
+operator's recorded start and end times are not independently checked capture
+times. Trust comes from system root certificates or the embedded FreeTSA root. You
+can also supply root certificates obtained independently. Certificates carried
+only in the package cannot grant trust. Offline checks cannot see later
+revocation. Sealjar v0.1 does not assess eIDAS qualification or label a timestamp
+qualified.
 
 A package cannot show whether its content is true or complete. It cannot establish
 that the operator was honest or that a server sent the saved bytes. It also cannot

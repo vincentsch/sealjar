@@ -10,6 +10,12 @@ alongside the complete plan:
 ```sh
 OUT=$(cd .. && pwd -P)
 sealjar capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --dry-run
+```
+
+Check the full plan, including exclusions and the absolute output directory. If it
+matches what you want to capture, run:
+
+```sh
 sealjar capture https://staging.example.com https://staging.example.com/prices/ . --out "$OUT" --confirm --no-prompt
 ```
 
@@ -101,14 +107,15 @@ Repository-only capture can write HTML without Chrome, but no PDFs.
 
 ## Privacy and network access
 
-Capture contacts target pages and their resources, DNS and timestamp authorities. A
-TSA receives a manifest hash and normal network metadata. Requests honour
-`HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`; doctor's connection probes do not honour
-proxies. `--no-timestamp` skips TSA requests, not website or DNS traffic. Dry runs
-make no network requests. Verification works offline.
+Capture loads target pages and their resources. It also contacts DNS servers and
+timestamp authorities. A TSA receives a manifest hash and normal network metadata.
+Requests honour `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`; doctor's connection
+probes do not honour proxies. `--no-timestamp` skips TSA requests, not website or
+DNS traffic. Dry runs make no network requests. Verification works offline.
 
 Network metadata masks Cookie, Set-Cookie, Authorization and Proxy-Authorization
 values and known secret query values. No response bodies are stored as network
-records. Masking and exclusions cannot remove private content from screenshots, DOM,
-source or history. Captured files are preserved as captured. Inspect the package
-before sharing it; Sealjar does not upload it for you.
+records. Masking and exclusions cannot remove all private content. Screenshots and
+rendered HTML may show it; source files and Git history may contain it too.
+Captured files are preserved as captured. Inspect the package before sharing it;
+Sealjar does not upload it for you.

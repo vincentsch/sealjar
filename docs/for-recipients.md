@@ -40,10 +40,10 @@ authenticate an untimestamped manifest, because files and hashes could be replac
 together. A trusted timestamp shows that the sealed files existed by the time it
 records. It does not independently check when capture happened.
 
-Trust comes from system roots, the embedded FreeTSA root or independently supplied
-explicit roots. Certificates merely carried in the package do not establish trust.
-Offline checks cannot see later revocation. Sealjar v0.1 does not assess eIDAS
-qualification or label a timestamp qualified.
+Trust comes from system root certificates or the embedded FreeTSA root. You can
+also supply root certificates obtained independently. Certificates carried only in
+the package cannot grant trust. Offline checks cannot see later revocation.
+Sealjar v0.1 does not assess eIDAS qualification or label a timestamp qualified.
 
 The demo fallback uses a public signing key. It gives no independent time evidence,
 even if an explicitly supplied root grants the token trust.
@@ -51,11 +51,13 @@ even if an explicitly supplied root grants the token trust.
 ## Check without installing Sealjar
 
 `VERIFY.txt` in the ZIP and the [verification
-guide](verify.md#without-installing-sealjar) provide a Python 3 manifest-file hash
-check and an OpenSSL timestamp check. Those steps need Python/OpenSSL even though
-they do not need Sealjar. The timestamp check uses independently obtained roots and
+guide](verify.md#without-installing-sealjar) give the commands. Python 3 checks the
+file hashes against the manifest. OpenSSL checks the timestamp. You need both
+programs for these steps. The timestamp check uses independently obtained roots and
 `-attime` with the token's genTime. Reading a token's text alone does not verify its
 signature.
+
+## What the package cannot establish
 
 A package cannot show whether its content is true or complete. It cannot establish
 that the operator was honest or that a server sent the saved bytes. It also cannot
@@ -64,10 +66,13 @@ website. It does not replace an acceptance protocol or a delivery record. No leg
 effect or admissibility is promised. For important disputes, consider a neutral
 expert or notary present during capture.
 
-Capture loads pages and their resources. It also contacts DNS servers and timestamp
-authorities. An authority receives a hash and normal network metadata. Timestamp
-requests use standard proxies; doctor's probes do not. Masking and exclusions cannot
-remove private content from screenshots, DOM, source or history. Inspect the package
+## Before forwarding the package
+
+Capture loads pages and their resources. It also contacts DNS servers and
+timestamp authorities. An authority receives a hash and normal network metadata.
+Timestamp requests use standard proxies; doctor's probes do not. Masking and
+exclusions cannot remove all private content. Screenshots and rendered HTML may
+show it; source files and Git history may contain it too. Inspect the package
 before forwarding it, and agree separately on who may receive it.
 
 For German readers: [Pakete lesen und prüfen](de/fuer-empfaenger.md).

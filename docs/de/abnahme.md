@@ -14,12 +14,13 @@ Abnahmeprotokoll noch einen Liefernachweis.
 
 ## Installation und Vorschau
 
-Die [Installationsanleitung](../quickstart.md#install) beschreibt Linux, macOS, Git
-Bash, WSL und natives Windows. Für Webseiten und Demo wird Chrome oder Chromium
-benötigt, für Code und Demo Git. Prüfung, Berichtsexport und
-Snapshot-Wiederherstellung benötigen beides nicht. Ein History-Bundle braucht Git
-zum Auschecken. Ohne Chrome sind bei reiner Code-Erfassung HTML-Berichte möglich,
-aber keine PDFs. `report --pdf` kopiert nur bereits gespeicherte PDFs.
+Die [Installationsanleitung](../quickstart.md#install) beschreibt Linux, macOS,
+Git Bash, WSL und natives Windows. Für Webseiten und Demo wird Chrome oder
+Chromium benötigt, für Code und Demo Git. Pakete lassen sich ohne Chrome oder Git
+prüfen. Auch der Berichtsexport und die Wiederherstellung von Snapshot-Dateien
+brauchen diese Programme nicht. Ein History-Bundle braucht Git zum Auschecken.
+Ohne Chrome sind bei reiner Code-Erfassung HTML-Berichte möglich, aber keine PDFs.
+`report --pdf` kopiert nur bereits gespeicherte PDFs.
 
 Im Stammordner des zu erfassenden Repositorys kann die Ausgabe im übergeordneten
 Ordner liegen. Der aufgelöste Pfad muss außerhalb des Repositorys liegen. Die
@@ -28,6 +29,12 @@ Beispiel-URL wird durch die freigegebene Adresse ersetzt:
 ```sh
 OUT=$(cd .. && pwd -P)
 sealjar capture https://staging.example.com . --out "$OUT" --dry-run
+```
+
+Wenn die vollständige Vorschau und der Ausgabeordner stimmen, kann die Erfassung
+starten:
+
+```sh
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
@@ -68,20 +75,22 @@ Passende Prüfsummen (SHA-256) zeigen die Übereinstimmung mit dem Manifest. Ohn
 authentifiziertes Manifest könnten Dateien und Prüfsummen gemeinsam ersetzt worden
 sein. Die Erfassungszeit selbst wird durch den Zeitstempel nicht unabhängig geprüft.
 
-Das Paket belegt weder Wahrheit noch Vollständigkeit noch ehrliche Bedienung oder
-die Herkunft der Bytes vom Server. Auch Lieferung, Abnahme und der Zusammenhang
-zwischen erfasstem Code und Website bleiben offen. Eine bestimmte rechtliche Wirkung
+Das Paket zeigt nicht, ob die Inhalte wahr oder vollständig sind. Es zeigt auch
+nicht, ob die erfassende Person ehrlich gehandelt hat oder die gespeicherten Daten
+vom Server stammen. Es belegt weder Lieferung noch Abnahme. Ob der erfasste Code
+die Website erzeugt hat, bleibt ebenfalls offen. Eine bestimmte rechtliche Wirkung
 oder Zulässigkeit als Beweismittel wird nicht zugesagt. Bei wichtigen Streitfällen
 empfiehlt sich eine neutrale Begleitung, etwa durch einen Sachverständigen oder
 Notar.
 
 Vertrauen entsteht durch System-Wurzelzertifikate, das eingebettete FreeTSA-Root
-oder unabhängig bezogene, ausdrücklich angegebene Wurzeln. Zertifikate allein aus
-dem Paket begründen kein Vertrauen. Offline-Prüfungen erkennen spätere
-Zertifikatswiderrufe nicht. Sealjar v0.1 bewertet keine eIDAS-Qualifikation und
-bezeichnet Zeitstempel nicht als qualifiziert. DigiCert ist der Standard, FreeTSA
-der Ausweichdienst. Eigene Dienste lassen sich mit `--tsa` wählen; `stamp` ergänzt
-später Zeitstempel, ohne Manifest oder erfasste Dateien zu ändern.
+oder separat beschaffte Wurzelzertifikate, die bei der Prüfung angegeben werden.
+Zertifikate allein aus dem Paket begründen kein Vertrauen. Offline-Prüfungen
+erkennen spätere Zertifikatswiderrufe nicht. Sealjar v0.1 bewertet keine
+eIDAS-Qualifikation und bezeichnet Zeitstempel nicht als qualifiziert. DigiCert
+ist der Standard, FreeTSA der Ausweichdienst. Eigene Dienste lassen sich mit
+`--tsa` wählen; `stamp` ergänzt später Zeitstempel, ohne Manifest oder erfasste
+Dateien zu ändern.
 
 Bei der Erfassung werden Zielseiten und deren Ressourcen geladen. Hinzu kommen
 Anfragen an DNS-Server und Zeitstempeldienste. Ein Zeitstempeldienst erhält einen

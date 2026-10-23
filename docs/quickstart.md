@@ -14,15 +14,19 @@ bash /tmp/sealjar-install.sh
 ```
 
 WSL uses Linux assets. The installer checks `checksums.txt` and prints an absolute
-`Installed:` path. Use that path if `sealjar` is not on PATH. `INSTALL_DIR` selects
-a different directory. To select a published version:
+`Installed:` path. Use that path if `sealjar` is not on PATH. `INSTALL_DIR`
+selects a different directory. Remove `/tmp/sealjar-install.sh` when finished.
+
+<details>
+<summary>Choose a version or install with Go</summary>
+
+To select a published version, keep the installer script and run:
 
 ```sh
 SEALJAR_VERSION=v0.1.0 bash /tmp/sealjar-install.sh
 ```
 
-Remove `/tmp/sealjar-install.sh` when finished with the installer. If Go is
-available, this is an optional source fallback:
+If Go is available, you can install from source instead:
 
 ```sh
 go install github.com/vincentsch/sealjar/cmd/sealjar@latest
@@ -31,7 +35,12 @@ go env GOBIN GOPATH
 
 Use GOBIN when set, otherwise the first GOPATH entry's `bin` directory.
 
+</details>
+
 ## Native Windows
+
+<details>
+<summary>Download and check the executable with PowerShell</summary>
 
 PowerShell can download the executable without Go. Set `$arch` to `arm64` for
 Windows on ARM. This example uses a new directory under your temporary folder.
@@ -59,6 +68,8 @@ Keep `$exe` for later commands and use `& $exe capture ...`. The checksum file c
 from the same release; it detects download corruption and does not replace checking
 the source of the download.
 
+</details>
+
 ## Check prerequisites
 
 After installing, the examples use `sealjar` for the executable:
@@ -67,12 +78,13 @@ After installing, the examples use `sealjar` for the executable:
 sealjar doctor
 ```
 
-Web capture and demo need Chrome or Chromium. Code capture and demo need Git. Doctor
-reports missing programs. It also checks output access and connections to timestamp
-authorities. Its connection probes send no timestamp requests and do not honour
-proxies. Verify, stored-report extraction and snapshot restore need neither Chrome
-nor Git. Checking out history needs Git. If Chrome is installed in an unusual
-location, pass its executable path with `--chrome`.
+Web capture and demo need Chrome or Chromium. Code capture and demo need Git.
+Doctor reports missing programs. It also checks output access and connections to
+timestamp authorities. Its connection probes send no timestamp requests and do not
+honour proxies. You can verify packages without Chrome or Git. You can also
+extract stored reports and restore snapshot files without either program. Checking
+out history needs Git. If Chrome is installed in an unusual location, pass its
+executable path with `--chrome`.
 
 ## Try a bundled example
 
@@ -98,15 +110,25 @@ repository. A relative `--out` is resolved from your current working directory.
 ```sh
 OUT=$(cd .. && pwd -P)
 sealjar capture https://staging.example.com . --out "$OUT" --dry-run
+```
+
+Check the full plan, including exclusions and the absolute output directory. If it
+matches what you want to capture, run:
+
+```sh
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
+```
+
+Use the ZIP path printed by capture in place of `package.sealjar.zip`:
+
+```sh
 sealjar verify package.sealjar.zip
 ```
 
-Replace `package.sealjar.zip` with the printed ZIP path. Inspect the full plan
-before capturing, including its absolute output directory. For a specific output
-directory, supply its absolute path in both capture commands. The dry run starts no
-browser, makes no network requests and writes nothing. For authentication,
-additional pages and exclusions, see [capture](capture.md).
+For a specific output directory, supply its absolute path in both capture
+commands. The dry run starts no browser, makes no network requests and writes
+nothing. For authentication, additional pages and exclusions, see
+[capture](capture.md).
 
 ## Try the instructions without an external site
 

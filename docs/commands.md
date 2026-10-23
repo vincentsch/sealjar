@@ -9,6 +9,12 @@ When capturing a repository from its root, write packages outside it:
 
 ```sh
 sealjar capture . --dry-run --out ../sealjar-captures
+```
+
+Check the full plan, including exclusions and the absolute output directory. If it
+matches what you want to capture, run:
+
+```sh
 sealjar capture . --confirm --no-prompt --out ../sealjar-captures
 ```
 

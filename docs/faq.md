@@ -8,10 +8,11 @@ adds a third view. Capture can span several hosts alongside one Git repository. 
 
 ## Do I need Chrome or Git?
 
-Web capture and demo need Chrome or Chromium. Code capture and demo need Git.
-Verify, stored-report extraction and snapshot restore need neither. Checking out a
-history bundle needs Git. Repository-only capture without Chrome produces HTML
-reports without PDFs. `report --pdf` only copies stored PDFs.
+Web capture and demo need Chrome or Chromium. Code capture and demo need Git. You
+can verify packages without Chrome or Git. You can also extract stored reports and
+restore snapshot files without either program. Checking out a history bundle needs
+Git. Repository-only capture without Chrome produces HTML reports without PDFs.
+`report --pdf` only copies stored PDFs.
 
 ## Does exit 0 mean the website was captured completely?
 
@@ -39,10 +40,11 @@ The [package format](package-format.md) explains sealing order.
 
 ## Is every valid timestamp trusted?
 
-No. Trust needs system roots, the embedded FreeTSA root or independently supplied
-explicit roots, never certificates merely carried in the package. Offline checks
-cannot see later revocation. Sealjar v0.1 does not assess eIDAS qualification or
-label timestamps qualified. The demo fallback is explicitly untrusted.
+No. Trust comes from system root certificates or the embedded FreeTSA root. You
+can also supply root certificates obtained independently. Certificates carried
+only in the package cannot grant trust. Offline checks cannot see later
+revocation. Sealjar v0.1 does not assess eIDAS qualification or label timestamps
+qualified. The demo fallback is explicitly untrusted.
 
 The demo fallback uses a public signing key. It gives no independent time evidence,
 even if an explicitly supplied root grants the token trust.

@@ -26,8 +26,19 @@ writes its public `root.pem`; its private keys stay in memory.
 SITE=$(cat "$SITE_DIR/endpoint")
 TSA=$(cat "$TSA_DIR/endpoint")
 sealjar capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --dry-run
+```
+
+Check the full plan, including exclusions and the absolute output directory. If it
+matches what you want to capture, run:
+
+```sh
 sealjar capture "$SITE/" . --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
 sealjar capture "$SITE/private/" --auth client:handover --out .. --tsa "$TSA" --tsa-root "$TSA_DIR/root.pem" --confirm --no-prompt
+```
+
+Replace `package.sealjar.zip` with a printed ZIP path to check that capture:
+
+```sh
 sealjar verify package.sealjar.zip --tsa-root "$TSA_DIR/root.pem"
 ```
 
@@ -42,4 +53,3 @@ wait "$SITE_PID" "$TSA_PID"
 rm -rf "$SITE_DIR" "$TSA_DIR"
 rm /tmp/sealjar-testsite /tmp/sealjar-testtsa
 ```
-

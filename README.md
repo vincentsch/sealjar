@@ -50,10 +50,11 @@ install](docs/quickstart.md#install) are described separately. Native Windows ne
 no Go installation.
 
 Chrome or Chromium is needed for web capture and demo. Git is needed for code
-capture and demo. Verify, stored-report extraction and snapshot restore need
-neither. Checking out a history bundle needs Git. Repository-only capture without
-Chrome produces HTML reports without PDFs. `report --pdf` copies stored PDFs; it
-cannot generate missing ones.
+capture and demo. You can verify packages without Chrome or Git. You can also
+extract stored reports and restore snapshot files without either program. Checking
+out a history bundle needs Git. Repository-only capture without Chrome produces
+HTML reports without PDFs. `report --pdf` copies stored PDFs; it cannot generate
+missing ones.
 
 ## Try it
 
@@ -85,6 +86,12 @@ check it is the destination you want. List each authorised URL explicitly.
 ```sh
 OUT=$(cd .. && pwd -P)
 sealjar capture https://staging.example.com . --out "$OUT" --dry-run
+```
+
+Check the full plan, including exclusions and the absolute output directory. If it
+matches what you want to capture, run:
+
+```sh
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 

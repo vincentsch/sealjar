@@ -63,17 +63,19 @@ diesem Zeitpunkt vorlagen. Wann die Erfassung stattfand, wird dadurch nicht
 unabhängig geprüft.
 
 Als Vertrauensanker dienen System-Wurzelzertifikate, das eingebettete FreeTSA-Root
-oder unabhängig bezogene, ausdrücklich angegebene Wurzeln. Zertifikate, die
-lediglich im Paket mitgeliefert werden, begründen kein Vertrauen. Offline-Prüfungen
-erkennen spätere Zertifikatswiderrufe nicht. Sealjar v0.1 bewertet keine
-eIDAS-Qualifikation und bezeichnet Zeitstempel nicht als qualifiziert.
+oder separat beschaffte Wurzelzertifikate, die bei der Prüfung angegeben werden.
+Zertifikate, die lediglich im Paket mitgeliefert werden, begründen kein Vertrauen.
+Offline-Prüfungen erkennen spätere Zertifikatswiderrufe nicht. Sealjar v0.1
+bewertet keine eIDAS-Qualifikation und bezeichnet Zeitstempel nicht als
+qualifiziert.
 
-Das Paket belegt weder Wahrheit noch Vollständigkeit der Inhalte noch ehrliche
-Bedienung oder die Herkunft der Bytes vom Server. Es bestätigt auch keine Lieferung
-oder Abnahme und keinen Zusammenhang zwischen erfasstem Code und Website. Eine
-rechtliche Wirkung oder Zulässigkeit als Beweismittel wird nicht zugesagt. Bei
-wichtigen Streitfällen empfiehlt sich eine neutrale Begleitung der Erfassung, etwa
-durch einen Sachverständigen oder Notar.
+Das Paket zeigt nicht, ob die Inhalte wahr oder vollständig sind. Es zeigt auch
+nicht, ob die erfassende Person ehrlich gehandelt hat oder die gespeicherten Daten
+vom Server stammen. Es belegt weder Lieferung noch Abnahme. Ob der erfasste Code
+die Website erzeugt hat, bleibt ebenfalls offen. Eine rechtliche Wirkung oder
+Zulässigkeit als Beweismittel wird nicht zugesagt. Bei wichtigen Streitfällen
+empfiehlt sich eine neutrale Begleitung der Erfassung, etwa durch einen
+Sachverständigen oder Notar.
 
 Bei der Erfassung werden Zielseiten und deren Ressourcen geladen. Hinzu kommen
 Anfragen an DNS-Server und Zeitstempeldienste. Der Zeitstempeldienst erhält einen
