@@ -1,9 +1,15 @@
 # Sealjar images
 
-The light and dark SVG wordmarks use path outlines from DejaVu Serif.
-Their font license is in [FONT-LICENSE.txt](FONT-LICENSE.txt). The simple mark
-combines a page and a leaf. Its colours are ink `#1D1D1B` and accent `#2C4A7A`;
-the dark variant uses paper `#F4F3EF` for the lettering and outline.
+The SVG wordmarks use Figtree at weight 650, converted to path outlines.
+Its Open Font License is in [FONT-LICENSE.txt](FONT-LICENSE.txt). The mark is a
+sealed jar on blue `#155BD9`. The lid uses `#9DBDFF`; the jar is white.
+Light-background lettering is `#1D1D21`; dark-background lettering is white.
+
+The website's `src/lib/brand.ts` holds the shared paths. After changing them,
+run `npm run brand:generate` there and copy the exports here. Site
+`wordmark.svg` becomes `wordmark-light.svg` here; site `wordmark-light.svg`
+becomes `wordmark-dark.svg`. Both product mark files use site `mark.svg`.
+The website's tests compare these files when the product checkout is available.
 
 `demo-report.png` and `demo-seal.png` show actual bundled demo output with its
 trusted DigiCert timestamp. The report opening and bilingual seal were captured
