@@ -21,9 +21,11 @@ sealjar doctor --tsa https://freetsa.org/tsr
 - `--out` Check this output folder for write access
 - `--tsa` Check this timestamp authority instead of defaults (repeatable)
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
+
+Use --json to get JSON for scripts and other programs.
 
 ## Related commands
 

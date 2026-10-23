@@ -9,7 +9,7 @@ require (
 	github.com/digitorus/timestamp v0.0.0-20260914073129-b4b58b92aa51
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/spf13/cobra v1.10.2
-	github.com/vincentsch/rungrad v0.3.2
+	github.com/vincentsch/rungrad v0.3.3
 	golang.org/x/image v0.20.0
 )
 

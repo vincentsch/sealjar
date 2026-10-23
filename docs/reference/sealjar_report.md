@@ -22,13 +22,15 @@ sealjar report capture.sealjar.zip --lang de --pdf --out reader-de --dry-run
 - `--pdf` Include stored PDFs (no browser required)
 - `--tsa-root` Add trusted timestamp roots from a PEM file
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
 
-## Changes state
+Use --json to get JSON for scripts and other programs.
 
-This command changes state and honors `--dry-run`.
+## Preview changes
+
+This command makes changes. Use `--dry-run` to see what would change without changing anything.
 
 ## Related commands
 

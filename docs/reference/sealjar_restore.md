@@ -20,13 +20,15 @@ sealjar restore capture.sealjar.zip --to recovered --dry-run
 - `--to` Restore into this new or empty folder
 - `--tsa-root` Add trusted timestamp roots from a PEM file
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
 
-## Changes state
+Use --json to get JSON for scripts and other programs.
 
-This command changes state and honors `--dry-run`.
+## Preview changes
+
+This command makes changes. Use `--dry-run` to see what would change without changing anything.
 
 ## Related commands
 

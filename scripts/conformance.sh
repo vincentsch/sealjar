@@ -33,7 +33,7 @@ git -C "$scratch/example-repo" -c user.name='Snapshot Fixture' -c user.email=sna
 mkdir "$scratch/output"
 "$scratch/sealjar" capture "$scratch/example-repo" --confirm --tsa "$tsa_url" --tsa-root "$scratch/root.pem" --out "$scratch/output" --json > "$scratch/capture.json"
 package=$(python3 -c 'import json,sys,os; print(os.path.abspath(json.load(open(sys.argv[1]))["package"]))' "$scratch/capture.json")
-go run github.com/vincentsch/rungrad/cmd/rungrad@v0.3.2 score "$scratch/sealjar" \
+go run github.com/vincentsch/rungrad/cmd/rungrad@v0.3.3 score "$scratch/sealjar" \
   --manifest auto --strict \
   --read "verify $package --tsa-root $scratch/root.pem" \
   --mutate "capture $scratch/example-repo --confirm --no-timestamp --out $scratch/output" \

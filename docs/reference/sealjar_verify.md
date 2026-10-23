@@ -19,9 +19,11 @@ sealjar verify capture.sealjar.zip --json
 
 - `--tsa-root` Add trusted timestamp roots from a PEM file
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
+
+Use --json to get JSON for scripts and other programs.
 
 ## Related commands
 
