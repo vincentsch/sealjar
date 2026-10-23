@@ -165,3 +165,5 @@ Pakete](docs/de/fuer-empfaenger.md).
 
 Sealjar is [MIT licensed](LICENSE). For source changes, read
 [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Built with [rungrad](https://rungrad.com).

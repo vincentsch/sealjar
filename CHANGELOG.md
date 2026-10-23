@@ -1,6 +1,8 @@
 # Changelog
 
-## v0.1.0 - unreleased
+## Unreleased
+
+## v0.1.0
 
 - Capture website screenshots, rendered pages, PDFs and network metadata.
 - Save current Git files, repository facts and optional history in portable packages.
