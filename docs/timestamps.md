@@ -70,3 +70,29 @@ if an explicitly supplied root grants it trust.
 
 With `stamp --json`, `verification` describes the completed output package, checked
 with the supplied roots. In a dry run it describes the input package.
+
+## macOS and DigiCert
+
+The launch check on a native macOS arm64 runner returned verify exit 11
+for a DigiCert timestamp with default roots. The same package verified with
+exit 0 after supplying a root bundle exported independently from macOS.
+FreeTSA verified with exit 0 using both default roots and its official root.
+These are the observed v0.1.0 results, not a guarantee for every host.
+
+If DigiCert verification reports an unknown authority on macOS, export the
+system roots and pass that file explicitly:
+
+```sh
+sealjar_roots_dir=$(mktemp -d)
+security find-certificate -a -p \
+  /System/Library/Keychains/SystemRootCertificates.keychain \
+  > "$sealjar_roots_dir/system-roots.pem"
+shasum -a 256 "$sealjar_roots_dir/system-roots.pem"
+sealjar verify package.sealjar.zip --tsa-root "$sealjar_roots_dir/system-roots.pem"
+```
+
+Keep the exported file and its hash with your verification notes. This does
+not install a certificate or change system trust. Do not take a trust anchor
+from the package being checked. For a new capture, an explicit
+`--tsa https://freetsa.org/tsr` selects FreeTSA instead of the default
+DigiCert-first sequence.

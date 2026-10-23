@@ -54,5 +54,7 @@ jobs:
           go-version-file: go.mod
       - name: Build
         run: make build
+      - name: Warm up Chrome on native runner
+        run: python3 scripts/ci-chrome-warmup.py
       - name: Test
         run: make test

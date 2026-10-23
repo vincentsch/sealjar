@@ -72,8 +72,8 @@ timestamp service is unavailable, it uses a local token labelled “Demo timesta
 not trusted”. That fallback gives verify exit 11. Its signing key is public, so it
 supplies no independent time evidence, even if a supplied root grants it trust.
 
-<p><img src="docs/media/demo-report.png" alt="Bakery demo report opening with labelled capture details and page screenshots" width="820"></p>
-<p><img src="docs/media/demo-seal.png" alt="Bilingual bakery demo seal showing a trusted DigiCert timestamp and verification limits" width="820"></p>
+<p><img src="docs/media/demo-report-v0.1.0.png" alt="Bakery demo report opening with labelled capture details and page screenshots" width="820"></p>
+<p><img src="docs/media/demo-seal-v0.1.0.png" alt="Bilingual bakery demo seal showing a trusted DigiCert timestamp and verification limits" width="820"></p>
 
 These images come from a demo run that received a trusted DigiCert timestamp. The
 report points to the seal and `sealjar verify` for timestamp results.

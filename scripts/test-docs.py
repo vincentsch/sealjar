@@ -24,7 +24,7 @@ class DocumentationTests(unittest.TestCase):
                     self.assertTrue((page.parent / target).is_file(), link)
 
     def test_readme_screenshots_are_sized_for_reading(self):
-        for name in ('demo-report.png', 'demo-seal.png'):
+        for name in ('demo-report-v0.1.0.png', 'demo-seal-v0.1.0.png'):
             with self.subTest(image=name):
                 data = (ROOT / 'docs/media' / name).read_bytes()
                 self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')

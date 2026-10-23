@@ -36,21 +36,21 @@ This is the shared pending list for release and onboarding work. Check off an it
 only after recording its host, command, result and date. Local fixture checks do
 not satisfy public-download or hosted checks.
 
-- [ ] Public installer download, latest and pinned, after publishing release assets.
-- [ ] Public `go install github.com/vincentsch/sealjar/cmd/sealjar@vX.Y.Z`,
+- [x] Public installer download, latest and pinned, after publishing release assets.
+- [x] Public `go install github.com/vincentsch/sealjar/cmd/sealjar@vX.Y.Z`,
   using an empty module cache after publishing a public module tag.
-- [ ] Agent prompt fetched from GitHub after publishing its source file.
-- [ ] First hosted Linux CI run, including Chrome-required tests and conformance.
-- [ ] First hosted macOS CI run.
-- [ ] First hosted Windows CI run.
-- [ ] Native macOS CLI smoke check, including installation, demo and verification.
-- [ ] Native Windows CLI smoke check, including the `.exe`, demo and verification.
-- [ ] First hosted release run: confirm CI completes before release work starts,
-  a failed CI blocks it, and all six correctly named binaries plus checksums.txt
+- [x] Agent prompt fetched from GitHub after publishing its source file.
+- [x] First hosted Linux CI run, including Chrome-required tests and conformance.
+- [x] First hosted macOS CI run.
+- [x] First hosted Windows CI run.
+- [x] Native macOS CLI smoke check, including installation, demo and verification.
+- [x] Native Windows CLI smoke check, including the `.exe`, demo and verification.
+- [x] First hosted release run: confirm CI completes before release work starts,
+  the release job depends on successful CI, and all six correctly named binaries plus checksums.txt
   are uploaded. Requires a published tag and release run.
-- [ ] Hosted provenance verification of all six downloaded binaries with
+- [x] Hosted provenance verification of all six downloaded binaries with
   `gh attestation verify <binary> --repo vincentsch/sealjar` after release.
-- [ ] Native macOS timestamp trust checks for DigiCert and FreeTSA as described below.
+- [x] Native macOS timestamp trust checks for DigiCert and FreeTSA as described below.
 
 Public downloads, public module installation, prompt fetching and hosted
 attestations need published content. Hosted CI needs GitHub runners and source
@@ -102,3 +102,35 @@ Trust remains system roots plus embedded FreeTSA and explicit user roots. If def
 trust fails, hold any macOS default-trust claim and document the independent root
 path and explicit-root result. Do not silently add roots or change trust policy.
 Remove the temporary repository and captures after recording concise results.
+
+## Public v0.1.0 verification, 2026-10-23
+
+Published [sealjar v0.1.0](https://github.com/vincentsch/sealjar/releases/tag/v0.1.0)
+from `0711fe2fa4a548531d9da2624b9c9aa328be5b82`. The [release workflow](https://github.com/vincentsch/sealjar/actions/runs/39947650187)
+passed Linux, macOS and Windows CI before the publishing job started. The release
+contains six platform executables and `checksums.txt`. All six downloaded SHA-256
+hashes matched. All six GitHub build attestations verified with `gh attestation
+verify`, the release workflow identity, tag ref and source digest pinned, and
+`--deny-self-hosted-runners`.
+
+On Linux amd64, latest and pinned (`v0.1.0`) public installers succeeded in fresh
+temporary folders. The installed CLI's version and bundled demo were checked.
+`go install github.com/vincentsch/sealjar/cmd/sealjar@v0.1.0` succeeded with an
+initially empty module cache, the public Go proxy and checksum database. The
+README agent prompt and `AGENTS.md` were fetched anonymously from GitHub and
+matched the published source. Fetching the prompt does not establish a trial
+with every supported coding agent.
+
+The [native public-release smoke run](https://github.com/vincentsch/sealjar/actions/runs/39948682481)
+passed on Linux amd64, macOS arm64 and Windows amd64: public native downloads,
+checksum checks, latest and pinned installation where supported, version and demo
+checks. Windows checked the `.exe` hash with PowerShell `Get-FileHash`. This is
+native execution coverage for those three hosts; the other three assets were
+cross-built and their checksums and provenance verified.
+
+On macOS, DigiCert verification with default roots returned exit 11 (unknown
+authority); an independently exported macOS system-root bundle gave exit 0.
+FreeTSA gave exit 0 with default and explicit official roots. The default macOS
+DigiCert trust claim remains withheld. See [the workaround](docs/timestamps.md#macos-and-digicert).
+The Linux public demo verified its real DigiCert timestamp with exit 0; a
+tampered package was rejected with exit 10.
