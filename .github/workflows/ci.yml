@@ -41,6 +41,9 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      # Browser-using packages must not compete for native runner resources.
+      GOFLAGS: -p=1
     defaults:
       run:
         shell: bash
