@@ -1,8 +1,13 @@
 # Make your first capture
 
-Sealjar writes a ZIP and a folder for reading its reports. Keep both outside the
-repository you capture. The [recipient guide](for-recipients.md) explains what the
-results mean.
+Sealjar is a free, open-source tool you run on your computer by typing commands.
+It saves web pages and project code in one ZIP file. It is for freelancers and
+agencies who want a record of what they hand over to a client. You can check the
+saved files for changes later.
+
+The ZIP comes with screenshots and a folder for reading its reports. Keep both
+outside the repository you capture. The [recipient guide](for-recipients.md)
+explains what the results mean.
 
 ## Install
 

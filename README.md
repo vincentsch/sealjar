@@ -14,9 +14,10 @@
   <a href="docs/de/abnahme.md">Deutsch</a>
 </p>
 
-Sealjar saves web pages and current code in one ZIP file. You get desktop and mobile
-screenshots with a report in English and German. A trusted timestamp shows that the
-sealed files existed by the time it records.
+Sealjar is a free, open-source tool you run on your computer by typing commands.
+It saves web pages and your project's code in one ZIP file, with screenshots and a
+report. Freelancers and agencies can use it to record a client handover and check
+the saved files for changes later.
 
 ## Capture with your coding agent
 
