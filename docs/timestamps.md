@@ -1,24 +1,31 @@
 # Timestamps and trust
 
-A timestamp authority (TSA) signs a hash with its time. Sealjar uses RFC 3161
-responses over the SHA-256 hash of the original manifest bytes. The authority
-receives the hash with a random request identifier (nonce). It also sees normal
-network metadata. The package stays on your computer.
+Sealjar is a free, open-source CLI that captures web pages and code into a
+sealed ZIP. Each package gets a timestamp from a timestamp authority (TSA). This
+page explains where that timestamp comes from, what it shows and how to add one
+later.
 
-Capture tries DigiCert at `http://timestamp.digicert.com`, then FreeTSA at
-`https://freetsa.org/tsr` if DigiCert returns no usable token. Signatures and
-certificate checks protect the response even over HTTP. Repeat `--tsa` to replace
-those defaults and request every supplied authority. To use a custom authority:
+The authority signs the SHA-256 hash of the manifest together with its own clock
+time and returns an RFC 3161 token. It receives the hash with a random request
+number (nonce) and sees normal network metadata. The package itself stays on
+your computer.
+
+Capture asks DigiCert at `http://timestamp.digicert.com` first. If DigiCert
+returns no usable token, it asks FreeTSA at `https://freetsa.org/tsr`. The
+token's signature and certificate chain protect it, so plain HTTP is fine.
+Repeat `--tsa` to replace both defaults; every authority you list is asked. For
+your own authority:
 
 ```sh
 sealjar capture . --out .. --tsa https://tsa.example/tsr --tsa-root roots.pem --confirm --no-prompt
 ```
 
-Obtain the root independently from the authority. Capture still writes a package
-when all timestamp requests fail and explains how to stamp later. `--strict` returns
-10 after writing if timestamp acquisition or capture quality failed.
-`--no-timestamp` deliberately skips requests and does not trigger strict failure. An
-otherwise valid token with an unknown trust anchor may be retained as untrusted.
+Get the root from the authority itself, never from a package. If every request
+fails, capture still writes the package and tells you how to stamp it later.
+With `--strict`, the exit code is 10 after writing when timestamping or capture
+quality failed. `--no-timestamp` skips the requests on purpose and does not count
+as a failure. A valid token with an unknown root may be kept in the package as
+untrusted.
 
 ## Add another token later
 
@@ -28,58 +35,63 @@ sealjar stamp package.sealjar.zip
 sealjar stamp package.sealjar.zip --tsa https://tsa.example/tsr --tsa-root roots.pem
 ```
 
-Stamp writes a new `-stamped.sealjar.zip` beside the original, preserving the
-manifest and captured files. Existing tokens also stay unchanged. The new token
-shows that the sealed files existed by its own later time. It does not authenticate
-the operator's earlier capture time. Use `verify` on the printed new path to check
-its tokens.
+Stamp writes a new `-stamped.sealjar.zip` next to the original. The manifest,
+the captured files and the existing tokens stay as they are. The new token shows
+that the sealed files existed no later than its own, later time. It says nothing
+about the earlier capture time. Run `verify` on the new file to check its
+tokens.
 
 ## Decide what to trust
 
-Verification checks imprint, CMS signature, signer binding, timestamp-only
-certificate purpose and the chain at the token's genTime. System roots, the embedded
-FreeTSA root and independently supplied `--tsa-root` files provide trust anchors.
-Certificates merely carried in the package cannot grant trust. Offline checks cannot
-see later certificate revocation.
+Verify checks that the token's hash matches the manifest and that its CMS
+signature is valid. It checks that the signing certificate belongs to the signer
+and is meant for timestamping. It builds the chain to a trusted root as of the
+token's genTime. Trusted roots are the system's root certificates, the FreeTSA
+root that ships with Sealjar, and the files you supply with `--tsa-root`.
+Certificates that only come inside the package are not trusted. An offline
+check cannot see a later revocation.
 
-Sealjar v0.1 does not assess eIDAS qualification or label a timestamp qualified.
-Cryptographic trust and a service's qualification are separate questions. For a
-manual check, [verify](verify.md#without-installing-sealjar) shows Python hash
-checks and OpenSSL with independently obtained roots and `-attime`.
+Sealjar v0.1 does not assess eIDAS qualification and never calls a timestamp
+qualified. Whether a signature checks out and whether a service is qualified are
+two different questions. For a manual check,
+[verify](verify.md#without-installing-sealjar) shows the Python hash check and
+OpenSSL with your own roots and `-attime`.
 
-A trusted timestamp shows that the sealed files existed by the time it records. It
-does not independently check when capture happened. A package cannot show whether
-its content is true or complete. It cannot establish that the operator was honest or
-that a server sent the saved bytes. It also cannot establish delivery or acceptance
-of a project, or link the captured code to the website. No legal effect or
-admissibility is promised. For important disputes, consider a neutral expert or
-notary present during capture.
+A trusted timestamp shows that the sealed files existed no later than its time.
+It does not check when the capture was made. A package cannot show that its
+content is true or complete. It cannot show that the operator was honest or
+that a server sent the saved bytes. It cannot show that a project was
+delivered or accepted, and it cannot link the captured code to the website.
+Sealjar promises no legal effect and no admissibility. For an important dispute,
+have a neutral person present during the capture, for example an expert or a
+notary.
 
 ## Network and demo behaviour
 
-Timestamp requests use `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`, with a 10-second
-deadline per authority and a 1 MiB response limit. Doctor only probes connections,
-sends no timestamp request and does not honour proxy settings.
+Timestamp requests use `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`. Each
+authority gets 10 seconds, and responses over 1 MiB are rejected. Doctor only
+probes the connections. It sends no timestamp request and ignores proxy
+settings.
 
-Demo tries the default authority. If unavailable, it uses a local token labelled
-“Demo timestamp, not trusted”. Its public demo root identifies the demo without
-granting trust. Verify normally exits 11 for that fallback. The signing key is
-public, so anyone can make such a token. It gives no independent time evidence, even
-if an explicitly supplied root grants it trust.
+The demo asks the default authority first. If that fails, it signs with a local
+key and labels the token “Demo timestamp, not trusted”. Its demo root
+identifies the token as a demo token without trusting it, and verify exits 11.
+The signing key is public, and anyone can make such a token. It says nothing
+about when the files existed, even if you supply a root that trusts it.
 
-With `stamp --json`, `verification` describes the completed output package, checked
-with the supplied roots. In a dry run it describes the input package.
+With `stamp --json`, the `verification` object describes the new output package,
+checked with the roots you supplied. In a dry run it describes the input
+package.
 
 ## macOS and DigiCert
 
-The launch check on a native macOS arm64 runner returned verify exit 11
-for a DigiCert timestamp with default roots. The same package verified with
-exit 0 after supplying a root bundle exported independently from macOS.
-FreeTSA verified with exit 0 using both default roots and its official root.
-These are the observed v0.1.0 results, not a guarantee for every host.
+During the v0.1.0 launch check, a native macOS arm64 runner returned exit 11 for
+a DigiCert timestamp with the default roots. The same package verified with
+exit 0 after passing a root bundle exported from macOS. FreeTSA verified with
+exit 0 both with the default roots and with its official root. These are the
+observed results for v0.1.0, not a guarantee for every Mac.
 
-If DigiCert verification reports an unknown authority on macOS, export the
-system roots and pass that file explicitly:
+If verify reports an unknown authority for a DigiCert token on macOS, export the system roots and supply the file:
 
 ```sh
 sealjar_roots_dir=$(mktemp -d)
@@ -90,8 +102,7 @@ shasum -a 256 "$sealjar_roots_dir/system-roots.pem"
 sealjar verify package.sealjar.zip --tsa-root "$sealjar_roots_dir/system-roots.pem"
 ```
 
-Keep the exported file and its hash with your verification notes. This does
-not install a certificate or change system trust. Do not take a trust anchor
-from the package being checked. For a new capture, an explicit
-`--tsa https://freetsa.org/tsr` selects FreeTSA instead of the default
-DigiCert-first sequence.
+Keep the exported file and its hash with the verification output. This changes nothing in
+the system's trust settings. Never take a root from the package you are
+checking. For a new capture, `--tsa https://freetsa.org/tsr` asks FreeTSA
+instead of DigiCert first.

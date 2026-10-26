@@ -1,6 +1,10 @@
 # Check a package
 
-Verify the received ZIP:
+Sealjar is a free, open-source CLI that captures web pages and code into a
+sealed ZIP. `sealjar verify` checks such a package offline and gives three
+separate answers. If you received a package and do not want to install
+Sealjar, you can check it [with Python 3 and OpenSSL](#without-installing-sealjar)
+instead.
 
 ```sh
 sealjar verify package.sealjar.zip
@@ -8,34 +12,34 @@ sealjar verify package.sealjar.zip --json
 sealjar verify package.sealjar.zip --tsa-root roots.pem
 ```
 
-Obtain extra roots independently, never from package certificates alone. The three
-answers mean different things:
+Get extra roots from a source you trust, never from the certificates inside the
+package. The three answers:
 
 | Answer | What to read |
 | --- | --- |
-| Capture | Complete, Problems or Failed, with target and quality details recorded during capture. |
-| Files | Unchanged means listed files match the manifest; changed, missing and unexpected paths are named. |
-| Timestamp | Trusted means a token's imprint, signature and certificate chain pass against trusted roots at its time. |
+| Capture | Complete, Problems or Failed, with the targets and the quality problems recorded during capture. |
+| Files | Unchanged means every listed file matches the manifest. Changed, missing and unexpected files are named. |
+| Timestamp | Trusted means the token's hash, signature and certificate chain check out against trusted roots at the token's time. |
 
-Exit 0 means matching files and at least one trusted timestamp. It does not mean the
-capture was complete. Exit 10 means changed, malformed or invalid content, including
-an imprint mismatch or invalid signature. Otherwise exit 11 means no trusted
-timestamp, including no timestamp at all. Missing input is exit 5; unsupported
-formats and operational failures return 2. Usage errors return 1. All available
-answers are printed, including on exits 10 and 11.
+Exit 0 means the files match and at least one timestamp is trusted. It does not
+say the capture was complete. Exit 10 means a file changed, is malformed or is
+otherwise invalid, including a token whose hash does not match the manifest or
+whose signature is bad. Exit 11 means no trusted timestamp, including no
+timestamp at all. Exit 5 means the input file is missing. Exit 2 means an
+unsupported format or a failure while checking. Exit 1 is a usage error. Verify
+prints every answer it could compute, also on exits 10 and 11.
 
-Preserve the original ZIP and extracted files. Do not repair captured files to make
-them pass. Request another capture or investigate the difference separately.
-
-The demo fallback uses a public signing key. It gives no independent time evidence,
-even if an explicitly supplied root grants the token trust.
+Keep the original ZIP and the extracted files as they are. Do not repair
+captured files to get a clean result. Ask for a new capture or look into the
+difference separately. The demo's local token is signed with a public key and
+says nothing about time, even if you supply a root that trusts it.
 
 ## Without installing Sealjar
 
-Independent checks use Python 3 for file hashes and OpenSSL for timestamp tokens.
-Extract a copy of the ZIP into a new empty directory with an archive tool that rejects unsafe
-paths and links. Keep the original ZIP. Work from the extracted package root. The
-following is the Python file check from `VERIFY.txt`:
+Python 3 checks the file hashes and OpenSSL checks the timestamp token. Extract
+a copy of the ZIP into a new, empty directory with an archive tool that rejects
+unsafe paths and links. Keep the original ZIP. Run the following from the
+extracted package root. It is the same Python check as in `VERIFY.txt`:
 
 ```python
 from pathlib import Path
@@ -68,19 +72,19 @@ print("\n".join(problems) if problems else f"All {len(expected)} files match.")
 sys.exit(1 if problems else 0)
 ```
 
-Exit 0 means consistency with the file list; exit 1 names differences.
-`manifest.json`, root-level timestamp tokens and `SEAL.html` are outside that list.
-Someone could replace both files and hashes in an untimestamped manifest. Matching
-hashes alone cannot authenticate it.
+Exit 0 means every listed file matches; exit 1 names the differences.
+`manifest.json`, the timestamp tokens next to it and `SEAL.html` are not in the
+list. In a manifest without a timestamp, someone could have replaced files and
+hashes together, so matching hashes alone cannot vouch for it.
 
-Choose an actual token path for `token.tsr`. Read its UTC genTime:
+Pick one of the token files for `token.tsr` and read its genTime in UTC:
 
 ```sh
 openssl ts -reply -in token.tsr -text
 ```
 
-Convert the displayed time to Unix seconds. Replace the example value with the
-token's own “Time stamp” value, without the label:
+Convert that time to Unix seconds. Replace the example with the token's own
+“Time stamp” value, without the label:
 
 ```sh
 python3 - <<'PYTIME'
@@ -93,35 +97,36 @@ print(int(datetime.strptime(gen_time, "%b %d %H:%M:%S %Y GMT")
 PYTIME
 ```
 
-Obtain `roots.pem` independently from a trusted OS export, the FreeTSA root in
-Sealjar source, or the authority's separately trusted certificate source. Use the
-number above in place of `GEN_TIME_UNIX_SECONDS`:
+Get `roots.pem` from a source you trust. That can be an export of your
+operating system's roots or the FreeTSA root in Sealjar's source. The
+authority's own certificate works too, if you got it from a place you trust.
+Put the number from above in place of `GEN_TIME_UNIX_SECONDS`:
 
 ```sh
 openssl ts -verify -data manifest.json -in token.tsr -CAfile roots.pem -attime GEN_TIME_UNIX_SECONDS
 ```
 
-Some authorities also require intermediate certificates; follow their guidance. The
-`-attime` check uses certificate validity at the token's genTime. Without it,
-OpenSSL uses today's date, which can reject an older valid timestamp. Reading a
-token with `-text` alone does not verify it.
+Some authorities also need their intermediate certificates; follow their
+instructions. `-attime` checks the certificates as of the token's genTime.
+Without it, OpenSSL uses today's date and can reject an older timestamp that was
+valid. Printing a token with `-text` does not check it.
 
 ## What a successful check establishes
 
-A trusted timestamp authenticates the exact manifest bytes. Together with matching
-file hashes, it shows that the sealed files existed by the time it records. The
-operator's recorded start and end times are not independently checked capture
-times. Trust comes from system root certificates or the embedded FreeTSA root. You
-can also supply root certificates obtained independently. Certificates carried
-only in the package cannot grant trust. Offline checks cannot see later
-revocation. Sealjar v0.1 does not assess eIDAS qualification or label a timestamp
-qualified.
+A trusted timestamp vouches for the exact bytes of the manifest. Together with
+matching hashes, it shows that the sealed files existed no later than the
+timestamp's time. The start and end times in the manifest come from the
+operator's computer and are not checked independently. Verify trusts the
+system's root certificates, the FreeTSA root that ships with Sealjar, and roots you supply yourself. Certificates that only come inside the package are not
+trusted. An offline check cannot see a later revocation. Sealjar v0.1 does not
+assess eIDAS qualification and never calls a timestamp qualified.
 
-A package cannot show whether its content is true or complete. It cannot establish
-that the operator was honest or that a server sent the saved bytes. It also cannot
-establish delivery or acceptance of a project, or link the captured code to the
-website. It carries no promise of legal effect or admissibility. For important
-disputes, consider a neutral expert or notary present during capture.
+A package cannot show that its content is true or complete. It cannot show that
+the operator was honest or that a server sent the saved bytes. It cannot
+show that a project was delivered or accepted, and it cannot link the captured
+code to the website. Sealjar promises no legal effect and no admissibility. For
+an important dispute, have a neutral person present during the capture, for
+example an expert or a notary.
 
-See [timestamps](timestamps.md), [package format](package-format.md) and the
-[recipient guide](for-recipients.md).
+See also [timestamps](timestamps.md), the [package format](package-format.md)
+and the [recipient guide](for-recipients.md).

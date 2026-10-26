@@ -1,73 +1,78 @@
 # Questions about captures
 
+Sealjar is a free, open-source CLI that captures web pages and a Git repository
+into one sealed, timestamped ZIP. Short answers, with links to the pages that
+go deeper.
+
 ## Does Sealjar crawl the website?
 
-No. List the URLs you want. Each gets desktop and mobile screenshots; `--tablet`
-adds a third view. Capture can span several hosts alongside one Git repository. See
-[capture](capture.md).
+No. You list the URLs yourself. Each gets desktop and mobile screenshots, and
+`--tablet` adds a third view. One package can hold pages from several hosts and
+one Git repository. See [capture](capture.md).
 
 ## Do I need Chrome or Git?
 
-Web capture and demo need Chrome or Chromium. Code capture and demo need Git. You
-can verify packages without Chrome or Git. You can also extract stored reports and
-restore snapshot files without either program. Checking out a history bundle needs
-Git. Repository-only capture without Chrome produces HTML reports without PDFs.
-`report --pdf` only copies stored PDFs.
+Web capture and the demo need Chrome or Chromium. Code capture and the demo need
+Git. Verify, report and restore need neither. Checking out a history bundle
+needs Git. A code-only capture without Chrome writes HTML reports but no PDFs,
+and `report --pdf` can only copy PDFs that exist.
 
 ## Does exit 0 mean the website was captured completely?
 
-No. Read Capture, Files and Timestamp separately. Verify exit 0 means matching files
-and at least one trusted timestamp; capture problems stay visible. Exit 10 means
-changed or invalid content. Exit 11 means no trusted timestamp. The [verification
-guide](verify.md) explains these results.
+No. Read Capture, Files and Timestamp separately. Exit 0 means the files match
+and at least one timestamp is trusted; capture problems are listed anyway. Exit
+10 means changed or invalid content. Exit 11 means no trusted timestamp. The
+[verification guide](verify.md) explains the results.
 
 ## Can someone change the manifest too?
 
-Hashes alone cannot authenticate an untimestamped manifest. A trusted timestamp
-binds its exact bytes to a time. Together with matching hashes, it shows that the
-sealed files existed by that time. It does not independently check when capture
-happened. A package cannot show whether its content is true or complete. It cannot
-establish that the operator was honest or that a server sent the saved bytes. It
-also cannot establish delivery or acceptance of a project, or link the captured code
-to the website. No legal effect or admissibility is promised. For important
-disputes, consider a neutral expert or notary during capture.
+In a manifest without a timestamp, yes. Hashes alone cannot vouch for it,
+because files and hashes could be replaced together. A trusted timestamp binds
+the exact manifest bytes to a time. With matching hashes, it shows that the
+sealed files existed no later than that time. It does not check when the
+capture was made.
+
+A package cannot show that its content is true or complete. It cannot show that
+the operator was honest or that a server sent the saved bytes. It cannot
+show that a project was delivered or accepted, and it cannot link the captured
+code to the website. Sealjar promises no legal effect and no admissibility. For
+an important dispute, have a neutral person present during the capture, for
+example an expert or a notary.
 
 ## Is the seal page itself authenticated?
 
-No. `SEAL.html` is created after timestamping and is outside the manifest. Verify
-checks tokens directly; report extraction regenerates the seal from checked data.
-The [package format](package-format.md) explains sealing order.
+No. `SEAL.html` is written after timestamping and is not in the manifest.
+Verify checks the tokens directly, and `sealjar report` writes a fresh seal
+page from checked data. The [package format](package-format.md) explains the
+sealing order.
 
 ## Is every valid timestamp trusted?
 
-No. Trust comes from system root certificates or the embedded FreeTSA root. You
-can also supply root certificates obtained independently. Certificates carried
-only in the package cannot grant trust. Offline checks cannot see later
-revocation. Sealjar v0.1 does not assess eIDAS qualification or label timestamps
-qualified. The demo fallback is explicitly untrusted.
-
-The demo fallback uses a public signing key. It gives no independent time evidence,
-even if an explicitly supplied root grants the token trust.
+No. Verify trusts the system's root certificates, the FreeTSA root that ships
+with Sealjar, and roots you supply yourself. Certificates that only come inside
+the package are not trusted. An offline check cannot see a later revocation.
+Sealjar v0.1 does not assess eIDAS qualification and never calls a timestamp
+qualified. The demo's local token is labelled untrusted. Its key is public, and it says nothing about time, even if you supply a root that trusts it.
 
 ## Does capture remove secrets?
 
-No. Exclusions and metadata masking reduce exposure, but cannot remove all private content. Screenshots and rendered HTML may show it; source files and Git
-history may contain it too. Inspect packages before sharing. Capture contacts target
-pages and resources, DNS and timestamp authorities. The TSA receives a hash and
-normal network metadata. Timestamp requests honour standard proxy settings; doctor's
-connection probes do not.
+No. Exclusions and masking reduce what gets in, but they cannot remove all
+private content. Screenshots and HTML can show it, and source files and Git
+history can contain it. Look through a package before you share it. Capture
+contacts the listed pages, DNS servers and the timestamp authority, which
+receives a hash and normal network metadata. Timestamp requests use the
+standard proxy variables; doctor's connection probes do not.
 
 ## Can I retry a timestamp or recover the code?
 
-[Stamp](timestamps.md#add-another-token-later) adds tokens to a new ZIP without
-changing the manifest or payload.
-[Restore](package-format.md#read-or-restore-a-copy) recovers checked snapshot files
-into a new or empty folder. History remains a separate bundle and may contain old
-secrets and unrelated work.
+Yes. [Stamp](timestamps.md#add-another-token-later) adds tokens in a new ZIP
+without changing the manifest or the payload.
+[Restore](package-format.md#read-or-restore-a-copy) writes the checked snapshot
+files into a new or empty folder. The history stays a separate bundle and can
+contain old secrets and unrelated work.
 
 ## Why keep the reader folder together?
 
-HTML image links are relative. Moving the report alone breaks those links. Use the
-PDF for a standalone reading copy. The ZIP remains the complete package for
-independent verification. [Recipients](for-recipients.md) can check it with Sealjar
-or with Python 3 and OpenSSL.
+The HTML report links to its images relatively. Moved on its own, it shows no images. Use the PDF when you want one file. The ZIP stays the complete package
+for checking. [Recipients](for-recipients.md) can check it with Sealjar or with
+Python 3 and OpenSSL.
