@@ -52,9 +52,8 @@ even if an explicitly supplied root grants the token trust.
 
 `VERIFY.txt` in the ZIP and the [verification
 guide](verify.md#without-installing-sealjar) give the commands. Python 3 checks the
-file hashes against the manifest. OpenSSL checks the timestamp. You need both
-programs for these steps. The timestamp check uses independently obtained roots and
-`-attime` with the token's genTime. Reading a token's text alone does not verify its
+file hashes against the manifest. OpenSSL checks the timestamp. The timestamp
+check uses independently obtained roots and `-attime` with the token's genTime. Reading a token's text alone does not verify its
 signature.
 
 ## What the package cannot establish

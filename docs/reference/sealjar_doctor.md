@@ -23,9 +23,7 @@ sealjar doctor --tsa https://freetsa.org/tsr
 
 ## Output
 
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
+Defaults to human-readable output. Use `--json` for JSON.
 
 ## Related commands
 

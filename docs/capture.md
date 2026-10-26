@@ -1,7 +1,6 @@
 # Capture pages and code
 
-[Install Sealjar](quickstart.md#install) first. A capture accepts listed HTTP(S)
-URLs and paths in one Git repository. It does not crawl or prove that the captured
+A capture accepts listed HTTP(S) URLs and paths in one Git repository. It does not crawl or prove that the captured
 code produced the captured website. The repository needs a commit.
 
 From the repository root, resolve an output directory outside it and show it

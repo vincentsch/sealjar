@@ -8,8 +8,7 @@ network metadata. The package stays on your computer.
 Capture tries DigiCert at `http://timestamp.digicert.com`, then FreeTSA at
 `https://freetsa.org/tsr` if DigiCert returns no usable token. Signatures and
 certificate checks protect the response even over HTTP. Repeat `--tsa` to replace
-those defaults and request every supplied authority. After
-[installation](quickstart.md#install), for a custom authority:
+those defaults and request every supplied authority. To use a custom authority:
 
 ```sh
 sealjar capture . --out .. --tsa https://tsa.example/tsr --tsa-root roots.pem --confirm --no-prompt

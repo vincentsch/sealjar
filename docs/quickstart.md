@@ -1,12 +1,11 @@
 # Make your first capture
 
-Sealjar is a free, open-source tool you run on your computer by typing commands.
-It saves web pages and project code in one ZIP file. It is for freelancers and
-agencies who want a record of what they hand over to a client. You can check the
-saved files for changes later.
+Sealjar is a free, open-source CLI for timestamped captures of websites and Git
+repositories. It helps developers and agencies record client handovers in a
+verifiable ZIP.
 
-The ZIP comes with screenshots and a folder for reading its reports. Keep both
-outside the repository you capture. The [recipient guide](for-recipients.md)
+Capture also writes a reader folder with reports and screenshots. Keep the ZIP and
+reader folder outside the repository you capture. The [recipient guide](for-recipients.md)
 explains what the results mean.
 
 ## Install
@@ -77,8 +76,6 @@ the source of the download.
 
 ## Check prerequisites
 
-After installing, the examples use `sealjar` for the executable:
-
 ```sh
 sealjar doctor
 ```
@@ -93,7 +90,7 @@ executable path with `--chrome`.
 
 ## Try a bundled example
 
-[Install Sealjar](#install) first. The demo needs Chrome or Chromium and Git. Run
+The demo needs Chrome or Chromium and Git. Run
 from a directory whose parent can receive the output:
 
 ```sh

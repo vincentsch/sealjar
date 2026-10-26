@@ -33,12 +33,31 @@ func TestReferenceLifecycle(t *testing.T) {
 	if strings.Count(string(first), "--out ../sealjar-captures") != 2 {
 		t.Fatal("unsafe capture examples", string(first))
 	}
+	if !strings.Contains(string(first), "Defaults to human-readable output. Use `--json` for JSON.") ||
+		!strings.Contains(string(first), "`--dry-run` previews changes without writing files.") {
+		t.Fatal("reference output and preview guidance missing", string(first))
+	}
+	if err := generate(true, dir); err != nil {
+		t.Fatal("generated reference failed freshness check", err)
+	}
 	if err := generate(false, dir); err != nil {
 		t.Fatal(err)
 	}
 	second, _ := os.ReadFile(page)
 	if string(first) != string(second) {
 		t.Fatal("generation changed on second run")
+	}
+	oldProse := strings.NewReplacer(
+		"Defaults to human-readable output. Use `--json` for JSON.",
+		"Shows text you can read in your terminal.\n\nUse --json to get JSON for scripts and other programs.",
+		"`--dry-run` previews changes without writing files.",
+		"This command makes changes. Use `--dry-run` to see what would change without changing anything.",
+	).Replace(string(first))
+	if err := os.WriteFile(page, []byte(oldProse), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := generate(true, dir); err == nil {
+		t.Fatal("old generic prose passed freshness check")
 	}
 	if err := os.WriteFile(page, []byte("stale"), 0644); err != nil {
 		t.Fatal(err)

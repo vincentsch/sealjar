@@ -1,6 +1,6 @@
 # Check a package
 
-After [installation](quickstart.md#install), use the ZIP path you received:
+Verify the received ZIP:
 
 ```sh
 sealjar verify package.sealjar.zip
@@ -32,9 +32,8 @@ even if an explicitly supplied root grants the token trust.
 
 ## Without installing Sealjar
 
-Reading HTML or PDF needs no tools beyond a browser or PDF reader. Independent
-checks without Sealjar need Python 3 for hashes and OpenSSL for tokens. Extract a
-copy of the ZIP into a new empty directory with an archive tool that rejects unsafe
+Independent checks use Python 3 for file hashes and OpenSSL for timestamp tokens.
+Extract a copy of the ZIP into a new empty directory with an archive tool that rejects unsafe
 paths and links. Keep the original ZIP. Work from the extracted package root. The
 following is the Python file check from `VERIFY.txt`:
 

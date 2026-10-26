@@ -66,7 +66,7 @@ happened. Read [verification](verify.md) for trust, manual checks and limits.
 
 ## Read or restore a copy
 
-After [installation](quickstart.md#install), use a new or empty destination:
+Use a new or empty destination:
 
 ```sh
 sealjar report package.sealjar.zip --out ../reader

@@ -21,9 +21,7 @@ sealjar verify capture.sealjar.zip --json
 
 ## Output
 
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
+Defaults to human-readable output. Use `--json` for JSON.
 
 ## Related commands
 

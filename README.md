@@ -14,10 +14,9 @@
   <a href="docs/de/abnahme.md">Deutsch</a>
 </p>
 
-Sealjar is a free, open-source tool you run on your computer by typing commands.
-It saves web pages and your project's code in one ZIP file, with screenshots and a
-report. Freelancers and agencies can use it to record a client handover and check
-the saved files for changes later.
+Sealjar is a free, open-source CLI for timestamped captures of websites and Git
+repositories. It helps developers and agencies record client handovers in a
+verifiable ZIP.
 
 ## Capture with your coding agent
 
@@ -69,10 +68,9 @@ sealjar doctor
 sealjar demo --out ../bakery-demo
 ```
 
-The demo serves a bakery website on your computer and captures an example
-repository. The ZIP comes with a folder for reading the reports. A second ZIP has a
-changed screenshot, so you can see how verification reports it. If the public
-timestamp service is unavailable, it uses a local token labelled “Demo timestamp,
+The demo captures a local bakery site and example repository. The ZIP comes with a
+reader folder. A second ZIP contains a modified screenshot for testing verification.
+If the public timestamp service is unavailable, it uses a local token labelled “Demo timestamp,
 not trusted”. That fallback gives verify exit 11. Its signing key is public, so it
 supplies no independent time evidence, even if a supplied root grants it trust.
 
@@ -84,8 +82,8 @@ report points to the seal and `sealjar verify` for timestamp results.
 
 ## Capture by hand
 
-From your repository root, write outside it. Here `..` is the parent directory;
-check it is the destination you want. List each authorised URL explicitly.
+From your repository root, choose an output directory outside it. List each
+authorised URL explicitly.
 
 ```sh
 OUT=$(cd .. && pwd -P)
@@ -99,9 +97,8 @@ matches what you want to capture, run:
 sealjar capture https://staging.example.com . --out "$OUT" --confirm --no-prompt
 ```
 
-Read the complete plan, including exclusions. Add pages or hosts as more URL
-arguments; Sealjar does not crawl. The package can combine those pages with one Git
-repository. Tracked files include current uncommitted edits. `--include-untracked`
+Add pages or hosts as more URL arguments; Sealjar does not crawl. The package can
+combine those pages with one Git repository. Tracked files include current uncommitted edits. `--include-untracked`
 adds files Git does not ignore. `--history` adds a Git bundle, which can contain old
 secrets and unrelated work. Submodules are listed without their contents; LFS
 pointers remain pointers unless already materialised.

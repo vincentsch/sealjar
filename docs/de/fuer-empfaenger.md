@@ -1,10 +1,9 @@
 # Ein erhaltenes Paket lesen und prüfen
 
 Das ZIP enthält die vollständige Erfassung. Der zugehörige Leseordner enthält
-Berichte und Bilder. `report/report.de.html` lässt sich im Browser öffnen, das
-Bericht-PDF in einem PDF-Programm. Dafür ist keine Sealjar-Installation nötig. Beim
-HTML-Bericht muss der Ordner zusammenbleiben, weil Bildverweise relativ sind. Das
-PDF ist eine eigenständige Lesekopie.
+Berichte und Bilder. `report/report.de.html` und das Bericht-PDF sind ohne
+Sealjar-Installation lesbar. Der HTML-Bericht nutzt relative Bildverweise, daher
+muss der Leseordner zusammenbleiben. Das PDF ist eine eigenständige Lesekopie.
 
 Zuerst lohnt sich der Blick auf die Zusammenfassung. Stimmen URLs, Repository und
 Commit mit dem erwarteten Umfang überein? Welche Dateien wurden ausgeschlossen?
@@ -42,9 +41,8 @@ verändert.
 
 Ohne Sealjar stehen in `VERIFY.txt` und der
 [Prüfanleitung](../verify.md#without-installing-sealjar) ein Python-3-Skript für die
-Dateiprüfung und OpenSSL-Befehle für den Zeitstempel. Diese Schritte benötigen
-Python und OpenSSL. Vertrauensanker müssen unabhängig bezogen werden. Mit `-attime`
-erfolgt die Zertifikatsprüfung zum Zeitpunkt `genTime` des Tokens. Die reine
+Dateiprüfung und OpenSSL-Befehle für den Zeitstempel. Vertrauensanker müssen
+unabhängig bezogen werden. Mit `-attime` erfolgt die Zertifikatsprüfung zum Zeitpunkt `genTime` des Tokens. Die reine
 Textanzeige eines Tokens prüft keine Signatur.
 
 Wenn die Demo keinen Online-Zeitstempel erhält, nutzt sie einen lokalen Token mit

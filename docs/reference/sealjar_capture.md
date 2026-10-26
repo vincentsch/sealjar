@@ -37,13 +37,11 @@ sealjar capture . --dry-run --no-timestamp --include-untracked --out ../sealjar-
 
 ## Output
 
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
+Defaults to human-readable output. Use `--json` for JSON.
 
 ## Preview changes
 
-This command makes changes. Use `--dry-run` to see what would change without changing anything.
+`--dry-run` previews changes without writing files.
 
 ## Related commands
 

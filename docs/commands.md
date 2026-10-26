@@ -1,9 +1,7 @@
 # Commands
 
-[Install Sealjar](quickstart.md#install) before running these commands.
-
 The [command reference](reference/index.md) comes from the CLI's command tree. Run
-`sealjar <command> --help` for the same flags and examples in your terminal.
+`sealjar <command> --help` for the same flags and examples.
 
 When capturing a repository from its root, write packages outside it:
 
